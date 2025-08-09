@@ -29,25 +29,26 @@ import { Loader2 } from "lucide-react";
 interface InventoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  item?: any;
+  editingItem?: any;
 }
 
-export default function InventoryModal({ isOpen, onClose, item }: InventoryModalProps) {
+export default function InventoryModal({ isOpen, onClose, editingItem }: InventoryModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
   const form = useForm<InsertInventoryItem>({
     resolver: zodResolver(insertInventoryItemSchema),
     defaultValues: {
-      name: item?.name || "",
-      description: item?.description || "",
-      sku: item?.sku || "",
-      category: item?.category || "",
-      quantity: item?.quantity || "",
-      minStockLevel: item?.minStockLevel || "",
-      unitPrice: item?.unitPrice || "",
-      supplier: item?.supplier || "",
-      location: item?.location || "",
+      name: editingItem?.name || "",
+      description: editingItem?.description || "",
+      sku: editingItem?.sku || "",
+      category: editingItem?.category || "",
+      quantity: editingItem?.quantity || 0,
+      minimumStock: editingItem?.minimumStock || 0,
+      cost: editingItem?.cost || "",
+      price: editingItem?.price || "",
+      brand: editingItem?.brand || "",
+      location: editingItem?.location || "",
     },
   });
 
@@ -77,7 +78,7 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertInventoryItem) => {
-      const res = await apiRequest("PATCH", `/api/inventory/${item.id}`, data);
+      const res = await apiRequest("PATCH", `/api/inventory/${editingItem.id}`, data);
       return res.json();
     },
     onSuccess: () => {
@@ -99,7 +100,7 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
   });
 
   const onSubmit = (data: InsertInventoryItem) => {
-    if (item) {
+    if (editingItem) {
       updateMutation.mutate(data);
     } else {
       createMutation.mutate(data);
@@ -113,10 +114,10 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {item ? "Edit Inventory Item" : "Add New Inventory Item"}
+            {editingItem ? "Edit Inventory Item" : "Add New Inventory Item"}
           </DialogTitle>
           <DialogDescription>
-            {item ? "Update inventory item details" : "Enter details to add a new inventory item"}
+            {editingItem ? "Update inventory item details" : "Enter details to add a new inventory item"}
           </DialogDescription>
         </DialogHeader>
 
@@ -198,12 +199,12 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
 
               <FormField
                 control={form.control}
-                name="supplier"
+                name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Supplier</FormLabel>
+                    <FormLabel>Brand</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter supplier name" {...field} />
+                      <Input placeholder="Enter brand name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -211,7 +212,7 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
               />
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="quantity"
@@ -228,7 +229,7 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
 
               <FormField
                 control={form.control}
-                name="minStockLevel"
+                name="minimumStock"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Min Stock Level</FormLabel>
@@ -239,10 +240,26 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
                   </FormItem>
                 )}
               />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="cost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Cost</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" min="0" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <FormField
                 control={form.control}
-                name="unitPrice"
+                name="price"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Unit Price</FormLabel>
@@ -281,10 +298,10 @@ export default function InventoryModal({ isOpen, onClose, item }: InventoryModal
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="bg-primary-600 hover:bg-primary-700"
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {item ? "Update Item" : "Add Item"}
+                {editingItem ? "Update Item" : "Add Item"}
               </Button>
             </div>
           </form>
