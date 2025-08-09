@@ -13,6 +13,7 @@ export default function Navbar() {
     { path: "/", label: "Dashboard" },
     { path: "/customers", label: "Customers" },
     { path: "/work-orders", label: "Work Orders" },
+    { path: "/technicians", label: "Technicians" },
     { path: "/billing", label: "Billing" },
     { path: "/inventory", label: "Inventory" },
     { path: "/reports", label: "Reports" },

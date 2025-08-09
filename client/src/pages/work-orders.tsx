@@ -7,10 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Clock, CheckCircle, AlertCircle } from "lucide-react";
 import WorkOrderModal from "@/components/modals/work-order-modal";
+import WorkOrderDetailsModal from "@/components/modals/work-order-details-modal";
 import type { WorkOrderFilters } from "@/types";
 
 export default function WorkOrders() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [filters, setFilters] = useState<WorkOrderFilters>({});
 
   const { data: workOrders, isLoading } = useQuery({
@@ -204,10 +207,24 @@ export default function WorkOrders() {
                     )}
 
                     <div className="flex justify-end space-x-2">
-                      <Button size="sm" variant="outline">
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedWorkOrder(order);
+                          setIsDetailsModalOpen(true);
+                        }}
+                      >
                         View Details
                       </Button>
-                      <Button size="sm" className="bg-primary-600 hover:bg-primary-700">
+                      <Button 
+                        size="sm" 
+                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                        onClick={() => {
+                          setSelectedWorkOrder(order);
+                          setIsModalOpen(true);
+                        }}
+                      >
                         Update Status
                       </Button>
                     </div>
@@ -231,7 +248,20 @@ export default function WorkOrders() {
 
       <WorkOrderModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setSelectedWorkOrder(null);
+        }}
+        workOrder={selectedWorkOrder}
+      />
+      
+      <WorkOrderDetailsModal 
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedWorkOrder(null);
+        }}
+        workOrder={selectedWorkOrder}
       />
     </div>
   );

@@ -20,6 +20,8 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: string, user: Partial<InsertUser>): Promise<User>;
+  getTechnicians(): Promise<User[]>;
   
   // Customer management
   getCustomers(search?: string): Promise<Customer[]>;
@@ -56,6 +58,7 @@ export interface IStorage {
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice>;
   deleteInvoice(id: string): Promise<void>;
+  createInvoiceFromWorkOrder(workOrderId: string): Promise<Invoice>;
   
   // Dashboard metrics
   getDashboardMetrics(): Promise<any>;
@@ -89,6 +92,23 @@ export class DatabaseStorage implements IStorage {
       .values(insertUser)
       .returning();
     return user;
+  }
+
+  async updateUser(id: string, userUpdate: Partial<InsertUser>): Promise<User> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({ ...userUpdate, updatedAt: sql`now()` })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+
+  async getTechnicians(): Promise<User[]> {
+    return await db
+      .select()
+      .from(users)
+      .where(eq(users.role, "technician"))
+      .orderBy(desc(users.createdAt));
   }
 
   // Customer methods
@@ -432,6 +452,41 @@ export class DatabaseStorage implements IStorage {
 
   async deleteInvoice(id: string): Promise<void> {
     await db.delete(invoices).where(eq(invoices.id, id));
+  }
+
+  async createInvoiceFromWorkOrder(workOrderId: string): Promise<Invoice> {
+    // Get the work order with customer info
+    const workOrder = await this.getWorkOrder(workOrderId);
+    if (!workOrder) {
+      throw new Error("Work order not found");
+    }
+
+    if (workOrder.status !== "completed") {
+      throw new Error("Work order must be completed to generate invoice");
+    }
+
+    if (!workOrder.actualCost) {
+      throw new Error("Work order must have actual cost to generate invoice");
+    }
+
+    const subtotal = Number(workOrder.actualCost);
+    const taxRate = 0.08; // 8% tax rate
+    const taxAmount = subtotal * taxRate;
+    const total = subtotal + taxAmount;
+
+    const invoiceData: InsertInvoice = {
+      customerId: workOrder.customerId,
+      workOrderId: workOrderId,
+      subtotal: subtotal.toString(),
+      taxRate: taxRate.toString(),
+      taxAmount: taxAmount.toString(),
+      total: total.toString(),
+      paymentStatus: "pending",
+      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      notes: `Invoice for work order ${workOrder.orderNumber}: ${workOrder.problemDescription}`,
+    };
+
+    return await this.createInvoice(invoiceData);
   }
 
   // Dashboard metrics

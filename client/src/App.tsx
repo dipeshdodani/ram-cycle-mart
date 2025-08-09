@@ -13,6 +13,7 @@ import WorkOrders from "@/pages/work-orders";
 import Billing from "@/pages/billing";
 import Inventory from "@/pages/inventory";
 import Reports from "@/pages/reports";
+import Technicians from "@/pages/technicians";
 
 function Router() {
   return (
@@ -20,6 +21,7 @@ function Router() {
       <ProtectedRoute path="/" component={Dashboard} />
       <ProtectedRoute path="/customers" component={Customers} />
       <ProtectedRoute path="/work-orders" component={WorkOrders} />
+      <ProtectedRoute path="/technicians" component={Technicians} />
       <ProtectedRoute path="/billing" component={Billing} />
       <ProtectedRoute path="/inventory" component={Inventory} />
       <ProtectedRoute path="/reports" component={Reports} />

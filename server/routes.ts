@@ -223,13 +223,52 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Technicians list (users with technician role)
+  // Technicians routes (users with technician role)
   app.get("/api/technicians", async (req, res) => {
     try {
-      // This would need to be implemented in storage to filter by role
-      res.json([]);
+      const technicians = await storage.getTechnicians();
+      res.json(technicians);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch technicians" });
+    }
+  });
+
+  app.post("/api/technicians", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      const technician = await storage.createUser(validatedData);
+      res.status(201).json(technician);
+    } catch (error) {
+      res.status(400).json({ message: "Invalid technician data" });
+    }
+  });
+
+  app.patch("/api/technicians/:id", async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.partial().parse(req.body);
+      const technician = await storage.updateUser(req.params.id, validatedData);
+      res.json(technician);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to update technician" });
+    }
+  });
+
+  // Invoice generation from work order
+  app.post("/api/work-orders/:id/invoice", async (req, res) => {
+    try {
+      const workOrder = await storage.getWorkOrder(req.params.id);
+      if (!workOrder) {
+        return res.status(404).json({ message: "Work order not found" });
+      }
+      
+      if (workOrder.status !== "completed") {
+        return res.status(400).json({ message: "Work order must be completed to generate invoice" });
+      }
+
+      const invoice = await storage.createInvoiceFromWorkOrder(req.params.id);
+      res.status(201).json(invoice);
+    } catch (error) {
+      res.status(400).json({ message: "Failed to generate invoice" });
     }
   });
 
