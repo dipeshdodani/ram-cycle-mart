@@ -4,51 +4,51 @@
 
 :root {
   --background: hsl(0 0% 100%);
-  --foreground: hsl(210 25% 7.8431%);
-  --card: hsl(180 6.6667% 97.0588%);
-  --card-foreground: hsl(210 25% 7.8431%);
+  --foreground: hsl(222.2 84% 4.9%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(222.2 84% 4.9%);
   --popover: hsl(0 0% 100%);
-  --popover-foreground: hsl(210 25% 7.8431%);
-  --primary: hsl(203.8863 88.2845% 53.1373%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(210 25% 7.8431%);
-  --secondary-foreground: hsl(0 0% 100%);
-  --muted: hsl(240 1.9608% 90%);
-  --muted-foreground: hsl(210 25% 7.8431%);
-  --accent: hsl(211.5789 51.3514% 92.7451%);
-  --accent-foreground: hsl(203.8863 88.2845% 53.1373%);
-  --destructive: hsl(356.3033 90.5579% 54.3137%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(201.4286 30.4348% 90.9804%);
-  --input: hsl(200 23.0769% 97.4510%);
-  --ring: hsl(202.8169 89.1213% 53.1373%);
-  --chart-1: hsl(203.8863 88.2845% 53.1373%);
-  --chart-2: hsl(159.7826 100% 36.0784%);
-  --chart-3: hsl(42.0290 92.8251% 56.2745%);
-  --chart-4: hsl(147.1429 78.5047% 41.9608%);
-  --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(180 6.6667% 97.0588%);
-  --sidebar-foreground: hsl(210 25% 7.8431%);
-  --sidebar-primary: hsl(203.8863 88.2845% 53.1373%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(211.5789 51.3514% 92.7451%);
-  --sidebar-accent-foreground: hsl(203.8863 88.2845% 53.1373%);
-  --sidebar-border: hsl(205.0000 25.0000% 90.5882%);
-  --sidebar-ring: hsl(202.8169 89.1213% 53.1373%);
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 1.3rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --tracking-normal: 0em;
-  --spacing: 0.25rem;
+  --popover-foreground: hsl(222.2 84% 4.9%);
+  --primary: hsl(221.2 83.2% 53.3%);
+  --primary-foreground: hsl(210 40% 98%);
+  --secondary: hsl(210 40% 96%);
+  --secondary-foreground: hsl(222.2 84% 4.9%);
+  --muted: hsl(210 40% 96%);
+  --muted-foreground: hsl(215.4 16.3% 46.9%);
+  --accent: hsl(210 40% 96%);
+  --accent-foreground: hsl(222.2 84% 4.9%);
+  --destructive: hsl(0 84.2% 60.2%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(214.3 31.8% 91.4%);
+  --input: hsl(214.3 31.8% 91.4%);
+  --ring: hsl(221.2 83.2% 53.3%);
+  --radius: 0.5rem;
+  
+  /* Custom SewCraft Pro Colors */
+  --primary-50: hsl(213 100% 97%);
+  --primary-100: hsl(214 95% 93%);
+  --primary-200: hsl(213 97% 87%);
+  --primary-300: hsl(212 96% 78%);
+  --primary-400: hsl(213 94% 68%);
+  --primary-500: hsl(217 91% 60%);
+  --primary-600: hsl(221 83% 53%);
+  --primary-700: hsl(224 76% 48%);
+  --primary-800: hsl(226 71% 40%);
+  --primary-900: hsl(224 64% 33%);
+  --primary-950: hsl(226 55% 21%);
+  
+  /* Gray scale */
+  --gray-50: hsl(210 40% 98%);
+  --gray-100: hsl(210 40% 96%);
+  --gray-200: hsl(214 32% 91%);
+  --gray-300: hsl(213 27% 84%);
+  --gray-400: hsl(215 20% 65%);
+  --gray-500: hsl(220 9% 46%);
+  --gray-600: hsl(215 14% 34%);
+  --gray-700: hsl(217 19% 27%);
+  --gray-800: hsl(215 28% 17%);
+  --gray-900: hsl(221 39% 11%);
+  --gray-950: hsl(224 71% 4%);
 }
 
 .dark {
@@ -106,4 +106,68 @@
   body {
     @apply font-sans antialiased bg-background text-foreground;
   }
+}
+
+@layer components {
+  /* Custom button styles for better visibility */
+  .btn-primary {
+    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-4 py-2 rounded-md transition-colors;
+  }
+  
+  .btn-secondary {
+    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium px-4 py-2 rounded-md border border-input transition-colors;
+  }
+  
+  .btn-outline {
+    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground font-medium px-4 py-2 rounded-md transition-colors;
+  }
+  
+  /* Custom primary color classes */
+  .bg-primary-50 { background-color: hsl(var(--primary-50)); }
+  .bg-primary-100 { background-color: hsl(var(--primary-100)); }
+  .bg-primary-200 { background-color: hsl(var(--primary-200)); }
+  .bg-primary-300 { background-color: hsl(var(--primary-300)); }
+  .bg-primary-400 { background-color: hsl(var(--primary-400)); }
+  .bg-primary-500 { background-color: hsl(var(--primary-500)); }
+  .bg-primary-600 { background-color: hsl(var(--primary-600)); }
+  .bg-primary-700 { background-color: hsl(var(--primary-700)); }
+  .bg-primary-800 { background-color: hsl(var(--primary-800)); }
+  .bg-primary-900 { background-color: hsl(var(--primary-900)); }
+  
+  .text-primary-50 { color: hsl(var(--primary-50)); }
+  .text-primary-100 { color: hsl(var(--primary-100)); }
+  .text-primary-200 { color: hsl(var(--primary-200)); }
+  .text-primary-300 { color: hsl(var(--primary-300)); }
+  .text-primary-400 { color: hsl(var(--primary-400)); }
+  .text-primary-500 { color: hsl(var(--primary-500)); }
+  .text-primary-600 { color: hsl(var(--primary-600)); }
+  .text-primary-700 { color: hsl(var(--primary-700)); }
+  .text-primary-800 { color: hsl(var(--primary-800)); }
+  .text-primary-900 { color: hsl(var(--primary-900)); }
+  
+  .hover\\:bg-primary-700:hover { background-color: hsl(var(--primary-700)); }
+  .hover\\:bg-primary-800:hover { background-color: hsl(var(--primary-800)); }
+  
+  /* Gray scale utilities */
+  .bg-gray-50 { background-color: hsl(var(--gray-50)); }
+  .bg-gray-100 { background-color: hsl(var(--gray-100)); }
+  .bg-gray-200 { background-color: hsl(var(--gray-200)); }
+  .bg-gray-300 { background-color: hsl(var(--gray-300)); }
+  .bg-gray-400 { background-color: hsl(var(--gray-400)); }
+  .bg-gray-500 { background-color: hsl(var(--gray-500)); }
+  .bg-gray-600 { background-color: hsl(var(--gray-600)); }
+  .bg-gray-700 { background-color: hsl(var(--gray-700)); }
+  .bg-gray-800 { background-color: hsl(var(--gray-800)); }
+  .bg-gray-900 { background-color: hsl(var(--gray-900)); }
+  
+  .text-gray-50 { color: hsl(var(--gray-50)); }
+  .text-gray-100 { color: hsl(var(--gray-100)); }
+  .text-gray-200 { color: hsl(var(--gray-200)); }
+  .text-gray-300 { color: hsl(var(--gray-300)); }
+  .text-gray-400 { color: hsl(var(--gray-400)); }
+  .text-gray-500 { color: hsl(var(--gray-500)); }
+  .text-gray-600 { color: hsl(var(--gray-600)); }
+  .text-gray-700 { color: hsl(var(--gray-700)); }
+  .text-gray-800 { color: hsl(var(--gray-800)); }
+  .text-gray-900 { color: hsl(var(--gray-900)); }
 }

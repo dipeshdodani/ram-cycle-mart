@@ -87,7 +87,7 @@ export default function AuthPage() {
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full bg-primary-600 hover:bg-primary-700"
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? "Signing In..." : "Sign In"}
@@ -187,7 +187,7 @@ export default function AuthPage() {
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full bg-primary-600 hover:bg-primary-700"
+                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? "Creating Account..." : "Create Account"}
@@ -201,7 +201,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right Side - Hero Section */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:py-8 bg-primary-600">
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:py-8 bg-primary">
         <div className="text-white">
           <h2 className="text-4xl font-bold mb-6">
             Complete Shop Management Solution
