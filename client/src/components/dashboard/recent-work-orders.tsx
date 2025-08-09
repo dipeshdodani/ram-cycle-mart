@@ -13,10 +13,10 @@ interface WorkOrder {
     lastName: string;
     phone: string;
   };
-  machine: {
+  machine?: {
     brand: string;
     model: string;
-  };
+  } | null;
 }
 
 interface RecentWorkOrdersProps {
@@ -131,8 +131,9 @@ export default function RecentWorkOrders({ workOrders, isLoading }: RecentWorkOr
                       <div className="text-sm text-gray-500">{order.customer.phone}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">{order.machine.brand}</div>
-                      <div className="text-sm text-gray-500">{order.machine.model}</div>
+                      <div className="text-sm text-gray-900">
+                        {order.machine ? `${order.machine.brand} ${order.machine.model}` : "Not specified"}
+                      </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <Badge className={getStatusColor(order.status)}>
