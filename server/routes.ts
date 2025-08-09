@@ -4,8 +4,18 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { 
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
-  insertInventoryItemSchema, insertInvoiceSchema 
+  insertInventoryItemSchema, insertInvoiceSchema, insertUserSchema 
 } from "@shared/schema";
+import { scrypt, randomBytes } from "crypto";
+import { promisify } from "util";
+
+const scryptAsync = promisify(scrypt);
+
+async function hashPassword(password: string) {
+  const salt = randomBytes(16).toString("hex");
+  const buf = (await scryptAsync(password, salt, 64)) as Buffer;
+  return `${buf.toString("hex")}.${salt}`;
+}
 
 export function registerRoutes(app: Express): Server {
   // Setup authentication routes
@@ -235,11 +245,26 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/technicians", async (req, res) => {
     try {
+      console.log("Received technician data:", req.body);
       const validatedData = insertUserSchema.parse(req.body);
-      const technician = await storage.createUser(validatedData);
+      console.log("Validated data:", validatedData);
+      
+      // Hash password before storing
+      const hashedPassword = await hashPassword(validatedData.password);
+      const technicianData = { ...validatedData, password: hashedPassword };
+      
+      const technician = await storage.createUser(technicianData);
       res.status(201).json(technician);
     } catch (error) {
-      res.status(400).json({ message: "Invalid technician data" });
+      console.error("Technician creation error:", error);
+      if (error.issues) {
+        console.error("Validation issues:", error.issues);
+      }
+      res.status(400).json({ 
+        message: "Invalid technician data", 
+        details: error.message,
+        issues: error.issues || []
+      });
     }
   });
 
