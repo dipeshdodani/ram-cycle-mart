@@ -1,265 +1,294 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertInventoryItemSchema, type InsertInventoryItem } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import type { InventoryItem } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface InventoryModalProps {
   isOpen: boolean;
   onClose: () => void;
-  editingItem?: InventoryItem | null;
+  item?: any;
 }
 
-export default function InventoryModal({ isOpen, onClose, editingItem }: InventoryModalProps) {
+export default function InventoryModal({ isOpen, onClose, item }: InventoryModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const [formData, setFormData] = useState({
-    sku: "",
-    name: "",
-    description: "",
-    category: "",
-    brand: "",
-    cost: "",
-    price: "",
-    quantity: "",
-    minimumStock: "",
-    location: "",
+
+  const form = useForm<InsertInventoryItem>({
+    resolver: zodResolver(insertInventoryItemSchema),
+    defaultValues: {
+      name: item?.name || "",
+      description: item?.description || "",
+      sku: item?.sku || "",
+      category: item?.category || "",
+      quantity: item?.quantity || "",
+      minStockLevel: item?.minStockLevel || "",
+      unitPrice: item?.unitPrice || "",
+      supplier: item?.supplier || "",
+      location: item?.location || "",
+    },
   });
 
-  useEffect(() => {
-    if (editingItem) {
-      setFormData({
-        sku: editingItem.sku,
-        name: editingItem.name,
-        description: editingItem.description || "",
-        category: editingItem.category,
-        brand: editingItem.brand || "",
-        cost: editingItem.cost.toString(),
-        price: editingItem.price.toString(),
-        quantity: editingItem.quantity.toString(),
-        minimumStock: editingItem.minimumStock.toString(),
-        location: editingItem.location || "",
-      });
-    }
-  }, [editingItem]);
-
-  const createInventoryMutation = useMutation({
-    mutationFn: async (data: any) => {
-      if (editingItem) {
-        const res = await apiRequest("PUT", `/api/inventory/${editingItem.id}`, data);
-        return res.json();
-      } else {
-        const res = await apiRequest("POST", "/api/inventory", data);
-        return res.json();
-      }
+  const createMutation = useMutation({
+    mutationFn: async (data: InsertInventoryItem) => {
+      const res = await apiRequest("POST", "/api/inventory", data);
+      return res.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: `Inventory item ${editingItem ? 'updated' : 'created'} successfully`,
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/inventory/low-stock"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
-      handleClose();
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({
+        title: "Inventory item created",
+        description: "Inventory item has been successfully created.",
+      });
+      onClose();
+      form.reset();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: `Failed to ${editingItem ? 'update' : 'create'} inventory item`,
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const submitData = {
-      ...formData,
-      cost: parseFloat(formData.cost),
-      price: parseFloat(formData.price),
-      quantity: parseInt(formData.quantity),
-      minimumStock: parseInt(formData.minimumStock),
-    };
+  const updateMutation = useMutation({
+    mutationFn: async (data: InsertInventoryItem) => {
+      const res = await apiRequest("PATCH", `/api/inventory/${item.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/inventory"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({
+        title: "Inventory item updated",
+        description: "Inventory item has been successfully updated.",
+      });
+      onClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-    createInventoryMutation.mutate(submitData);
+  const onSubmit = (data: InsertInventoryItem) => {
+    if (item) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
-  const handleClose = () => {
-    setFormData({
-      sku: "",
-      name: "",
-      description: "",
-      category: "",
-      brand: "",
-      cost: "",
-      price: "",
-      quantity: "",
-      minimumStock: "",
-      location: "",
-    });
-    onClose();
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setFormData({ ...formData, [field]: value });
-  };
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editingItem ? 'Edit Inventory Item' : 'Add New Inventory Item'}
+            {item ? "Edit Inventory Item" : "Add New Inventory Item"}
           </DialogTitle>
+          <DialogDescription>
+            {item ? "Update inventory item details" : "Enter details to add a new inventory item"}
+          </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="sku">SKU *</Label>
-              <Input
-                id="sku"
-                value={formData.sku}
-                onChange={(e) => handleInputChange("sku", e.target.value)}
-                placeholder="e.g., SG-BOB-001"
-                required
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => handleInputChange("name", e.target.value)}
-                placeholder="e.g., Singer Bobbins"
-                required
-              />
-            </div>
-          </div>
 
-          <div>
-            <Label htmlFor="description">Description</Label>
-            <Textarea
-              id="description"
-              value={formData.description}
-              onChange={(e) => handleInputChange("description", e.target.value)}
-              placeholder="Item description..."
-              rows={3}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Item Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter item name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="sku"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SKU</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter SKU" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe the item..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="category">Category *</Label>
-              <Input
-                id="category"
-                value={formData.category}
-                onChange={(e) => handleInputChange("category", e.target.value)}
-                placeholder="e.g., Bobbins, Needles, Parts"
-                required
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="category"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Category</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select category" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="parts">Parts</SelectItem>
+                        <SelectItem value="accessories">Accessories</SelectItem>
+                        <SelectItem value="tools">Tools</SelectItem>
+                        <SelectItem value="supplies">Supplies</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div>
-              <Label htmlFor="brand">Brand</Label>
-              <Input
-                id="brand"
-                value={formData.brand}
-                onChange={(e) => handleInputChange("brand", e.target.value)}
-                placeholder="e.g., Singer, Brother, Janome"
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="cost">Cost *</Label>
-              <Input
-                id="cost"
-                type="number"
-                step="0.01"
-                value={formData.cost}
-                onChange={(e) => handleInputChange("cost", e.target.value)}
-                placeholder="0.00"
-                required
+              <FormField
+                control={form.control}
+                name="supplier"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Supplier</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter supplier name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            
-            <div>
-              <Label htmlFor="price">Price *</Label>
-              <Input
-                id="price"
-                type="number"
-                step="0.01"
-                value={formData.price}
-                onChange={(e) => handleInputChange("price", e.target.value)}
-                placeholder="0.00"
-                required
-              />
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="quantity">Quantity *</Label>
-              <Input
-                id="quantity"
-                type="number"
-                value={formData.quantity}
-                onChange={(e) => handleInputChange("quantity", e.target.value)}
-                placeholder="0"
-                required
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="quantity"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Current Quantity</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </div>
-            
-            <div>
-              <Label htmlFor="minimumStock">Minimum Stock *</Label>
-              <Input
-                id="minimumStock"
-                type="number"
-                value={formData.minimumStock}
-                onChange={(e) => handleInputChange("minimumStock", e.target.value)}
-                placeholder="0"
-                required
-              />
-            </div>
-          </div>
 
-          <div>
-            <Label htmlFor="location">Location</Label>
-            <Input
-              id="location"
-              value={formData.location}
-              onChange={(e) => handleInputChange("location", e.target.value)}
-              placeholder="e.g., Shelf A-3, Storage Room"
+              <FormField
+                control={form.control}
+                name="minStockLevel"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Min Stock Level</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="0" placeholder="0" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="unitPrice"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Unit Price</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" min="0" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Storage Location</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter storage location" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              className="bg-primary-600 hover:bg-primary-700"
-              disabled={createInventoryMutation.isPending}
-            >
-              {createInventoryMutation.isPending 
-                ? (editingItem ? "Updating..." : "Creating...") 
-                : (editingItem ? "Update Item" : "Add Item")
-              }
-            </Button>
-          </div>
-        </form>
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="bg-primary-600 hover:bg-primary-700"
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {item ? "Update Item" : "Add Item"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

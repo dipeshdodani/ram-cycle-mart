@@ -1,235 +1,309 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertInvoiceSchema, type InsertInvoice } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import type { Customer, WorkOrder } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface InvoiceModalProps {
   isOpen: boolean;
   onClose: () => void;
+  invoice?: any;
 }
 
-export default function InvoiceModal({ isOpen, onClose }: InvoiceModalProps) {
+export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const [formData, setFormData] = useState({
-    customerId: "",
-    workOrderId: "",
-    subtotal: "",
-    taxRate: "8.75",
-    notes: "",
-    dueDate: "",
-  });
 
-  const { data: customers } = useQuery<Customer[]>({
+  const { data: customers } = useQuery({
     queryKey: ["/api/customers"],
   });
 
   const { data: workOrders } = useQuery({
     queryKey: ["/api/work-orders"],
-    queryFn: async () => {
-      const res = await fetch("/api/work-orders?status=completed");
-      return res.json();
+  });
+
+  const form = useForm<InsertInvoice>({
+    resolver: zodResolver(insertInvoiceSchema),
+    defaultValues: {
+      customerId: invoice?.customerId || "",
+      workOrderId: invoice?.workOrderId || "",
+      amount: invoice?.amount || "",
+      tax: invoice?.tax || "",
+      total: invoice?.total || "",
+      status: invoice?.status || "pending",
+      dueDate: invoice?.dueDate || "",
+      notes: invoice?.notes || "",
     },
   });
 
-  const createInvoiceMutation = useMutation({
-    mutationFn: async (data: any) => {
+  const createMutation = useMutation({
+    mutationFn: async (data: InsertInvoice) => {
       const res = await apiRequest("POST", "/api/invoices", data);
       return res.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Invoice created successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
-      handleClose();
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({
+        title: "Invoice created",
+        description: "Invoice has been successfully created.",
+      });
+      onClose();
+      form.reset();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to create invoice",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const subtotal = parseFloat(formData.subtotal);
-    const taxRate = parseFloat(formData.taxRate) / 100;
-    const taxAmount = subtotal * taxRate;
-    const total = subtotal + taxAmount;
+  const updateMutation = useMutation({
+    mutationFn: async (data: InsertInvoice) => {
+      const res = await apiRequest("PATCH", `/api/invoices/${invoice.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({
+        title: "Invoice updated",
+        description: "Invoice has been successfully updated.",
+      });
+      onClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-    const submitData = {
-      customerId: formData.customerId,
-      workOrderId: formData.workOrderId || undefined,
-      subtotal,
-      taxRate,
-      taxAmount,
-      total,
-      dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-      notes: formData.notes || undefined,
-    };
-
-    createInvoiceMutation.mutate(submitData);
+  const onSubmit = (data: InsertInvoice) => {
+    if (invoice) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
-  const handleClose = () => {
-    setFormData({
-      customerId: "",
-      workOrderId: "",
-      subtotal: "",
-      taxRate: "8.75",
-      notes: "",
-      dueDate: "",
-    });
-    onClose();
-  };
-
-  const subtotal = parseFloat(formData.subtotal) || 0;
-  const taxRate = parseFloat(formData.taxRate) / 100 || 0;
-  const taxAmount = subtotal * taxRate;
-  const total = subtotal + taxAmount;
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Invoice</DialogTitle>
+          <DialogTitle>
+            {invoice ? "Edit Invoice" : "Create New Invoice"}
+          </DialogTitle>
+          <DialogDescription>
+            {invoice ? "Update invoice details" : "Enter details to create a new invoice"}
+          </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customer">Customer *</Label>
-              <Select 
-                value={formData.customerId} 
-                onValueChange={(value) => setFormData({ ...formData, customerId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers?.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.firstName} {customer.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="workOrder">Work Order (Optional)</Label>
-              <Select 
-                value={formData.workOrderId} 
-                onValueChange={(value) => setFormData({ ...formData, workOrderId: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Work Order" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">None</SelectItem>
-                  {workOrders?.map((order: any) => (
-                    <SelectItem key={order.id} value={order.id}>
-                      {order.orderNumber} - {order.customer?.firstName} {order.customer?.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="subtotal">Subtotal *</Label>
-              <Input
-                id="subtotal"
-                type="number"
-                step="0.01"
-                value={formData.subtotal}
-                onChange={(e) => setFormData({ ...formData, subtotal: e.target.value })}
-                placeholder="0.00"
-                required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {customers?.map((customer: any) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.firstName} {customer.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="workOrderId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Work Order (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select work order" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {workOrders?.map((order: any) => (
+                          <SelectItem key={order.id} value={order.id}>
+                            {order.orderNumber} - {order.customer?.firstName} {order.customer?.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-            
-            <div>
-              <Label htmlFor="taxRate">Tax Rate (%)</Label>
-              <Input
-                id="taxRate"
-                type="number"
-                step="0.01"
-                value={formData.taxRate}
-                onChange={(e) => setFormData({ ...formData, taxRate: e.target.value })}
-                placeholder="8.75"
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <FormField
+                control={form.control}
+                name="amount"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Amount</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="tax"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Tax</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="total"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Total</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
-          </div>
 
-          <div>
-            <Label htmlFor="dueDate">Due Date</Label>
-            <Input
-              id="dueDate"
-              type="date"
-              value={formData.dueDate}
-              onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-            />
-          </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="sent">Sent</SelectItem>
+                        <SelectItem value="paid">Paid</SelectItem>
+                        <SelectItem value="overdue">Overdue</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes for the invoice..."
-              rows={3}
-            />
-          </div>
-
-          {/* Invoice Summary */}
-          {subtotal > 0 && (
-            <div className="bg-gray-50 p-4 rounded-lg space-y-2">
-              <div className="flex justify-between text-sm">
-                <span>Subtotal:</span>
-                <span>${subtotal.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span>Tax ({(taxRate * 100).toFixed(2)}%):</span>
-                <span>${taxAmount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-semibold text-lg border-t pt-2">
-                <span>Total:</span>
-                <span>${total.toFixed(2)}</span>
-              </div>
+              <FormField
+                control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Date</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
-          )}
 
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              className="bg-primary-600 hover:bg-primary-700"
-              disabled={createInvoiceMutation.isPending}
-            >
-              {createInvoiceMutation.isPending ? "Creating..." : "Create Invoice"}
-            </Button>
-          </div>
-        </form>
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Add any notes about this invoice..." 
+                      className="min-h-[100px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                disabled={isLoading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="bg-primary-600 hover:bg-primary-700"
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {invoice ? "Update Invoice" : "Create Invoice"}
+              </Button>
+            </div>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

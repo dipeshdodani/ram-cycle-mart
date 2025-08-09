@@ -24,8 +24,9 @@ export default function Customers() {
     },
   });
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
+  const formatDate = (date: string | Date) => {
+    const dateObj = typeof date === 'string' ? new Date(date) : date;
+    return dateObj.toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",

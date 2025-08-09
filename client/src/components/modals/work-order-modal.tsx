@@ -1,215 +1,325 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/hooks/use-toast";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { insertWorkOrderSchema, type InsertWorkOrder } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
-import type { Customer, SewingMachine } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Loader2 } from "lucide-react";
 
 interface WorkOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
+  workOrder?: any;
 }
 
-export default function WorkOrderModal({ isOpen, onClose }: WorkOrderModalProps) {
+export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrderModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  
-  const [formData, setFormData] = useState({
-    customerId: "",
-    machineId: "",
-    problemDescription: "",
-    priority: "normal" as const,
-    estimatedCost: "",
-    dueDate: "",
-  });
 
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
-
-  const { data: customers } = useQuery<Customer[]>({
+  const { data: customers } = useQuery({
     queryKey: ["/api/customers"],
   });
 
-  const { data: machines } = useQuery<SewingMachine[]>({
+  const { data: machines } = useQuery({
     queryKey: ["/api/sewing-machines"],
-    queryFn: () => 
-      selectedCustomerId 
-        ? fetch(`/api/sewing-machines?customerId=${selectedCustomerId}`).then(res => res.json())
-        : Promise.resolve([]),
-    enabled: !!selectedCustomerId,
   });
 
-  const createWorkOrderMutation = useMutation({
-    mutationFn: async (data: any) => {
+  const form = useForm<InsertWorkOrder>({
+    resolver: zodResolver(insertWorkOrderSchema),
+    defaultValues: {
+      customerId: workOrder?.customerId || "",
+      sewingMachineId: workOrder?.sewingMachineId || "",
+      description: workOrder?.description || "",
+      problemDescription: workOrder?.problemDescription || "",
+      priority: workOrder?.priority || "medium",
+      status: workOrder?.status || "pending",
+      estimatedCost: workOrder?.estimatedCost || "",
+      notes: workOrder?.notes || "",
+    },
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data: InsertWorkOrder) => {
       const res = await apiRequest("POST", "/api/work-orders", data);
       return res.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Work order created successfully",
-      });
       queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/activity"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
-      handleClose();
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({
+        title: "Work order created",
+        description: "Work order has been successfully created.",
+      });
+      onClose();
+      form.reset();
     },
-    onError: () => {
+    onError: (error: Error) => {
       toast({
         title: "Error",
-        description: "Failed to create work order",
+        description: error.message,
         variant: "destructive",
       });
     },
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const submitData = {
-      ...formData,
-      estimatedCost: formData.estimatedCost ? parseFloat(formData.estimatedCost) : undefined,
-      dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : undefined,
-    };
+  const updateMutation = useMutation({
+    mutationFn: async (data: InsertWorkOrder) => {
+      const res = await apiRequest("PATCH", `/api/work-orders/${workOrder.id}`, data);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      toast({
+        title: "Work order updated",
+        description: "Work order has been successfully updated.",
+      });
+      onClose();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
-    createWorkOrderMutation.mutate(submitData);
+  const onSubmit = (data: InsertWorkOrder) => {
+    if (workOrder) {
+      updateMutation.mutate(data);
+    } else {
+      createMutation.mutate(data);
+    }
   };
 
-  const handleClose = () => {
-    setFormData({
-      customerId: "",
-      machineId: "",
-      problemDescription: "",
-      priority: "normal",
-      estimatedCost: "",
-      dueDate: "",
-    });
-    setSelectedCustomerId("");
-    onClose();
-  };
-
-  const handleCustomerChange = (customerId: string) => {
-    setFormData({ ...formData, customerId, machineId: "" });
-    setSelectedCustomerId(customerId);
-  };
+  const isLoading = createMutation.isPending || updateMutation.isPending;
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
-      <DialogContent className="max-w-2xl">
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Create New Work Order</DialogTitle>
+          <DialogTitle>
+            {workOrder ? "Edit Work Order" : "Create New Work Order"}
+          </DialogTitle>
+          <DialogDescription>
+            {workOrder ? "Update work order details" : "Enter details to create a new work order"}
+          </DialogDescription>
         </DialogHeader>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="customer">Customer *</Label>
-              <Select value={formData.customerId} onValueChange={handleCustomerChange}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Customer" />
-                </SelectTrigger>
-                <SelectContent>
-                  {customers?.map((customer) => (
-                    <SelectItem key={customer.id} value={customer.id}>
-                      {customer.firstName} {customer.lastName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div>
-              <Label htmlFor="machine">Sewing Machine</Label>
-              <Select 
-                value={formData.machineId} 
-                onValueChange={(value) => setFormData({ ...formData, machineId: value })}
-                disabled={!selectedCustomerId}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Machine" />
-                </SelectTrigger>
-                <SelectContent>
-                  {machines?.map((machine) => (
-                    <SelectItem key={machine.id} value={machine.id}>
-                      {machine.brand} {machine.model}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
 
-          <div>
-            <Label htmlFor="problemDescription">Problem Description *</Label>
-            <Textarea
-              id="problemDescription"
-              value={formData.problemDescription}
-              onChange={(e) => setFormData({ ...formData, problemDescription: e.target.value })}
-              placeholder="Describe the issue with the sewing machine..."
-              rows={3}
-              required
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="customerId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select customer" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {customers?.map((customer: any) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.firstName} {customer.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="sewingMachineId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Sewing Machine (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select machine" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {machines?.map((machine: any) => (
+                          <SelectItem key={machine.id} value={machine.id}>
+                            {machine.brand} {machine.model} ({machine.serialNumber})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="priority"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Priority</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select priority" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="low">Low</SelectItem>
+                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="high">High</SelectItem>
+                        <SelectItem value="urgent">Urgent</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="status"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Status</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select status" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="pending">Pending</SelectItem>
+                        <SelectItem value="in_progress">In Progress</SelectItem>
+                        <SelectItem value="completed">Completed</SelectItem>
+                        <SelectItem value="on_hold">On Hold</SelectItem>
+                        <SelectItem value="cancelled">Cancelled</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name="estimatedCost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Estimated Cost</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
             />
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <Label htmlFor="priority">Priority</Label>
-              <Select 
-                value={formData.priority} 
-                onValueChange={(value) => setFormData({ ...formData, priority: value as any })}
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Service Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe the service or repair needed..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="problemDescription"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Problem Description</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Describe the problem reported by the customer..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="notes"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Internal Notes (Optional)</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="Add any internal notes..." 
+                      className="min-h-[80px]"
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="flex justify-end space-x-2 pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={onClose}
+                disabled={isLoading}
               >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="low">Low</SelectItem>
-                  <SelectItem value="normal">Normal</SelectItem>
-                  <SelectItem value="high">High</SelectItem>
-                  <SelectItem value="urgent">Urgent</SelectItem>
-                </SelectContent>
-              </Select>
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={isLoading}
+                className="bg-primary-600 hover:bg-primary-700"
+              >
+                {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {workOrder ? "Update Work Order" : "Create Work Order"}
+              </Button>
             </div>
-            
-            <div>
-              <Label htmlFor="estimatedCost">Estimated Cost</Label>
-              <Input
-                id="estimatedCost"
-                type="number"
-                step="0.01"
-                value={formData.estimatedCost}
-                onChange={(e) => setFormData({ ...formData, estimatedCost: e.target.value })}
-                placeholder="0.00"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={formData.dueDate}
-                onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-end space-x-3 pt-4">
-            <Button type="button" variant="outline" onClick={handleClose}>
-              Cancel
-            </Button>
-            <Button 
-              type="submit" 
-              className="bg-primary-600 hover:bg-primary-700"
-              disabled={createWorkOrderMutation.isPending}
-            >
-              {createWorkOrderMutation.isPending ? "Creating..." : "Create Work Order"}
-            </Button>
-          </div>
-        </form>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

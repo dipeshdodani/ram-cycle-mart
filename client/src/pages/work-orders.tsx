@@ -104,13 +104,13 @@ export default function WorkOrders() {
                 <div className="min-w-[200px]">
                   <Select 
                     value={filters.status || ""} 
-                    onValueChange={(value) => setFilters({ ...filters, status: value || undefined })}
+                    onValueChange={(value) => setFilters({ ...filters, status: value === "all" ? undefined : value })}
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="All Statuses" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Statuses</SelectItem>
+                      <SelectItem value="all">All Statuses</SelectItem>
                       <SelectItem value="pending">Pending</SelectItem>
                       <SelectItem value="in_progress">In Progress</SelectItem>
                       <SelectItem value="completed">Completed</SelectItem>
