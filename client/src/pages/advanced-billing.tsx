@@ -126,7 +126,7 @@ export default function AdvancedBilling() {
       queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       
       // Save item descriptions for future use
-      const itemDescriptions = billData.items.map(item => item.description).filter(desc => desc.trim() !== '');
+      const itemDescriptions = bill.items.map((item: BillItem) => item.description).filter((desc: string) => desc.trim() !== '');
       const uniqueItems = Array.from(new Set([...savedItems, ...itemDescriptions]));
       setSavedItems(uniqueItems);
       localStorage.setItem('ramCycleMart_savedItems', JSON.stringify(uniqueItems));
@@ -214,7 +214,7 @@ export default function AdvancedBilling() {
   };
 
   const selectCustomer = (customerId: string) => {
-    const customer = customers?.find((c: any) => c.id === customerId);
+    const customer = Array.isArray(customers) ? customers.find((c: any) => c.id === customerId) : null;
     if (customer) {
       setBill(prev => ({
         ...prev,
@@ -412,7 +412,7 @@ export default function AdvancedBilling() {
                         <SelectValue placeholder="Choose existing customer (optional)" />
                       </SelectTrigger>
                       <SelectContent>
-                        {customers?.map((customer: any) => (
+                        {Array.isArray(customers) && customers?.map((customer: any) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.firstName} {customer.lastName}
                           </SelectItem>
