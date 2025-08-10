@@ -225,7 +225,7 @@ export default function WorkOrders() {
                           setIsModalOpen(true);
                         }}
                       >
-                        Update Status
+                        Edit Work Order
                       </Button>
                     </div>
                   </CardContent>
