@@ -227,98 +227,111 @@ export default function AdvancedBilling() {
   };
 
   const generatePDF = async (billData: any) => {
-    // Dynamic import for PDF generation
-    const jsPDF = (await import('jspdf')).default;
-    
-    const pdf = new jsPDF();
-    const pageWidth = pdf.internal.pageSize.width;
-    
-    // Header
-    pdf.setFontSize(24);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Ram Cycle Mart", pageWidth / 2, 30, { align: "center" });
-    
-    pdf.setFontSize(12);
-    pdf.setFont("helvetica", "normal");
-    pdf.text("Cycle Service & Repair", pageWidth / 2, 40, { align: "center" });
-    pdf.text("Phone: +91 98765 43210 | Email: info@ramcyclemart.com", pageWidth / 2, 50, { align: "center" });
-    
-    // Bill Details
-    pdf.setFontSize(16);
-    pdf.setFont("helvetica", "bold");
-    pdf.text("BILL/INVOICE", 20, 80);
-    
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "normal");
-    pdf.text(`Bill No: ${billData.invoiceNumber || 'BILL-' + Date.now()}`, 20, 95);
-    pdf.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 20, 105);
-    
-    // Customer Details
-    pdf.text("Bill To:", 120, 95);
-    pdf.text(`${bill.customerName}`, 120, 105);
-    if (bill.customerPhone) pdf.text(`Phone: ${bill.customerPhone}`, 120, 115);
-    if (bill.customerEmail) pdf.text(`Email: ${bill.customerEmail}`, 120, 125);
-    
-    // Items Table
-    let yPos = 145;
-    pdf.setFontSize(10);
-    pdf.setFont("helvetica", "bold");
-    
-    // Table headers
-    pdf.text("Description", 20, yPos);
-    pdf.text("Qty", 120, yPos);
-    pdf.text("Rate", 140, yPos);
-    pdf.text("Amount", 170, yPos);
-    
-    pdf.line(20, yPos + 3, 190, yPos + 3);
-    yPos += 15;
-    
-    pdf.setFont("helvetica", "normal");
-    
-    // Items
-    bill.items.forEach((item) => {
-      pdf.text(item.description, 20, yPos);
-      pdf.text(item.quantity.toString(), 120, yPos);
-      pdf.text(formatCurrency(item.unitPrice), 140, yPos);
-      pdf.text(formatCurrency(item.total), 170, yPos);
-      yPos += 10;
-    });
-    
-    // Totals
-    yPos += 10;
-    pdf.line(20, yPos, 190, yPos);
-    yPos += 15;
-    
-    pdf.text("Subtotal:", 140, yPos);
-    pdf.text(formatCurrency(bill.subtotal), 170, yPos);
-    yPos += 10;
-    
-    if (bill.discount > 0) {
-      pdf.text(`Discount (${bill.discount}%):`, 140, yPos);
-      pdf.text(`-${formatCurrency(bill.subtotal * bill.discount / 100)}`, 170, yPos);
-      yPos += 10;
-    }
-    
-
-    
-    pdf.setFont("helvetica", "bold");
-    pdf.text("Total:", 140, yPos);
-    pdf.text(formatCurrency(bill.total), 170, yPos);
-    
-    // Notes
-    if (bill.notes) {
-      yPos += 20;
+    try {
+      // Dynamic import for PDF generation
+      const jsPDF = (await import('jspdf')).default;
+      
+      const pdf = new jsPDF();
+      const pageWidth = pdf.internal.pageSize.width;
+      
+      // Header
+      pdf.setFontSize(24);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Ram Cycle Mart", pageWidth / 2, 30, { align: "center" });
+      
+      pdf.setFontSize(12);
       pdf.setFont("helvetica", "normal");
-      pdf.text("Notes:", 20, yPos);
-      pdf.text(bill.notes, 20, yPos + 10);
+      pdf.text("Cycle Service & Repair", pageWidth / 2, 40, { align: "center" });
+      pdf.text("Phone: +91 98765 43210 | Email: info@ramcyclemart.com", pageWidth / 2, 50, { align: "center" });
+      
+      // Bill Details
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.text("BILL/INVOICE", 20, 80);
+      
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Bill No: ${billData.invoiceNumber || 'BILL-' + Date.now()}`, 20, 95);
+      pdf.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 20, 105);
+      
+      // Customer Details
+      pdf.text("Bill To:", 120, 95);
+      pdf.text(`${bill.customerName}`, 120, 105);
+      if (bill.customerPhone) pdf.text(`Phone: ${bill.customerPhone}`, 120, 115);
+      if (bill.customerEmail) pdf.text(`Email: ${bill.customerEmail}`, 120, 125);
+      
+      // Items Table
+      let yPos = 145;
+      pdf.setFontSize(10);
+      pdf.setFont("helvetica", "bold");
+      
+      // Table headers
+      pdf.text("Description", 20, yPos);
+      pdf.text("Qty", 120, yPos);
+      pdf.text("Rate", 140, yPos);
+      pdf.text("Amount", 170, yPos);
+      
+      pdf.line(20, yPos + 3, 190, yPos + 3);
+      yPos += 15;
+      
+      pdf.setFont("helvetica", "normal");
+      
+      // Items
+      bill.items.forEach((item) => {
+        pdf.text(item.description, 20, yPos);
+        pdf.text(item.quantity.toString(), 120, yPos);
+        pdf.text(formatCurrency(item.unitPrice), 140, yPos);
+        pdf.text(formatCurrency(item.total), 170, yPos);
+        yPos += 10;
+      });
+      
+      // Totals
+      yPos += 10;
+      pdf.line(20, yPos, 190, yPos);
+      yPos += 15;
+      
+      pdf.text("Subtotal:", 140, yPos);
+      pdf.text(formatCurrency(bill.subtotal), 170, yPos);
+      yPos += 10;
+      
+      if (bill.discount > 0) {
+        pdf.text(`Discount (${bill.discount}%):`, 140, yPos);
+        pdf.text(`-${formatCurrency(bill.subtotal * bill.discount / 100)}`, 170, yPos);
+        yPos += 10;
+      }
+      
+      pdf.setFont("helvetica", "bold");
+      pdf.text("Total:", 140, yPos);
+      pdf.text(formatCurrency(bill.total), 170, yPos);
+      
+      // Notes
+      if (bill.notes) {
+        yPos += 20;
+        pdf.setFont("helvetica", "normal");
+        pdf.text("Notes:", 20, yPos);
+        pdf.text(bill.notes, 20, yPos + 10);
+      }
+      
+      // Footer
+      pdf.setFontSize(8);
+      pdf.text("Thank you for your business!", pageWidth / 2, 280, { align: "center" });
+      
+      // Download PDF
+      pdf.save(`Bill-${billData.invoiceNumber || Date.now()}.pdf`);
+      
+      toast({
+        title: "PDF Generated",
+        description: "Bill PDF has been downloaded successfully.",
+      });
+      
+    } catch (error) {
+      console.error('PDF Generation Error:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "There was an error generating the PDF. Please try again.",
+        variant: "destructive",
+      });
     }
-    
-    // Footer
-    pdf.setFontSize(8);
-    pdf.text("Thank you for your business!", pageWidth / 2, 280, { align: "center" });
-    
-    // Download PDF
-    pdf.save(`Bill-${billData.invoiceNumber || Date.now()}.pdf`);
   };
 
   return (
