@@ -175,7 +175,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                   return (
                     <FormItem>
                       <FormLabel>Customer</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Select customer" />
@@ -208,7 +208,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Inventory Item (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select inventory item" />
@@ -235,7 +235,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Priority</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select priority" />
@@ -259,7 +259,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select onValueChange={field.onChange} value={field.value}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -277,39 +277,62 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                   </FormItem>
                 )}
               />
+
+              <FormField
+                control={form.control}
+                name="assignedTechnicianId"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Assigned Technician (Optional)</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select technician" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {technicians?.map((technician: any) => (
+                          <SelectItem key={technician.id} value={technician.id}>
+                            {technician.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            <FormField
-              control={form.control}
-              name="estimatedCost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estimated Cost</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" placeholder="0.00" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="estimatedCost"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estimated Cost (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Service Description</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Describe the service or repair needed..." 
-                      className="min-h-[80px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+              <FormField
+                control={form.control}
+                name="dueDate"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Due Date (Optional)</FormLabel>
+                    <FormControl>
+                      <Input type="date" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormField
               control={form.control}
@@ -320,24 +343,6 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                   <FormControl>
                     <Textarea 
                       placeholder="Describe the problem reported by the customer..." 
-                      className="min-h-[80px]"
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="notes"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Internal Notes (Optional)</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Add any internal notes..." 
                       className="min-h-[80px]"
                       {...field} 
                     />
