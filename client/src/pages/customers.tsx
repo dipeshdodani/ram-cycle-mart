@@ -1,17 +1,26 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Phone, Mail, MapPin } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Search, Plus, Phone, Mail, MapPin, Trash2, History, Edit } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
+import { formatCurrency } from "@/lib/currency";
 import CustomerModal from "@/components/modals/customer-modal";
 import type { Customer } from "@shared/schema";
 
 export default function Customers() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
+  const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [showHistory, setShowHistory] = useState(false);
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: customers, isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers", searchTerm],
@@ -21,6 +30,37 @@ export default function Customers() {
         : "/api/customers";
       const res = await fetch(url);
       return res.json();
+    },
+  });
+
+  const { data: customerHistory } = useQuery({
+    queryKey: ["/api/invoices", selectedCustomer?.id],
+    queryFn: async () => {
+      if (!selectedCustomer?.id) return [];
+      const res = await fetch(`/api/invoices?customerId=${selectedCustomer.id}`);
+      return res.json();
+    },
+    enabled: !!selectedCustomer?.id,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (customerId: string) => {
+      const res = await apiRequest("DELETE", `/api/customers/${customerId}`);
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      toast({
+        title: "Customer deleted",
+        description: "Customer has been successfully deleted.",
+      });
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
@@ -140,11 +180,39 @@ export default function Customers() {
                     </div>
 
                     <div className="mt-4 flex space-x-2">
-                      <Button size="sm" variant="outline" className="flex-1">
-                        View Details
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex-1"
+                        onClick={() => {
+                          setSelectedCustomer(customer);
+                          setShowHistory(true);
+                        }}
+                      >
+                        <History className="h-3 w-3 mr-1" />
+                        History
                       </Button>
-                      <Button size="sm" className="flex-1 bg-primary-600 hover:bg-primary-700">
-                        New Order
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          setEditingCustomer(customer);
+                          setIsModalOpen(true);
+                        }}
+                      >
+                        <Edit className="h-3 w-3" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this customer?')) {
+                            deleteMutation.mutate(customer.id);
+                          }
+                        }}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </CardContent>
@@ -172,8 +240,86 @@ export default function Customers() {
 
       <CustomerModal 
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingCustomer(null);
+        }}
+        customer={editingCustomer}
       />
+
+      {/* Customer History Modal */}
+      <Dialog open={showHistory} onOpenChange={setShowHistory}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>
+              Purchase History - {selectedCustomer?.firstName} {selectedCustomer?.lastName}
+            </DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {customerHistory && customerHistory.length > 0 ? (
+              <div className="space-y-3">
+                {customerHistory.map((invoice: any) => (
+                  <Card key={invoice.id} className="border">
+                    <CardContent className="p-4">
+                      <div className="flex justify-between items-start">
+                        <div className="space-y-1">
+                          <div className="flex items-center space-x-2">
+                            <Badge variant="outline">
+                              {invoice.invoiceNumber}
+                            </Badge>
+                            <Badge 
+                              variant={invoice.paymentStatus === 'paid' ? 'default' : 'secondary'}
+                              className={invoice.paymentStatus === 'paid' ? 'bg-green-100 text-green-800' : ''}
+                            >
+                              {invoice.paymentStatus}
+                            </Badge>
+                          </div>
+                          <p className="text-sm text-gray-600">
+                            {formatDate(invoice.createdAt)}
+                          </p>
+                          {invoice.notes && (
+                            <p className="text-sm text-gray-500 mt-2">
+                              {invoice.notes}
+                            </p>
+                          )}
+                        </div>
+                        <div className="text-right">
+                          <p className="text-lg font-semibold text-green-600">
+                            {formatCurrency(Number(invoice.total))}
+                          </p>
+                          {invoice.taxAmount > 0 && (
+                            <p className="text-xs text-gray-500">
+                              Tax: {formatCurrency(Number(invoice.taxAmount))}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+                
+                <div className="pt-4 border-t">
+                  <div className="flex justify-between items-center">
+                    <span className="font-medium">Total Purchase Value:</span>
+                    <span className="text-lg font-bold text-green-600">
+                      {formatCurrency(
+                        customerHistory.reduce((sum: number, invoice: any) => 
+                          sum + Number(invoice.total), 0
+                        )
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">No purchase history found for this customer.</p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

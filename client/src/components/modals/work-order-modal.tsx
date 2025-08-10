@@ -170,26 +170,36 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
               <FormField
                 control={form.control}
                 name="customerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select customer" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {customers?.map((customer: any) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.firstName} {customer.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const selectedCustomer = customers?.find((c: any) => c.id === field.value);
+                  return (
+                    <FormItem>
+                      <FormLabel>Customer</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select customer" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {customers?.map((customer: any) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.firstName} {customer.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {selectedCustomer && (
+                        <div className="mt-2 p-2 bg-blue-50 dark:bg-blue-900/20 rounded text-sm">
+                          <p className="font-medium">{selectedCustomer.firstName} {selectedCustomer.lastName}</p>
+                          {selectedCustomer.phone && <p className="text-blue-700 dark:text-blue-300">📞 {selectedCustomer.phone}</p>}
+                          {selectedCustomer.email && <p className="text-blue-700 dark:text-blue-300">✉️ {selectedCustomer.email}</p>}
+                        </div>
+                      )}
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               <FormField

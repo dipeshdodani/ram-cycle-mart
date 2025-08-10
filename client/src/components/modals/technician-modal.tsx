@@ -4,6 +4,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
+import { useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -38,16 +39,43 @@ export default function TechnicianModal({ isOpen, onClose, technician }: Technic
   const form = useForm<InsertUser>({
     resolver: zodResolver(insertUserSchema),
     defaultValues: {
-      username: technician?.username || "",
-      firstName: technician?.firstName || "",
-      lastName: technician?.lastName || "",
-      email: technician?.email || "",
-      phone: technician?.phone || "",
-      role: technician?.role || "technician",
-      isActive: technician?.isActive !== undefined ? technician.isActive : true,
-      password: "", // Only required for new technicians
+      username: "",
+      firstName: "",
+      lastName: "",
+      email: "",
+      phone: "",
+      role: "technician",
+      isActive: true,
+      password: "",
     },
   });
+
+  // Reset form when technician prop changes
+  useEffect(() => {
+    if (technician) {
+      form.reset({
+        username: technician.username || "",
+        firstName: technician.firstName || "",
+        lastName: technician.lastName || "",
+        email: technician.email || "",
+        phone: technician.phone || "",
+        role: technician.role || "technician",
+        isActive: technician.isActive !== undefined ? technician.isActive : true,
+        password: "", // Don't pre-fill password for edits
+      });
+    } else {
+      form.reset({
+        username: "",
+        firstName: "",
+        lastName: "",
+        email: "",
+        phone: "",
+        role: "technician",
+        isActive: true,
+        password: "",
+      });
+    }
+  }, [technician, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertUser) => {

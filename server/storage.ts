@@ -373,6 +373,7 @@ export class DatabaseStorage implements IStorage {
         total: invoices.total,
         paymentStatus: invoices.paymentStatus,
         dueDate: invoices.dueDate,
+        notes: invoices.notes,
         createdAt: invoices.createdAt,
         customer: {
           id: customers.id,
