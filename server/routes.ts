@@ -138,7 +138,35 @@ export function registerRoutes(app: Express): Server {
       const workOrder = await storage.updateWorkOrder(req.params.id, validatedData);
       res.json(workOrder);
     } catch (error) {
-      res.status(400).json({ message: "Failed to update work order" });
+      console.error("Work order update error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid work order data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to update work order" });
+      }
+    }
+  });
+
+  app.patch("/api/work-orders/:id", async (req, res) => {
+    try {
+      console.log("PATCH work order with data:", req.body);
+      const validatedData = insertWorkOrderSchema.partial().parse(req.body);
+      console.log("Validated data:", validatedData);
+      const workOrder = await storage.updateWorkOrder(req.params.id, validatedData);
+      res.json(workOrder);
+    } catch (error) {
+      console.error("Work order update error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid work order data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to update work order" });
+      }
     }
   });
 
