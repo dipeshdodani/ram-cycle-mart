@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertWorkOrderSchema, insertSewingMachineSchema, type InsertWorkOrder, type InsertSewingMachine } from "@shared/schema";
+import { insertWorkOrderSchema, type InsertWorkOrder } from "@shared/schema";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -35,22 +35,13 @@ interface WorkOrderModalProps {
 export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrderModalProps) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [showMachineForm, setShowMachineForm] = useState(false);
-  const [newMachineData, setNewMachineData] = useState<InsertSewingMachine>({
-    customerId: "",
-    brand: "",
-    model: "",
-    serialNumber: "",
-    purchaseDate: "",
-    warrantyExpiry: "",
-  });
 
   const { data: customers } = useQuery({
     queryKey: ["/api/customers"],
   });
 
   const { data: machines } = useQuery({
-    queryKey: ["/api/sewing-machines"],
+    queryKey: ["/api/inventory"],
   });
 
   const { data: technicians } = useQuery({
@@ -151,71 +142,12 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     },
   });
 
-  const createMachineMutation = useMutation({
-    mutationFn: async (data: InsertSewingMachine) => {
-      const res = await apiRequest("POST", "/api/sewing-machines", data);
-      return res.json();
-    },
-    onSuccess: (newMachine) => {
-      queryClient.invalidateQueries({ queryKey: ["/api/sewing-machines"] });
-      form.setValue("machineId", newMachine.id);
-      setShowMachineForm(false);
-      setNewMachineData({
-        customerId: "",
-        brand: "",
-        model: "",
-        serialNumber: "",
-        purchaseDate: "",
-        warrantyExpiry: "",
-      });
-      toast({
-        title: "Machine created",
-        description: "New sewing machine has been added and selected.",
-      });
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
   const onSubmit = (data: InsertWorkOrder) => {
     if (workOrder) {
       updateMutation.mutate(data);
     } else {
       createMutation.mutate(data);
     }
-  };
-
-  const handleCreateMachine = () => {
-    const selectedCustomerId = form.getValues("customerId");
-    if (!selectedCustomerId) {
-      toast({
-        title: "Select customer first",
-        description: "Please select a customer before creating a machine.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    setNewMachineData(prev => ({ ...prev, customerId: selectedCustomerId }));
-    setShowMachineForm(true);
-  };
-
-  const handleSaveMachine = () => {
-    if (!newMachineData.brand || !newMachineData.model || !newMachineData.serialNumber) {
-      toast({
-        title: "Missing information",
-        description: "Please fill in brand, model, and serial number.",
-        variant: "destructive",
-      });
-      return;
-    }
-    
-    createMachineMutation.mutate(newMachineData);
   };
 
   const isLoading = createMutation.isPending || updateMutation.isPending;
@@ -272,20 +204,20 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
 
               <FormField
                 control={form.control}
-                name="sewingMachineId"
+                name="machineId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Sewing Machine (Optional)</FormLabel>
+                    <FormLabel>Inventory Item (Optional)</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select machine" />
+                          <SelectValue placeholder="Select inventory item" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {machines?.map((machine: any) => (
-                          <SelectItem key={machine.id} value={machine.id}>
-                            {machine.brand} {machine.model} ({machine.serialNumber})
+                        {machines?.map((item: any) => (
+                          <SelectItem key={item.id} value={item.id}>
+                            {item.name} - {item.category} (Stock: {item.quantity})
                           </SelectItem>
                         ))}
                       </SelectContent>
