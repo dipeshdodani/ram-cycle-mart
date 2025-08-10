@@ -226,6 +226,7 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
+  customerId: z.string().optional().nullable(),
   invoiceNumber: z.string(),
   dueDate: z.string().transform(val => new Date(val))
 });
