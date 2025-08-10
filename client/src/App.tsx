@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/hooks/use-theme";
 import { ProtectedRoute } from "./lib/protected-route";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
@@ -14,6 +15,7 @@ import Billing from "@/pages/billing";
 import Inventory from "@/pages/inventory";
 import Reports from "@/pages/reports";
 import Technicians from "@/pages/technicians";
+import AdvancedBilling from "@/pages/advanced-billing";
 
 function Router() {
   return (
@@ -23,6 +25,7 @@ function Router() {
       <ProtectedRoute path="/work-orders" component={WorkOrders} />
       <ProtectedRoute path="/technicians" component={Technicians} />
       <ProtectedRoute path="/billing" component={Billing} />
+      <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />
       <ProtectedRoute path="/inventory" component={Inventory} />
       <ProtectedRoute path="/reports" component={Reports} />
       <Route path="/auth" component={AuthPage} />
@@ -34,12 +37,14 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Router />
-        </TooltipProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Router />
+          </TooltipProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

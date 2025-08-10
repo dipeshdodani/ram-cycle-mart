@@ -24,7 +24,7 @@
   --ring: hsl(221.2 83.2% 53.3%);
   --radius: 0.5rem;
   
-  /* Custom SewCraft Pro Colors */
+  /* Custom Ram Cycle Mart Colors */
   --primary-50: hsl(213 100% 97%);
   --primary-100: hsl(214 95% 93%);
   --primary-200: hsl(213 97% 87%);
@@ -52,127 +52,53 @@
 }
 
 .dark {
-  --background: hsl(0 0% 0%);
-  --foreground: hsl(200 6.6667% 91.1765%);
-  --card: hsl(228 9.8039% 10%);
-  --card-foreground: hsl(0 0% 85.0980%);
-  --popover: hsl(0 0% 0%);
-  --popover-foreground: hsl(200 6.6667% 91.1765%);
-  --primary: hsl(203.7736 87.6033% 52.5490%);
-  --primary-foreground: hsl(0 0% 100%);
-  --secondary: hsl(195.0000 15.3846% 94.9020%);
-  --secondary-foreground: hsl(210 25% 7.8431%);
-  --muted: hsl(0 0% 9.4118%);
-  --muted-foreground: hsl(210 3.3898% 46.2745%);
-  --accent: hsl(205.7143 70% 7.8431%);
-  --accent-foreground: hsl(203.7736 87.6033% 52.5490%);
-  --destructive: hsl(356.3033 90.5579% 54.3137%);
-  --destructive-foreground: hsl(0 0% 100%);
-  --border: hsl(210 5.2632% 14.9020%);
-  --input: hsl(207.6923 27.6596% 18.4314%);
-  --ring: hsl(202.8169 89.1213% 53.1373%);
-  --chart-1: hsl(203.8863 88.2845% 53.1373%);
-  --chart-2: hsl(159.7826 100% 36.0784%);
-  --chart-3: hsl(42.0290 92.8251% 56.2745%);
-  --chart-4: hsl(147.1429 78.5047% 41.9608%);
-  --chart-5: hsl(341.4894 75.2000% 50.9804%);
-  --sidebar: hsl(228 9.8039% 10%);
-  --sidebar-foreground: hsl(0 0% 85.0980%);
-  --sidebar-primary: hsl(202.8169 89.1213% 53.1373%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(205.7143 70% 7.8431%);
-  --sidebar-accent-foreground: hsl(203.7736 87.6033% 52.5490%);
-  --sidebar-border: hsl(205.7143 15.7895% 26.0784%);
-  --sidebar-ring: hsl(202.8169 89.1213% 53.1373%);
-  --font-sans: Open Sans, sans-serif;
-  --font-serif: Georgia, serif;
-  --font-mono: Menlo, monospace;
-  --radius: 1.3rem;
-  --shadow-2xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xs: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-sm: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 1px 2px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-md: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 2px 4px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-lg: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 4px 6px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00), 0px 8px 10px -1px hsl(202.8169 89.1213% 53.1373% / 0.00);
-  --shadow-2xl: 0px 2px 0px 0px hsl(202.8169 89.1213% 53.1373% / 0.00);
+  --background: hsl(222.2 84% 4.9%);
+  --foreground: hsl(210 40% 98%);
+  --card: hsl(222.2 84% 4.9%);
+  --card-foreground: hsl(210 40% 98%);
+  --popover: hsl(222.2 84% 4.9%);
+  --popover-foreground: hsl(210 40% 98%);
+  --primary: hsl(217 91% 60%);
+  --primary-foreground: hsl(222.2 84% 4.9%);
+  --secondary: hsl(217 32.6% 17.5%);
+  --secondary-foreground: hsl(210 40% 98%);
+  --muted: hsl(217 32.6% 17.5%);
+  --muted-foreground: hsl(215 20.2% 65.1%);
+  --accent: hsl(217 32.6% 17.5%);
+  --accent-foreground: hsl(210 40% 98%);
+  --destructive: hsl(0 62.8% 30.6%);
+  --destructive-foreground: hsl(210 40% 98%);
+  --border: hsl(217 32.6% 17.5%);
+  --input: hsl(217 32.6% 17.5%);
+  --ring: hsl(224.3 76.3% 94.1%);
 }
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-
-  body {
-    @apply font-sans antialiased bg-background text-foreground;
-  }
+/* Additional body styles for dark mode */
+body {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  background-color: hsl(var(--background));
+  color: hsl(var(--foreground));
 }
 
-/* Gujarati font support */
-.font-gujarati {
-  font-family: "Noto Sans Gujarati", "Shruti", "Gujarati MT", Arial, sans-serif;
+/* Ensure smooth transitions for theme switching */
+* {
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease;
 }
 
-@layer components {
-  /* Custom button styles for better visibility */
-  .btn-primary {
-    @apply bg-primary hover:bg-primary/90 text-primary-foreground font-medium px-4 py-2 rounded-md transition-colors;
-  }
-  
-  .btn-secondary {
-    @apply bg-secondary hover:bg-secondary/80 text-secondary-foreground font-medium px-4 py-2 rounded-md border border-input transition-colors;
-  }
-  
-  .btn-outline {
-    @apply border border-input bg-background hover:bg-accent hover:text-accent-foreground font-medium px-4 py-2 rounded-md transition-colors;
-  }
-  
-  /* Custom primary color classes */
-  .bg-primary-50 { background-color: hsl(var(--primary-50)); }
-  .bg-primary-100 { background-color: hsl(var(--primary-100)); }
-  .bg-primary-200 { background-color: hsl(var(--primary-200)); }
-  .bg-primary-300 { background-color: hsl(var(--primary-300)); }
-  .bg-primary-400 { background-color: hsl(var(--primary-400)); }
-  .bg-primary-500 { background-color: hsl(var(--primary-500)); }
-  .bg-primary-600 { background-color: hsl(var(--primary-600)); }
-  .bg-primary-700 { background-color: hsl(var(--primary-700)); }
-  .bg-primary-800 { background-color: hsl(var(--primary-800)); }
-  .bg-primary-900 { background-color: hsl(var(--primary-900)); }
-  
-  .text-primary-50 { color: hsl(var(--primary-50)); }
-  .text-primary-100 { color: hsl(var(--primary-100)); }
-  .text-primary-200 { color: hsl(var(--primary-200)); }
-  .text-primary-300 { color: hsl(var(--primary-300)); }
-  .text-primary-400 { color: hsl(var(--primary-400)); }
-  .text-primary-500 { color: hsl(var(--primary-500)); }
-  .text-primary-600 { color: hsl(var(--primary-600)); }
-  .text-primary-700 { color: hsl(var(--primary-700)); }
-  .text-primary-800 { color: hsl(var(--primary-800)); }
-  .text-primary-900 { color: hsl(var(--primary-900)); }
-  
-  .hover\\:bg-primary-700:hover { background-color: hsl(var(--primary-700)); }
-  .hover\\:bg-primary-800:hover { background-color: hsl(var(--primary-800)); }
-  
-  /* Gray scale utilities */
-  .bg-gray-50 { background-color: hsl(var(--gray-50)); }
-  .bg-gray-100 { background-color: hsl(var(--gray-100)); }
-  .bg-gray-200 { background-color: hsl(var(--gray-200)); }
-  .bg-gray-300 { background-color: hsl(var(--gray-300)); }
-  .bg-gray-400 { background-color: hsl(var(--gray-400)); }
-  .bg-gray-500 { background-color: hsl(var(--gray-500)); }
-  .bg-gray-600 { background-color: hsl(var(--gray-600)); }
-  .bg-gray-700 { background-color: hsl(var(--gray-700)); }
-  .bg-gray-800 { background-color: hsl(var(--gray-800)); }
-  .bg-gray-900 { background-color: hsl(var(--gray-900)); }
-  
-  .text-gray-50 { color: hsl(var(--gray-50)); }
-  .text-gray-100 { color: hsl(var(--gray-100)); }
-  .text-gray-200 { color: hsl(var(--gray-200)); }
-  .text-gray-300 { color: hsl(var(--gray-300)); }
-  .text-gray-400 { color: hsl(var(--gray-400)); }
-  .text-gray-500 { color: hsl(var(--gray-500)); }
-  .text-gray-600 { color: hsl(var(--gray-600)); }
-  .text-gray-700 { color: hsl(var(--gray-700)); }
-  .text-gray-800 { color: hsl(var(--gray-800)); }
-  .text-gray-900 { color: hsl(var(--gray-900)); }
+/* Custom scrollbar for dark mode */
+.dark ::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark ::-webkit-scrollbar-track {
+  background: hsl(217 32.6% 17.5%);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: hsl(215 20.2% 65.1%);
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: hsl(217 91% 60%);
 }

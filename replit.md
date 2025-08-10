@@ -2,7 +2,17 @@
 
 ## Overview
 
-SewCraft Pro is a comprehensive sewing machine shop management system built with a modern full-stack architecture. The application provides complete business management functionality including customer management, work order tracking, inventory control, billing/invoicing, and reporting capabilities. It's designed specifically for sewing machine repair shops to streamline their operations and improve customer service.
+Ram Cycle Mart is a comprehensive cycle service and repair shop management system built with a modern full-stack architecture. The application provides complete business management functionality including customer management, work order tracking, inventory control, billing/invoicing, advanced billing with PDF generation, and reporting capabilities. It's designed specifically for cycle repair shops to streamline their operations and improve customer service.
+
+## Recent Changes
+
+**January 2025 Updates:**
+- **Rebranded to "Ram Cycle Mart"**: Changed from SewCraft Pro to Ram Cycle Mart with custom cycle wheel logo
+- **Implemented Dark Theme**: Added complete dark/light theme system with theme toggle in navbar
+- **Advanced Billing System**: Created comprehensive billing module with custom items, descriptions, and PDF generation
+- **Enhanced UI Visibility**: Fixed button visibility issues with improved contrast in both light and dark modes
+- **INR Currency Support**: Full conversion from USD to INR with Indian locale formatting and 18% GST
+- **Gujarati Transliteration**: Maintained existing transliteration system for customer information
 
 ## User Preferences
 
@@ -18,6 +28,8 @@ Preferred communication style: Simple, everyday language.
 - **State Management**: TanStack Query for server state management and caching
 - **Forms**: React Hook Form with Zod schema validation
 - **Authentication**: Context-based auth provider with protected routes
+- **Theme System**: Dark/light mode with persistent user preference storage
+- **PDF Generation**: jsPDF integration for invoice and bill generation
 
 ### Backend Architecture
 - **Runtime**: Node.js with Express.js framework
@@ -38,11 +50,12 @@ Preferred communication style: Simple, everyday language.
 
 ### Core Data Models
 - **Users**: Role-based access (owner, manager, receptionist, technician)
-- **Customers**: Complete contact information and service history
-- **Sewing Machines**: Equipment tracking linked to customers
+- **Customers**: Complete contact information and service history with Gujarati transliteration
+- **Cycles**: Equipment tracking linked to customers (renamed from Sewing Machines)
 - **Work Orders**: Service requests with status tracking and priority levels
 - **Inventory Items**: Parts and supplies management with stock tracking
-- **Invoices**: Billing system with payment status tracking
+- **Invoices**: Billing system with payment status tracking and PDF generation
+- **Advanced Bills**: Custom billing with item descriptions and detailed PDF receipts
 
 ### Security Architecture
 - **Authentication**: Session-based with secure cookie storage
@@ -75,6 +88,8 @@ Preferred communication style: Simple, everyday language.
 - **Lucide Icons**: Icon library for consistent iconography
 - **Recharts**: Data visualization for reports and analytics
 - **React Day Picker**: Date selection components
+- **jsPDF**: PDF generation for invoices and bills
+- **html2canvas**: Canvas-based screenshot functionality
 
 ### Utility Libraries
 - **date-fns**: Date manipulation and formatting

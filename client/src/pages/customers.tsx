@@ -38,7 +38,7 @@ export default function Customers() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
       
       <div className="pt-16">
@@ -46,12 +46,12 @@ export default function Customers() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Customers</h1>
-              <p className="text-gray-600">Manage customer information and history</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Customers</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage customer information and history</p>
             </div>
             <Button 
               onClick={() => setIsModalOpen(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
+              className="bg-primary hover:bg-primary/90 text-white"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Customer
