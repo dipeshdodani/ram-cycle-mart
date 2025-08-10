@@ -22,6 +22,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { TransliterationInput } from "@/components/ui/transliteration-input";
+import { TransliterationTextarea } from "@/components/ui/transliteration-textarea";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
 
@@ -127,7 +129,11 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormItem>
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter first name" {...field} />
+                      <TransliterationInput
+                        placeholder="Enter first name"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -141,7 +147,11 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormItem>
                     <FormLabel>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter last name" {...field} />
+                      <TransliterationInput
+                        placeholder="Enter last name"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,7 +196,11 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter street address" {...field} />
+                    <TransliterationInput
+                      placeholder="Enter street address"
+                      value={field.value}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -201,7 +215,11 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormItem>
                     <FormLabel>City</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter city" {...field} />
+                      <TransliterationInput
+                        placeholder="Enter city"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -215,7 +233,11 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormItem>
                     <FormLabel>State</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter state" {...field} />
+                      <TransliterationInput
+                        placeholder="Enter state"
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -244,10 +266,11 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                 <FormItem>
                   <FormLabel>Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Add any additional notes about the customer..." 
-                      className="min-h-[100px]"
-                      {...field} 
+                    <TransliterationTextarea
+                      placeholder="Add any additional notes about the customer..."
+                      value={field.value}
+                      onChange={field.onChange}
+                      rows={4}
                     />
                   </FormControl>
                   <FormMessage />

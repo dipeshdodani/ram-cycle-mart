@@ -108,6 +108,11 @@
   }
 }
 
+/* Gujarati font support */
+.font-gujarati {
+  font-family: "Noto Sans Gujarati", "Shruti", "Gujarati MT", Arial, sans-serif;
+}
+
 @layer components {
   /* Custom button styles for better visibility */
   .btn-primary {
