@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -25,6 +25,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
+import { formatCurrency, INDIA_GST_RATE } from "@/lib/currency";
 
 interface InvoiceModalProps {
   isOpen: boolean;
@@ -44,28 +45,63 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
     queryKey: ["/api/work-orders"],
   });
 
+  // Get today + 30 days for default due date
+  const getDefaultDueDate = () => {
+    const date = new Date();
+    date.setDate(date.getDate() + 30);
+    return date.toISOString().split('T')[0];
+  };
+
   const form = useForm<InsertInvoice>({
     resolver: zodResolver(insertInvoiceSchema),
     defaultValues: {
       customerId: invoice?.customerId || "",
-      workOrderId: invoice?.workOrderId || "",
-      amount: invoice?.amount || "",
-      tax: invoice?.tax || "",
-      total: invoice?.total || "",
-      status: invoice?.status || "pending",
-      dueDate: invoice?.dueDate || "",
+      workOrderId: invoice?.workOrderId || null,
+      subtotal: invoice?.subtotal || "0.00",
+      taxRate: invoice?.taxRate || INDIA_GST_RATE.toString(),
+      taxAmount: invoice?.taxAmount || "0.00",
+      total: invoice?.total || "0.00",
+      paymentStatus: invoice?.paymentStatus || "pending",
+      dueDate: invoice?.dueDate ? new Date(invoice.dueDate) : new Date(getDefaultDueDate()),
       notes: invoice?.notes || "",
     },
   });
 
+  // Watch subtotal and tax rate to calculate total
+  const subtotal = form.watch("subtotal");
+  const taxRate = form.watch("taxRate");
+
+  // Auto-calculate tax and total when subtotal or tax rate changes
+  const calculateTotals = () => {
+    const subtotalNum = parseFloat(subtotal) || 0;
+    const taxRateNum = parseFloat(taxRate) || 0;
+    const taxAmount = subtotalNum * taxRateNum;
+    const total = subtotalNum + taxAmount;
+    
+    form.setValue("taxAmount", taxAmount.toFixed(2));
+    form.setValue("total", total.toFixed(2));
+  };
+
+  // Calculate totals when values change
+  React.useEffect(() => {
+    calculateTotals();
+  }, [subtotal, taxRate]);
+
   const createMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
-      const res = await apiRequest("POST", "/api/invoices", data);
+      // Generate invoice number
+      const invoiceNumber = `INV-${Date.now()}`;
+      const invoiceData = {
+        ...data,
+        invoiceNumber,
+        dueDate: new Date(data.dueDate),
+      };
+      const res = await apiRequest("POST", "/api/invoices", invoiceData);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Invoice created",
         description: "Invoice has been successfully created.",
@@ -84,12 +120,16 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
 
   const updateMutation = useMutation({
     mutationFn: async (data: InsertInvoice) => {
-      const res = await apiRequest("PATCH", `/api/invoices/${invoice.id}`, data);
+      const invoiceData = {
+        ...data,
+        dueDate: new Date(data.dueDate),
+      };
+      const res = await apiRequest("PUT", `/api/invoices/${invoice.id}`, invoiceData);
       return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
       toast({
         title: "Invoice updated",
         description: "Invoice has been successfully updated.",
@@ -105,6 +145,8 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
     },
   });
 
+  const isLoading = createMutation.isPending || updateMutation.isPending;
+
   const onSubmit = (data: InsertInvoice) => {
     if (invoice) {
       updateMutation.mutate(data);
@@ -113,30 +155,29 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
     }
   };
 
-  const isLoading = createMutation.isPending || updateMutation.isPending;
-
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>
-            {invoice ? "Edit Invoice" : "Create New Invoice"}
+            {invoice ? "Edit Invoice" : "Create Invoice"}
           </DialogTitle>
           <DialogDescription>
-            {invoice ? "Update invoice details" : "Enter details to create a new invoice"}
+            {invoice ? "Update invoice details below." : "Fill in the details to create a new invoice."}
           </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Customer Selection */}
               <FormField
                 control={form.control}
                 name="customerId"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Customer</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Customer *</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select customer" />
@@ -155,22 +196,24 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
                 )}
               />
 
+              {/* Work Order Selection */}
               <FormField
                 control={form.control}
                 name="workOrderId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Work Order (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select value={field.value || ""} onValueChange={(value) => field.onChange(value || null)}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select work order" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {workOrders?.map((order: any) => (
-                          <SelectItem key={order.id} value={order.id}>
-                            {order.orderNumber} - {order.customer?.firstName} {order.customer?.lastName}
+                        <SelectItem value="none">No work order</SelectItem>
+                        {workOrders?.map((workOrder: any) => (
+                          <SelectItem key={workOrder.id} value={workOrder.id}>
+                            {workOrder.orderNumber} - {workOrder.problemDescription.substring(0, 50)}...
                           </SelectItem>
                         ))}
                       </SelectContent>
@@ -182,42 +225,69 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Subtotal */}
               <FormField
                 control={form.control}
-                name="amount"
+                name="subtotal"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Amount</FormLabel>
+                    <FormLabel>Subtotal (₹)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.00"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setTimeout(calculateTotals, 0);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Tax Rate */}
               <FormField
                 control={form.control}
-                name="tax"
+                name="taxRate"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Tax</FormLabel>
+                    <FormLabel>Tax Rate</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        placeholder="0.18"
+                        {...field}
+                        onChange={(e) => {
+                          field.onChange(e);
+                          setTimeout(calculateTotals, 0);
+                        }}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
 
+              {/* Tax Amount (calculated) */}
               <FormField
                 control={form.control}
-                name="total"
+                name="taxAmount"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Total</FormLabel>
+                    <FormLabel>Tax Amount (₹)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <Input
+                        type="number"
+                        step="0.01"
+                        readOnly
+                        {...field}
+                        className="bg-gray-50"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -226,13 +296,35 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Total (calculated) */}
               <FormField
                 control={form.control}
-                name="status"
+                name="total"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Status</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormLabel>Total (₹)</FormLabel>
+                    <FormControl>
+                      <Input
+                        type="number"
+                        step="0.01"
+                        readOnly
+                        {...field}
+                        className="bg-gray-50 font-bold text-lg"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Payment Status */}
+              <FormField
+                control={form.control}
+                name="paymentStatus"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Payment Status</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
                       <FormControl>
                         <SelectTrigger>
                           <SelectValue placeholder="Select status" />
@@ -240,7 +332,6 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="pending">Pending</SelectItem>
-                        <SelectItem value="sent">Sent</SelectItem>
                         <SelectItem value="paid">Paid</SelectItem>
                         <SelectItem value="overdue">Overdue</SelectItem>
                         <SelectItem value="cancelled">Cancelled</SelectItem>
@@ -250,22 +341,28 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
                   </FormItem>
                 )}
               />
-
-              <FormField
-                control={form.control}
-                name="dueDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Due Date</FormLabel>
-                    <FormControl>
-                      <Input type="date" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
             </div>
 
+            {/* Due Date */}
+            <FormField
+              control={form.control}
+              name="dueDate"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Due Date</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="date"
+                      value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : field.value}
+                      onChange={(e) => field.onChange(new Date(e.target.value))}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Notes */}
             <FormField
               control={form.control}
               name="notes"
@@ -273,10 +370,11 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
                 <FormItem>
                   <FormLabel>Notes (Optional)</FormLabel>
                   <FormControl>
-                    <Textarea 
-                      placeholder="Add any notes about this invoice..." 
-                      className="min-h-[100px]"
-                      {...field} 
+                    <Textarea
+                      placeholder="Add any additional notes about this invoice..."
+                      className="min-h-[80px]"
+                      value={field.value || ""}
+                      onChange={field.onChange}
                     />
                   </FormControl>
                   <FormMessage />
