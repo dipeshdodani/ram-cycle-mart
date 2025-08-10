@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -44,19 +44,56 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     queryKey: ["/api/sewing-machines"],
   });
 
+  const { data: technicians } = useQuery({
+    queryKey: ["/api/technicians"],
+  });
+
   const form = useForm<InsertWorkOrder>({
     resolver: zodResolver(insertWorkOrderSchema),
     defaultValues: {
-      customerId: workOrder?.customerId || "",
-      sewingMachineId: workOrder?.sewingMachineId || "",
-      description: workOrder?.description || "",
-      problemDescription: workOrder?.problemDescription || "",
-      priority: workOrder?.priority || "medium",
-      status: workOrder?.status || "pending",
-      estimatedCost: workOrder?.estimatedCost || "",
-      notes: workOrder?.notes || "",
+      customerId: "",
+      machineId: "",
+      problemDescription: "",
+      priority: "normal",
+      status: "pending",
+      estimatedCost: "",
+      actualCost: "",
+      laborHours: "",
+      dueDate: "",
+      assignedTechnicianId: "",
     },
   });
+
+  // Reset form when workOrder changes
+  useEffect(() => {
+    if (workOrder) {
+      form.reset({
+        customerId: workOrder.customerId,
+        machineId: workOrder.machineId || "",
+        problemDescription: workOrder.problemDescription,
+        priority: workOrder.priority,
+        status: workOrder.status,
+        estimatedCost: workOrder.estimatedCost ? workOrder.estimatedCost.toString() : "",
+        actualCost: workOrder.actualCost ? workOrder.actualCost.toString() : "",
+        laborHours: workOrder.laborHours ? workOrder.laborHours.toString() : "",
+        dueDate: workOrder.dueDate ? new Date(workOrder.dueDate).toISOString().split('T')[0] : "",
+        assignedTechnicianId: workOrder.assignedTechnicianId || "",
+      });
+    } else {
+      form.reset({
+        customerId: "",
+        machineId: "",
+        problemDescription: "",
+        priority: "normal",
+        status: "pending",
+        estimatedCost: "",
+        actualCost: "",
+        laborHours: "",
+        dueDate: "",
+        assignedTechnicianId: "",
+      });
+    }
+  }, [workOrder, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertWorkOrder) => {

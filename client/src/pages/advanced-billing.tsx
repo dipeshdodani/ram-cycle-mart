@@ -31,8 +31,6 @@ interface BillData {
   customerEmail: string;
   items: BillItem[];
   subtotal: number;
-  taxRate: number;
-  taxAmount: number;
   discount: number;
   total: number;
   notes: string;
@@ -50,8 +48,6 @@ export default function AdvancedBilling() {
     customerEmail: "",
     items: [],
     subtotal: 0,
-    taxRate: INDIA_GST_RATE,
-    taxAmount: 0,
     discount: 0,
     total: 0,
     notes: "",
@@ -74,15 +70,15 @@ export default function AdvancedBilling() {
       dueDate.setDate(dueDate.getDate() + 30); // 30 days from now
       
       const invoiceData = {
-        customerId: billData.customerId,
+        customerId: billData.customerId || "manual-customer",
         invoiceNumber: `BILL-${Date.now()}`,
         subtotal: billData.subtotal.toString(),
-        taxRate: billData.taxRate.toString(),
-        taxAmount: billData.taxAmount.toString(),
+        taxRate: "0",
+        taxAmount: "0",
         total: billData.total.toString(),
         paymentStatus: "paid" as const,
         dueDate: dueDate.toISOString(),
-        notes: billData.notes || ""
+        notes: `Customer: ${billData.customerName}\nPhone: ${billData.customerPhone}\nEmail: ${billData.customerEmail}\n\n${billData.notes || ""}`
       };
       
       const res = await apiRequest("POST", "/api/invoices", invoiceData);
@@ -106,8 +102,6 @@ export default function AdvancedBilling() {
         customerEmail: "",
         items: [],
         subtotal: 0,
-        taxRate: INDIA_GST_RATE,
-        taxAmount: 0,
         discount: 0,
         total: 0,
         notes: "",
@@ -126,14 +120,11 @@ export default function AdvancedBilling() {
   const calculateTotals = (items: BillItem[], discount: number = 0) => {
     const subtotal = items.reduce((sum, item) => sum + item.total, 0);
     const discountAmount = (subtotal * discount) / 100;
-    const taxableAmount = subtotal - discountAmount;
-    const taxAmount = taxableAmount * bill.taxRate;
-    const total = taxableAmount + taxAmount;
+    const total = subtotal - discountAmount;
     
     setBill(prev => ({
       ...prev,
       subtotal,
-      taxAmount,
       total,
       discount
     }));
@@ -268,9 +259,7 @@ export default function AdvancedBilling() {
       yPos += 10;
     }
     
-    pdf.text(`GST (${(bill.taxRate * 100).toFixed(1)}%):`, 140, yPos);
-    pdf.text(formatCurrency(bill.taxAmount), 170, yPos);
-    yPos += 10;
+
     
     pdf.setFont("helvetica", "bold");
     pdf.text("Total:", 140, yPos);
@@ -320,19 +309,32 @@ export default function AdvancedBilling() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
-                      <label className="text-sm font-medium mb-2 block">Select Customer</label>
-                      <Select value={bill.customerId} onValueChange={selectCustomer}>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Choose customer" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {customers?.map((customer: any) => (
-                            <SelectItem key={customer.id} value={customer.id}>
-                              {customer.firstName} {customer.lastName}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <label className="text-sm font-medium mb-2 block">Customer Name</label>
+                      <Input
+                        placeholder="Enter customer name"
+                        value={bill.customerName}
+                        onChange={(e) => setBill(prev => ({ ...prev, customerName: e.target.value }))}
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Customer Phone</label>
+                      <Input
+                        placeholder="Enter phone number"
+                        value={bill.customerPhone}
+                        onChange={(e) => setBill(prev => ({ ...prev, customerPhone: e.target.value }))}
+                      />
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">Customer Email (Optional)</label>
+                      <Input
+                        type="email"
+                        placeholder="Enter email address"
+                        value={bill.customerEmail}
+                        onChange={(e) => setBill(prev => ({ ...prev, customerEmail: e.target.value }))}
+                      />
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-2 block">Payment Method</label>
@@ -350,11 +352,27 @@ export default function AdvancedBilling() {
                     </div>
                   </div>
                   
+                  <div>
+                    <label className="text-sm font-medium mb-2 block">Or Select from Existing Customers</label>
+                    <Select value={bill.customerId} onValueChange={selectCustomer}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Choose existing customer (optional)" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {customers?.map((customer: any) => (
+                          <SelectItem key={customer.id} value={customer.id}>
+                            {customer.firstName} {customer.lastName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  
                   {bill.customerName && (
                     <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                       <h4 className="font-medium text-blue-900 dark:text-blue-100">{bill.customerName}</h4>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">{bill.customerPhone}</p>
-                      <p className="text-sm text-blue-700 dark:text-blue-300">{bill.customerEmail}</p>
+                      {bill.customerPhone && <p className="text-sm text-blue-700 dark:text-blue-300">{bill.customerPhone}</p>}
+                      {bill.customerEmail && <p className="text-sm text-blue-700 dark:text-blue-300">{bill.customerEmail}</p>}
                     </div>
                   )}
                 </CardContent>
@@ -488,32 +506,31 @@ export default function AdvancedBilling() {
                     <div>
                       <div className="flex justify-between items-center mb-2">
                         <span>Discount (%):</span>
-                        <Input
-                          type="number"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          className="w-20 text-right"
-                          value={bill.discount}
-                          onChange={(e) => {
-                            const discount = parseFloat(e.target.value) || 0;
-                            setBill(prev => ({ ...prev, discount }));
-                            calculateTotals(bill.items, discount);
-                          }}
-                        />
+                        <div className="flex items-center space-x-2">
+                          <Input
+                            type="number"
+                            min="0"
+                            max="100"
+                            step="0.1"
+                            className="w-20 text-right"
+                            value={bill.discount}
+                            onChange={(e) => {
+                              const discount = parseFloat(e.target.value) || 0;
+                              setBill(prev => ({ ...prev, discount }));
+                              calculateTotals(bill.items, discount);
+                            }}
+                          />
+                          <span className="text-sm text-gray-500">%</span>
+                        </div>
                       </div>
                       {bill.discount > 0 && (
-                        <div className="flex justify-between text-green-600">
+                        <div className="flex justify-between text-green-600 dark:text-green-400">
                           <span>Discount Amount:</span>
                           <span>-{formatCurrency(bill.subtotal * bill.discount / 100)}</span>
                         </div>
                       )}
                     </div>
-                    
-                    <div className="flex justify-between">
-                      <span>GST (18%):</span>
-                      <span>{formatCurrency(bill.taxAmount)}</span>
-                    </div>
+
                     
                     <Separator />
                     
@@ -525,7 +542,7 @@ export default function AdvancedBilling() {
                   
                   <Button 
                     onClick={() => generateBillMutation.mutate(bill)}
-                    disabled={!bill.customerId || bill.items.length === 0 || generateBillMutation.isPending}
+                    disabled={!bill.customerName.trim() || bill.items.length === 0 || generateBillMutation.isPending}
                     className="w-full bg-primary hover:bg-primary/90"
                   >
                     <FileText className="mr-2 h-4 w-4" />
@@ -534,6 +551,9 @@ export default function AdvancedBilling() {
                   
                   {bill.items.length === 0 && (
                     <p className="text-sm text-gray-500 text-center">Add items to generate bill</p>
+                  )}
+                  {!bill.customerName.trim() && bill.items.length > 0 && (
+                    <p className="text-sm text-orange-500 text-center">Enter customer name to generate bill</p>
                   )}
                 </CardContent>
               </Card>
