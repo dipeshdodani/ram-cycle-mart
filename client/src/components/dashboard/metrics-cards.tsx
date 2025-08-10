@@ -12,7 +12,7 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
   const metricItems = [
     {
       title: "Today's Sales",
-      value: metrics?.todaySales ? `$${metrics.todaySales}` : "$0",
+      value: metrics?.todaySales ? `₹${metrics.todaySales}` : "₹0",
       icon: DollarSign,
       color: "bg-primary-100 text-primary-600",
       change: "+12.5% from yesterday",

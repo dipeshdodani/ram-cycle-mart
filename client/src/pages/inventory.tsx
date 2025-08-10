@@ -9,6 +9,7 @@ import { Search, Plus, Package, AlertTriangle, TrendingDown } from "lucide-react
 import InventoryModal from "@/components/modals/inventory-modal";
 import { useToast } from "@/hooks/use-toast";
 import type { InventoryItem } from "@shared/schema";
+import { formatCurrency } from "@/lib/currency";
 
 export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,13 +64,6 @@ export default function Inventory() {
     if (item.quantity <= 0) return { status: "out", color: "bg-red-100 text-red-800", icon: AlertTriangle };
     if (item.quantity <= item.minimumStock) return { status: "low", color: "bg-yellow-100 text-yellow-800", icon: TrendingDown };
     return { status: "good", color: "bg-green-100 text-green-800", icon: Package };
-  };
-
-  const formatCurrency = (amount: string | number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 
   const handleEditItem = (item: InventoryItem) => {

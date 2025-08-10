@@ -116,7 +116,7 @@ export const invoices = pgTable("invoices", {
   customerId: varchar("customer_id").notNull().references(() => customers.id),
   workOrderId: varchar("work_order_id").references(() => workOrders.id),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
-  taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.0875"),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.18"),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
   paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),

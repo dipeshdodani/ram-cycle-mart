@@ -14,6 +14,7 @@ import {
   DollarSign, Package, Clock, CheckCircle 
 } from "lucide-react";
 import type { DashboardMetrics } from "@/types";
+import { formatCurrency } from "@/lib/currency";
 
 const COLORS = ["#1976D2", "#4CAF50", "#FF9800", "#F44336", "#9C27B0"];
 
@@ -69,12 +70,7 @@ export default function Reports() {
     .sort((a: any, b: any) => b.quantity - a.quantity)
     .slice(0, 5) : [];
 
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: "USD",
-    }).format(value);
-  };
+  // Using imported formatCurrency from @/lib/currency
 
   const exportReport = (type: string) => {
     // In a real app, this would generate and download a report file
@@ -124,7 +120,7 @@ export default function Reports() {
                   </div>
                   <div className="ml-4">
                     <div className="text-sm font-medium text-gray-500">Revenue This Month</div>
-                    <div className="text-2xl font-bold text-gray-900">$25,300</div>
+                    <div className="text-2xl font-bold text-gray-900">₹25,300</div>
                     <div className="text-sm text-green-600">
                       <TrendingUp className="inline h-3 w-3 mr-1" />
                       +12.5% from last month
@@ -303,7 +299,7 @@ export default function Reports() {
                       <DollarSign className="h-5 w-5 text-orange-600 mr-2" />
                       <span className="font-medium text-orange-900">Avg. Order Value</span>
                     </div>
-                    <span className="text-2xl font-bold text-orange-900">$127</span>
+                    <span className="text-2xl font-bold text-orange-900">₹127</span>
                   </div>
                 </div>
               </CardContent>
