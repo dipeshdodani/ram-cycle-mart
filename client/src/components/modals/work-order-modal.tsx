@@ -48,7 +48,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     queryKey: ["/api/technicians"],
   });
 
-  const form = useForm<InsertWorkOrder>({
+  const form = useForm({
     resolver: zodResolver(insertWorkOrderSchema),
     defaultValues: {
       customerId: "",
@@ -96,7 +96,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
   }, [workOrder, form]);
 
   const createMutation = useMutation({
-    mutationFn: async (data: InsertWorkOrder) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("POST", "/api/work-orders", data);
       return res.json();
     },
@@ -120,7 +120,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
   });
 
   const updateMutation = useMutation({
-    mutationFn: async (data: InsertWorkOrder) => {
+    mutationFn: async (data: any) => {
       const res = await apiRequest("PATCH", `/api/work-orders/${workOrder.id}`, data);
       return res.json();
     },
@@ -146,11 +146,12 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     // Transform the form data to ensure proper types
     const transformedData = {
       ...data,
-      estimatedCost: data.estimatedCost || undefined,
-      actualCost: data.actualCost || undefined,
-      laborHours: data.laborHours || undefined,
-      assignedTechnicianId: data.assignedTechnicianId || undefined,
-      machineId: data.machineId || undefined,
+      dueDate: data.dueDate ? new Date(data.dueDate) : null,
+      estimatedCost: data.estimatedCost || null,
+      actualCost: data.actualCost || null,
+      laborHours: data.laborHours || null,
+      assignedTechnicianId: data.assignedTechnicianId || null,
+      machineId: data.machineId || null,
     };
 
     if (workOrder) {
