@@ -70,6 +70,9 @@ export default function AdvancedBilling() {
 
   const generateBillMutation = useMutation({
     mutationFn: async (billData: BillData) => {
+      const dueDate = new Date();
+      dueDate.setDate(dueDate.getDate() + 30); // 30 days from now
+      
       const invoiceData = {
         customerId: billData.customerId,
         invoiceNumber: `BILL-${Date.now()}`,
@@ -78,9 +81,8 @@ export default function AdvancedBilling() {
         taxAmount: billData.taxAmount.toString(),
         total: billData.total.toString(),
         paymentStatus: "paid" as const,
-        dueDate: new Date(),
-        notes: billData.notes,
-        items: billData.items
+        dueDate: dueDate.toISOString(),
+        notes: billData.notes || ""
       };
       
       const res = await apiRequest("POST", "/api/invoices", invoiceData);

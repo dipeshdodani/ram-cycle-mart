@@ -6,6 +6,7 @@ import {
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
   insertInventoryItemSchema, insertInvoiceSchema, insertUserSchema 
 } from "@shared/schema";
+import { z } from "zod";
 import { scrypt, randomBytes } from "crypto";
 import { promisify } from "util";
 
@@ -206,11 +207,21 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/invoices", async (req, res) => {
     try {
+      console.log("Creating invoice with data:", req.body);
       const validatedData = insertInvoiceSchema.parse(req.body);
+      console.log("Validated data:", validatedData);
       const invoice = await storage.createInvoice(validatedData);
       res.status(201).json(invoice);
     } catch (error) {
-      res.status(400).json({ message: "Invalid invoice data" });
+      console.error("Invoice creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid invoice data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Invalid invoice data" });
+      }
     }
   });
 
