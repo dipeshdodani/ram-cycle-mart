@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -60,17 +60,49 @@ export default function AdvancedBilling() {
     unitPrice: 0
   });
 
+  const [savedItems, setSavedItems] = useState<string[]>([]);
+
+  // Load saved items from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('ramCycleMart_savedItems');
+    if (saved) {
+      setSavedItems(JSON.parse(saved));
+    }
+  }, []);
+
   const { data: customers } = useQuery({
     queryKey: ["/api/customers"],
   });
 
   const generateBillMutation = useMutation({
     mutationFn: async (billData: BillData) => {
+      // First, create or find customer if manual entry
+      let customerId = billData.customerId;
+      
+      if (!customerId && billData.customerName.trim()) {
+        // Create new customer from manual entry
+        const customerData = {
+          firstName: billData.customerName.split(' ')[0] || billData.customerName,
+          lastName: billData.customerName.split(' ').slice(1).join(' ') || '',
+          phone: billData.customerPhone || '',
+          email: billData.customerEmail || '',
+          address: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          notes: `Created from Advanced Billing on ${new Date().toLocaleDateString()}`
+        };
+        
+        const customerRes = await apiRequest("POST", "/api/customers", customerData);
+        const newCustomer = await customerRes.json();
+        customerId = newCustomer.id;
+      }
+      
       const dueDate = new Date();
       dueDate.setDate(dueDate.getDate() + 30); // 30 days from now
       
       const invoiceData = {
-        customerId: billData.customerId || "manual-customer",
+        customerId: customerId,
         invoiceNumber: `BILL-${Date.now()}`,
         subtotal: billData.subtotal.toString(),
         taxRate: "0",
@@ -78,7 +110,7 @@ export default function AdvancedBilling() {
         total: billData.total.toString(),
         paymentStatus: "paid" as const,
         dueDate: dueDate.toISOString(),
-        notes: `Customer: ${billData.customerName}\nPhone: ${billData.customerPhone}\nEmail: ${billData.customerEmail}\n\n${billData.notes || ""}`
+        notes: `Items: ${billData.items.map(item => `${item.description} (${item.quantity}x ${formatCurrency(item.unitPrice)})`).join(', ')}\n\n${billData.notes || ""}`
       };
       
       const res = await apiRequest("POST", "/api/invoices", invoiceData);
@@ -90,7 +122,15 @@ export default function AdvancedBilling() {
         description: "Bill has been successfully generated and saved.",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/customers"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard"] });
       
+      // Save item descriptions for future use
+      const itemDescriptions = billData.items.map(item => item.description).filter(desc => desc.trim() !== '');
+      const uniqueItems = Array.from(new Set([...savedItems, ...itemDescriptions]));
+      setSavedItems(uniqueItems);
+      localStorage.setItem('ramCycleMart_savedItems', JSON.stringify(uniqueItems));
+
       // Generate PDF
       generatePDF(data);
       
@@ -390,11 +430,29 @@ export default function AdvancedBilling() {
                   <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div className="md:col-span-2">
                       <label className="text-sm font-medium mb-2 block">Item Description</label>
-                      <Input
-                        placeholder="e.g., Bike chain replacement, Brake adjustment..."
-                        value={currentItem.description}
-                        onChange={(e) => setCurrentItem(prev => ({ ...prev, description: e.target.value }))}
-                      />
+                      <div className="space-y-2">
+                        <Input
+                          placeholder="e.g., Bike chain replacement, Brake adjustment..."
+                          value={currentItem.description}
+                          onChange={(e) => setCurrentItem(prev => ({ ...prev, description: e.target.value }))}
+                        />
+                        {savedItems.length > 0 && (
+                          <div className="flex flex-wrap gap-1">
+                            <span className="text-xs text-gray-500">Quick add:</span>
+                            {savedItems.slice(0, 6).map((item, index) => (
+                              <Button
+                                key={index}
+                                variant="outline"
+                                size="sm"
+                                className="h-6 text-xs px-2"
+                                onClick={() => setCurrentItem(prev => ({ ...prev, description: item }))}
+                              >
+                                {item}
+                              </Button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                     <div>
                       <label className="text-sm font-medium mb-2 block">Quantity</label>
