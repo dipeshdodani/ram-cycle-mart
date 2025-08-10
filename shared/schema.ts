@@ -213,6 +213,10 @@ export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({
   orderNumber: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  dueDate: z.string().optional().transform((val) => {
+    return val ? new Date(val) : undefined;
+  }),
 });
 
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({

@@ -142,11 +142,21 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     },
   });
 
-  const onSubmit = (data: InsertWorkOrder) => {
+  const onSubmit = (data: any) => {
+    // Transform the form data to ensure proper types
+    const transformedData = {
+      ...data,
+      estimatedCost: data.estimatedCost || undefined,
+      actualCost: data.actualCost || undefined,
+      laborHours: data.laborHours || undefined,
+      assignedTechnicianId: data.assignedTechnicianId || undefined,
+      machineId: data.machineId || undefined,
+    };
+
     if (workOrder) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(transformedData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(transformedData);
     }
   };
 
@@ -312,7 +322,16 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                   <FormItem>
                     <FormLabel>Estimated Cost (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="number" step="0.01" placeholder="0.00" {...field} />
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        placeholder="0.00" 
+                        value={field.value || ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -326,7 +345,14 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                   <FormItem>
                     <FormLabel>Due Date (Optional)</FormLabel>
                     <FormControl>
-                      <Input type="date" {...field} />
+                      <Input 
+                        type="date" 
+                        value={field.value || ""} 
+                        onChange={field.onChange}
+                        onBlur={field.onBlur}
+                        name={field.name}
+                        ref={field.ref}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
