@@ -364,7 +364,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="bg-primary-600 hover:bg-primary-700"
+                className="bg-blue-600 hover:bg-blue-700 text-white border-0"
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {workOrder ? "Update Work Order" : "Create Work Order"}

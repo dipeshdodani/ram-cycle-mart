@@ -5,7 +5,7 @@ import {
   type InventoryItem, type InsertInventoryItem, type Invoice, type InsertInvoice
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, sql, count, sum, ilike, or } from "drizzle-orm";
+import { eq, desc, asc, and, sql, count, sum, ilike, or } from "drizzle-orm";
 import session from "express-session";
 import connectPg from "connect-pg-simple";
 import { pool } from "./db";
@@ -105,10 +105,17 @@ export class DatabaseStorage implements IStorage {
 
   async getTechnicians(): Promise<User[]> {
     return await db
-      .select()
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+        email: users.email,
+        role: users.role,
+        name: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('name')
+      })
       .from(users)
       .where(eq(users.role, "technician"))
-      .orderBy(desc(users.createdAt));
+      .orderBy(asc(users.firstName));
   }
 
   // Customer methods
@@ -150,6 +157,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteCustomer(id: string): Promise<void> {
+    // Check for related records first
+    const relatedWorkOrders = await db
+      .select({ id: workOrders.id })
+      .from(workOrders)
+      .where(eq(workOrders.customerId, id))
+      .limit(1);
+    
+    const relatedMachines = await db
+      .select({ id: sewingMachines.id })
+      .from(sewingMachines)
+      .where(eq(sewingMachines.customerId, id))
+      .limit(1);
+
+    if (relatedWorkOrders.length > 0 || relatedMachines.length > 0) {
+      throw new Error("Cannot delete customer with existing work orders or machines. Please remove related records first.");
+    }
+
     await db.delete(customers).where(eq(customers.id, id));
   }
 

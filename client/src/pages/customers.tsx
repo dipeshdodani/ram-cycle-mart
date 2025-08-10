@@ -91,7 +91,7 @@ export default function Customers() {
             </div>
             <Button 
               onClick={() => setIsModalOpen(true)}
-              className="bg-primary hover:bg-primary/90 text-white"
+              className="bg-blue-600 hover:bg-blue-700 text-white border-0"
             >
               <Plus className="mr-2 h-4 w-4" />
               Add Customer
