@@ -11,11 +11,10 @@ import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import Customers from "@/pages/customers";
 import WorkOrders from "@/pages/work-orders";
-import Billing from "@/pages/billing";
+import Invoices from "@/pages/invoices";
 import Inventory from "@/pages/inventory";
 import Reports from "@/pages/reports";
 import Technicians from "@/pages/technicians";
-import AdvancedBilling from "@/pages/advanced-billing";
 
 function Router() {
   return (
@@ -24,8 +23,7 @@ function Router() {
       <ProtectedRoute path="/customers" component={Customers} />
       <ProtectedRoute path="/work-orders" component={WorkOrders} />
       <ProtectedRoute path="/technicians" component={Technicians} />
-      <ProtectedRoute path="/billing" component={Billing} />
-      <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />
+      <ProtectedRoute path="/invoices" component={Invoices} />
       <ProtectedRoute path="/inventory" component={Inventory} />
       <ProtectedRoute path="/reports" component={Reports} />
       <Route path="/auth" component={AuthPage} />

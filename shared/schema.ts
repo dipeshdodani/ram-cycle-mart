@@ -109,12 +109,17 @@ export const workOrderParts = pgTable("work_order_parts", {
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
+// Invoice type enum
+export const invoiceTypeEnum = pgEnum("invoice_type", ["service", "new_sale"]);
+
 // Invoices table
 export const invoices = pgTable("invoices", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   invoiceNumber: text("invoice_number").notNull().unique(),
   customerId: varchar("customer_id").notNull().references(() => customers.id),
   workOrderId: varchar("work_order_id").references(() => workOrders.id),
+  type: invoiceTypeEnum("type").notNull().default("service"),
+  items: text("items").default("[]"), // JSON array of items for new sale invoices
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
   taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.18"),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull(),
@@ -123,6 +128,18 @@ export const invoices = pgTable("invoices", {
   paymentDate: timestamp("payment_date"),
   dueDate: timestamp("due_date").notNull(),
   notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Company settings table for GST configuration
+export const companySettings = pgTable("company_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  companyName: text("company_name").notNull().default("Ram Cycle Mart"),
+  gstNumber: text("gst_number"),
+  address: text("address"),
+  phone: text("phone"),
+  email: text("email"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
@@ -233,6 +250,12 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   dueDate: z.string().transform(val => new Date(val))
 });
 
+export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -246,3 +269,5 @@ export type InventoryItem = typeof inventoryItems.$inferSelect;
 export type InsertInventoryItem = z.infer<typeof insertInventoryItemSchema>;
 export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
+export type CompanySettings = typeof companySettings.$inferSelect;
+export type InsertCompanySettings = z.infer<typeof insertCompanySettingsSchema>;

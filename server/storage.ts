@@ -1,8 +1,9 @@
 import { 
-  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, invoices,
+  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, invoices, companySettings,
   type User, type InsertUser, type Customer, type InsertCustomer, 
   type SewingMachine, type InsertSewingMachine, type WorkOrder, type InsertWorkOrder,
-  type InventoryItem, type InsertInventoryItem, type Invoice, type InsertInvoice
+  type InventoryItem, type InsertInventoryItem, type Invoice, type InsertInvoice,
+  type CompanySettings, type InsertCompanySettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, sql, count, sum, ilike, or } from "drizzle-orm";
@@ -54,12 +55,17 @@ export interface IStorage {
   getLowStockItems(): Promise<InventoryItem[]>;
   
   // Invoice management
-  getInvoices(customerId?: string): Promise<any[]>;
+  getInvoices(filters?: { type?: string; status?: string }): Promise<any[]>;
   getInvoice(id: string): Promise<any>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice>;
   deleteInvoice(id: string): Promise<void>;
   createInvoiceFromWorkOrder(workOrderId: string): Promise<Invoice>;
+  
+  // Company settings
+  getCompanySettings(): Promise<CompanySettings | undefined>;
+  createCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings>;
+  updateCompanySettings(id: string, settings: Partial<InsertCompanySettings>): Promise<CompanySettings>;
   
   // Dashboard metrics
   getDashboardMetrics(): Promise<any>;
@@ -407,34 +413,48 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invoice methods
-  async getInvoices(customerId?: string): Promise<any[]> {
+  async getInvoices(filters?: { type?: string; status?: string }): Promise<any[]> {
     let query = db
       .select({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
+        customerId: invoices.customerId,
+        workOrderId: invoices.workOrderId,
+        type: invoices.type,
+        items: invoices.items,
         subtotal: invoices.subtotal,
+        taxRate: invoices.taxRate,
         taxAmount: invoices.taxAmount,
         total: invoices.total,
         paymentStatus: invoices.paymentStatus,
+        paymentDate: invoices.paymentDate,
         dueDate: invoices.dueDate,
         notes: invoices.notes,
         createdAt: invoices.createdAt,
+        updatedAt: invoices.updatedAt,
         customer: {
           id: customers.id,
           firstName: customers.firstName,
           lastName: customers.lastName,
+          email: customers.email,
+          phone: customers.phone,
         },
-        workOrder: {
+        workOrder: workOrders ? {
           id: workOrders.id,
           orderNumber: workOrders.orderNumber,
-        },
+          problemDescription: workOrders.problemDescription,
+        } : null,
       })
       .from(invoices)
       .leftJoin(customers, eq(invoices.customerId, customers.id))
       .leftJoin(workOrders, eq(invoices.workOrderId, workOrders.id));
 
-    if (customerId) {
-      query = query.where(eq(invoices.customerId, customerId));
+    if (filters?.type) {
+      query = query.where(eq(invoices.type, filters.type as any));
+    }
+    
+    if (filters?.status) {
+      query = query.where(eq(invoices.paymentStatus, filters.status as any));
     }
 
     return await query.orderBy(desc(invoices.createdAt));
@@ -445,6 +465,10 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: invoices.id,
         invoiceNumber: invoices.invoiceNumber,
+        customerId: invoices.customerId,
+        workOrderId: invoices.workOrderId,
+        type: invoices.type,
+        items: invoices.items,
         subtotal: invoices.subtotal,
         taxRate: invoices.taxRate,
         taxAmount: invoices.taxAmount,
@@ -454,6 +478,7 @@ export class DatabaseStorage implements IStorage {
         dueDate: invoices.dueDate,
         notes: invoices.notes,
         createdAt: invoices.createdAt,
+        updatedAt: invoices.updatedAt,
         customer: {
           id: customers.id,
           firstName: customers.firstName,
@@ -462,11 +487,11 @@ export class DatabaseStorage implements IStorage {
           email: customers.email,
           address: customers.address,
         },
-        workOrder: {
+        workOrder: workOrders ? {
           id: workOrders.id,
           orderNumber: workOrders.orderNumber,
           problemDescription: workOrders.problemDescription,
-        },
+        } : null,
       })
       .from(invoices)
       .leftJoin(customers, eq(invoices.customerId, customers.id))
@@ -614,6 +639,32 @@ export class DatabaseStorage implements IStorage {
       recentWorkOrders,
       recentCustomers,
     };
+  }
+
+  // Company settings methods
+  async getCompanySettings(): Promise<CompanySettings | undefined> {
+    const [settings] = await db
+      .select()
+      .from(companySettings)
+      .limit(1);
+    return settings || undefined;
+  }
+
+  async createCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings> {
+    const [newSettings] = await db
+      .insert(companySettings)
+      .values(settings)
+      .returning();
+    return newSettings;
+  }
+
+  async updateCompanySettings(id: string, settings: Partial<InsertCompanySettings>): Promise<CompanySettings> {
+    const [updatedSettings] = await db
+      .update(companySettings)
+      .set({ ...settings, updatedAt: sql`now()` })
+      .where(eq(companySettings.id, id))
+      .returning();
+    return updatedSettings;
   }
 }
 

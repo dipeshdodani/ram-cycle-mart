@@ -4,7 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { 
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
-  insertInventoryItemSchema, insertInvoiceSchema, insertUserSchema 
+  insertInventoryItemSchema, insertInvoiceSchema, insertUserSchema,
+  insertCompanySettingsSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes } from "crypto";
@@ -421,7 +422,182 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Invoice generation from work order
+  // Enhanced Invoice routes
+  app.get("/api/invoices", async (req, res) => {
+    try {
+      const { type, status } = req.query;
+      const filters: { type?: string; status?: string } = {};
+      
+      if (type && typeof type === 'string') {
+        filters.type = type;
+      }
+      
+      if (status && typeof status === 'string') {
+        filters.status = status;
+      }
+      
+      const invoices = await storage.getInvoices(filters);
+      res.json(invoices);
+    } catch (error) {
+      console.error("Invoice fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch invoices" });
+    }
+  });
+
+  app.get("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      res.json(invoice);
+    } catch (error) {
+      console.error("Invoice fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
+  app.post("/api/invoices", async (req, res) => {
+    try {
+      const validatedData = insertInvoiceSchema.parse(req.body);
+      
+      // For new sale invoices, update inventory
+      if (req.body.type === 'new_sale' && req.body.items) {
+        const items = JSON.parse(req.body.items);
+        
+        // Validate and update inventory for each item
+        for (const item of items) {
+          const inventoryItem = await storage.getInventoryItem(item.inventoryItemId);
+          if (!inventoryItem) {
+            return res.status(400).json({ 
+              message: `Inventory item not found: ${item.name}` 
+            });
+          }
+          
+          if (inventoryItem.quantity < item.quantity) {
+            return res.status(400).json({ 
+              message: `Insufficient stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}, Required: ${item.quantity}` 
+            });
+          }
+          
+          // Reduce inventory quantity
+          await storage.updateInventoryItem(item.inventoryItemId, {
+            quantity: inventoryItem.quantity - item.quantity
+          });
+        }
+      }
+      
+      const invoice = await storage.createInvoice(validatedData);
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error("Invoice creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid invoice data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: error.message || "Failed to create invoice" });
+      }
+    }
+  });
+
+  app.put("/api/invoices/:id", async (req, res) => {
+    try {
+      const validatedData = insertInvoiceSchema.partial().parse(req.body);
+      const invoice = await storage.updateInvoice(req.params.id, validatedData);
+      res.json(invoice);
+    } catch (error) {
+      console.error("Invoice update error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid invoice data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to update invoice" });
+      }
+    }
+  });
+
+  app.delete("/api/invoices/:id", async (req, res) => {
+    try {
+      const invoice = await storage.getInvoice(req.params.id);
+      if (!invoice) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+      
+      // For new sale invoices, restore inventory when deleting
+      if (invoice.type === 'new_sale' && invoice.items) {
+        const items = JSON.parse(invoice.items);
+        
+        for (const item of items) {
+          const inventoryItem = await storage.getInventoryItem(item.inventoryItemId);
+          if (inventoryItem) {
+            // Restore inventory quantity
+            await storage.updateInventoryItem(item.inventoryItemId, {
+              quantity: inventoryItem.quantity + item.quantity
+            });
+          }
+        }
+      }
+      
+      await storage.deleteInvoice(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Invoice deletion error:", error);
+      res.status(400).json({ message: "Failed to delete invoice" });
+    }
+  });
+
+  // Company Settings routes
+  app.get("/api/company-settings", async (req, res) => {
+    try {
+      const settings = await storage.getCompanySettings();
+      res.json(settings || {});
+    } catch (error) {
+      console.error("Company settings fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch company settings" });
+    }
+  });
+
+  app.post("/api/company-settings", async (req, res) => {
+    try {
+      const validatedData = insertCompanySettingsSchema.parse(req.body);
+      const settings = await storage.createCompanySettings(validatedData);
+      res.status(201).json(settings);
+    } catch (error) {
+      console.error("Company settings creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid company settings data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to create company settings" });
+      }
+    }
+  });
+
+  app.put("/api/company-settings/:id", async (req, res) => {
+    try {
+      const validatedData = insertCompanySettingsSchema.partial().parse(req.body);
+      const settings = await storage.updateCompanySettings(req.params.id, validatedData);
+      res.json(settings);
+    } catch (error) {
+      console.error("Company settings update error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid company settings data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to update company settings" });
+      }
+    }
+  });
+
+  // Legacy invoice generation from work order
   app.post("/api/work-orders/:id/invoice", async (req, res) => {
     try {
       const workOrder = await storage.getWorkOrder(req.params.id);
