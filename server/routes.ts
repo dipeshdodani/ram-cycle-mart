@@ -370,11 +370,33 @@ export function registerRoutes(app: Express): Server {
 
   app.patch("/api/technicians/:id", async (req, res) => {
     try {
-      const validatedData = insertUserSchema.partial().parse(req.body);
+      console.log("PATCH technician with data:", req.body);
+      console.log("Technician ID:", req.params.id);
+      
+      // For updates, password is optional - remove it if empty
+      const updateData = { ...req.body };
+      if (!updateData.password || updateData.password.trim() === '') {
+        delete updateData.password;
+      }
+      
+      const validatedData = insertUserSchema.partial().parse(updateData);
+      console.log("Validated data:", validatedData);
       const technician = await storage.updateUser(req.params.id, validatedData);
       res.json(technician);
     } catch (error) {
-      res.status(400).json({ message: "Failed to update technician" });
+      console.error("Technician update error:", error);
+      if (error instanceof z.ZodError) {
+        console.error("Validation errors:", error.errors);
+        res.status(400).json({ 
+          message: "Invalid technician data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ 
+          message: "Failed to update technician",
+          error: error.message || error.toString()
+        });
+      }
     }
   });
 

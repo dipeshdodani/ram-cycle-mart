@@ -37,7 +37,13 @@ export default function TechnicianModal({ isOpen, onClose, technician }: Technic
   const queryClient = useQueryClient();
 
   const form = useForm<InsertUser>({
-    resolver: zodResolver(insertUserSchema),
+    resolver: zodResolver(
+      technician 
+        ? insertUserSchema.partial().extend({
+            password: z.string().optional()
+          })
+        : insertUserSchema
+    ),
     defaultValues: {
       username: "",
       firstName: "",
