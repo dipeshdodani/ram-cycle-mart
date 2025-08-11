@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle, Trash2 } from "lucide-react";
+import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle, Trash2, Edit } from "lucide-react";
 import ServiceInvoiceModal from "@/components/modals/service-invoice-modal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -26,6 +26,7 @@ export default function ServiceBilling() {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -46,7 +47,7 @@ export default function ServiceBilling() {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updateData = { 
         paymentStatus: status,
-        ...(status === 'paid' && { paymentDate: new Date().toISOString() })
+        ...(status === 'paid' && { paymentDate: new Date() })
       };
       const res = await apiRequest("PUT", `/api/invoices/${id}`, updateData);
       return res.json();
@@ -243,6 +244,14 @@ export default function ServiceBilling() {
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => setEditingInvoice(invoice)}
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => generatePDF(invoice)}
                   >
                     <Download className="h-4 w-4" />
@@ -315,6 +324,14 @@ export default function ServiceBilling() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
       />
+      
+      {editingInvoice && (
+        <ServiceInvoiceModal
+          isOpen={!!editingInvoice}
+          onClose={() => setEditingInvoice(null)}
+          invoice={editingInvoice}
+        />
+      )}
     </div>
   );
 }

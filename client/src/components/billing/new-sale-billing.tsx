@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, ShoppingCart, Download, Settings, Trash2 } from "lucide-react";
+import { Search, Plus, ShoppingCart, Download, Settings, Trash2, Edit } from "lucide-react";
 import NewSaleInvoiceModal from "@/components/modals/new-sale-invoice-modal";
 import CompanySettingsModal from "@/components/modals/company-settings-modal";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,7 @@ export default function NewSaleBilling() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [editingInvoice, setEditingInvoice] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -56,7 +57,7 @@ export default function NewSaleBilling() {
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
       const updateData = { 
         paymentStatus: status,
-        ...(status === 'paid' && { paymentDate: new Date().toISOString() })
+        ...(status === 'paid' && { paymentDate: new Date() })
       };
       const res = await apiRequest("PUT", `/api/invoices/${id}`, updateData);
       return res.json();
@@ -321,6 +322,14 @@ export default function NewSaleBilling() {
                     <Button
                       variant="outline"
                       size="sm"
+                      onClick={() => setEditingInvoice(invoice)}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => generatePDF(invoice)}
                     >
                       <Download className="h-4 w-4" />
@@ -399,6 +408,14 @@ export default function NewSaleBilling() {
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
       />
+
+      {editingInvoice && (
+        <NewSaleInvoiceModal
+          isOpen={!!editingInvoice}
+          onClose={() => setEditingInvoice(null)}
+          invoice={editingInvoice}
+        />
+      )}
     </div>
   );
 }

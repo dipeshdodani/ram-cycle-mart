@@ -449,12 +449,24 @@ export class DatabaseStorage implements IStorage {
       .leftJoin(customers, eq(invoices.customerId, customers.id))
       .leftJoin(workOrders, eq(invoices.workOrderId, workOrders.id));
 
+    // Build where conditions array
+    const whereConditions = [];
+    
     if (filters?.type) {
-      query = query.where(eq(invoices.type, filters.type as any));
+      whereConditions.push(eq(invoices.type, filters.type as any));
     }
     
     if (filters?.status) {
-      query = query.where(eq(invoices.paymentStatus, filters.status as any));
+      whereConditions.push(eq(invoices.paymentStatus, filters.status as any));
+    }
+    
+    // Apply combined where conditions
+    if (whereConditions.length > 0) {
+      if (whereConditions.length === 1) {
+        query = query.where(whereConditions[0]);
+      } else {
+        query = query.where(and(...whereConditions));
+      }
     }
 
     return await query.orderBy(desc(invoices.createdAt));
@@ -511,10 +523,21 @@ export class DatabaseStorage implements IStorage {
     return newInvoice;
   }
 
-  async updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice> {
+  async updateInvoice(id: string, invoice: any): Promise<Invoice> {
+    // Handle date transformations for update
+    const transformedInvoice: any = { ...invoice };
+    
+    if (invoice.paymentDate) {
+      transformedInvoice.paymentDate = new Date(invoice.paymentDate);
+    }
+    
+    if (invoice.dueDate) {
+      transformedInvoice.dueDate = new Date(invoice.dueDate);
+    }
+    
     const [updatedInvoice] = await db
       .update(invoices)
-      .set({ ...invoice, updatedAt: sql`now()` })
+      .set({ ...transformedInvoice, updatedAt: sql`now()` })
       .where(eq(invoices.id, id))
       .returning();
     return updatedInvoice;

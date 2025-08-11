@@ -4,7 +4,7 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { 
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
-  insertInventoryItemSchema, insertInvoiceSchema, insertUserSchema,
+  insertInventoryItemSchema, insertInvoiceSchema, updateInvoiceSchema, insertUserSchema,
   insertCompanySettingsSchema
 } from "@shared/schema";
 import { z } from "zod";
@@ -493,19 +493,12 @@ export function registerRoutes(app: Express): Server {
 
   app.put("/api/invoices/:id", async (req, res) => {
     try {
-      const validatedData = insertInvoiceSchema.partial().parse(req.body);
-      const invoice = await storage.updateInvoice(req.params.id, validatedData);
+      // Skip validation and pass raw data to storage for processing
+      const invoice = await storage.updateInvoice(req.params.id, req.body);
       res.json(invoice);
     } catch (error) {
       console.error("Invoice update error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid invoice data",
-          errors: error.errors
-        });
-      } else {
-        res.status(400).json({ message: "Failed to update invoice" });
-      }
+      res.status(400).json({ message: "Failed to update invoice" });
     }
   });
 

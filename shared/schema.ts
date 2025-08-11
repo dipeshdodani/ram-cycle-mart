@@ -246,8 +246,23 @@ export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  dueDate: z.string().transform(val => new Date(val))
+  dueDate: z.union([z.string(), z.date()]).transform(val => {
+    if (val instanceof Date) return val;
+    return new Date(val);
+  })
 });
+
+export const updateInvoiceSchema = z.object({
+  paymentStatus: z.string().optional(),
+  paymentDate: z.string().optional().nullable(),
+  dueDate: z.string().optional(),
+  subtotal: z.union([z.string(), z.number()]).optional(),
+  taxRate: z.union([z.string(), z.number()]).optional(),
+  taxAmount: z.union([z.string(), z.number()]).optional(),
+  total: z.union([z.string(), z.number()]).optional(),
+  notes: z.string().optional().nullable(),
+  items: z.string().optional(),
+}).partial();
 
 export const insertCompanySettingsSchema = createInsertSchema(companySettings).omit({
   id: true,
