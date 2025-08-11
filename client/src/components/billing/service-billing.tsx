@@ -149,10 +149,11 @@ export default function ServiceBilling() {
         doc.setLineWidth(0.5);
         doc.line(20, 50, pageWidth - 20, 50);
         
-        // Invoice title and details
+        // Invoice title and details - dynamic based on invoice type
         doc.setFontSize(18);
         doc.setFont("helvetica", "bold");
-        doc.text('SERVICE INVOICE', 20, 65);
+        const invoiceTitle = invoice.type === 'new_sale' ? 'SALES INVOICE' : 'SERVICE INVOICE';
+        doc.text(invoiceTitle, 20, 65);
         
         // Invoice details section
         doc.setFontSize(10);
@@ -176,23 +177,38 @@ export default function ServiceBilling() {
           doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 20, 101);
         }
         
-        // Service details table
+        // Details table - different content based on invoice type
         let startY = 115;
-        const serviceData = [];
+        let tableData = [];
+        let tableHeaders = [];
         
-        if (invoice.workOrder) {
-          serviceData.push(['Work Order', invoice.workOrder.orderNumber]);
-          serviceData.push(['Problem Description', invoice.workOrder.problemDescription || 'N/A']);
-          serviceData.push(['Service Type', 'Cycle Repair & Service']);
+        if (invoice.type === 'new_sale') {
+          // For new sales, show the actual items sold
+          const items = JSON.parse(invoice.items || '[]');
+          tableHeaders = [['Item Description', 'Quantity', 'Unit Price', 'Total Amount']];
+          tableData = items.map((item: any) => [
+            item.name,
+            item.quantity.toString(),
+            formatCurrency(item.price),
+            formatCurrency(item.quantity * item.price)
+          ]);
         } else {
-          serviceData.push(['Service Type', 'General Service']);
-          serviceData.push(['Description', 'Cycle Repair & Maintenance']);
+          // For service invoices, show service details
+          tableHeaders = [['Service Details', 'Information']];
+          if (invoice.workOrder) {
+            tableData.push(['Work Order', invoice.workOrder.orderNumber]);
+            tableData.push(['Problem Description', invoice.workOrder.problemDescription || 'N/A']);
+            tableData.push(['Service Type', 'Cycle Repair & Service']);
+          } else {
+            tableData.push(['Service Type', 'General Service']);
+            tableData.push(['Description', 'Cycle Repair & Maintenance']);
+          }
         }
         
         autoTable(doc, {
           startY: startY,
-          head: [['Service Details', 'Information']],
-          body: serviceData,
+          head: tableHeaders,
+          body: tableData,
           headStyles: {
             fillColor: [66, 135, 245],
             textColor: [255, 255, 255],
@@ -203,17 +219,25 @@ export default function ServiceBilling() {
             fontSize: 10,
             cellPadding: 4
           },
-          columnStyles: {
+          columnStyles: invoice.type === 'new_sale' ? {
+            0: { cellWidth: 70, halign: 'left' },
+            1: { cellWidth: 25, halign: 'center' },
+            2: { cellWidth: 40, halign: 'right' },
+            3: { cellWidth: 45, halign: 'right' }
+          } : {
             0: { cellWidth: 50, fontStyle: 'bold' },
             1: { cellWidth: 120 }
           },
           margin: { left: 20, right: 20 }
         });
         
-        // Billing table
+        // Billing summary table
         const finalY = (doc as any).lastAutoTable.finalY + 15;
         
-        const billingData = [
+        const billingData = invoice.type === 'new_sale' ? [
+          ['Subtotal', '', '', formatCurrency(parseFloat(invoice.subtotal))],
+          ['GST (' + (parseFloat(invoice.taxRate) * 100).toFixed(1) + '%)', '', '', formatCurrency(parseFloat(invoice.taxAmount))]
+        ] : [
           ['Service Charges', '', '', formatCurrency(parseFloat(invoice.subtotal))],
           ['GST (' + (parseFloat(invoice.taxRate) * 100).toFixed(1) + '%)', '', '', formatCurrency(parseFloat(invoice.taxAmount))]
         ];
@@ -248,11 +272,14 @@ export default function ServiceBilling() {
           margin: { left: 20, right: 20 }
         });
         
-        // Thank you message
+        // Thank you message - different for sales vs service
         const footerY = (doc as any).lastAutoTable.finalY + 30;
         doc.setFontSize(14);
         doc.setFont("helvetica", "bold");
-        doc.text('Thank you for shopping with us!', pageWidth / 2, footerY, { align: "center" });
+        const thankYouMessage = invoice.type === 'new_sale' ? 
+          'Thank you for shopping with us!' : 
+          'Thank you for choosing our service!';
+        doc.text(thankYouMessage, pageWidth / 2, footerY, { align: "center" });
         
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
