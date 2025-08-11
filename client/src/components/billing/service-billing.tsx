@@ -120,15 +120,19 @@ export default function ServiceBilling() {
     }
   };
 
-  const generatePDF = (invoice: any) => {
+  const generatePDF = async (invoice: any) => {
     try {
       console.log('Starting PDF generation for invoice:', invoice);
-      // Import jsPDF dynamically to avoid SSR issues
-      import('jspdf').then(({ default: jsPDF }) => {
-        console.log('jsPDF imported successfully');
-        import('jspdf-autotable').then(() => {
-          console.log('jsPDF AutoTable imported successfully');
-        const doc = new jsPDF();
+      
+      // Import jsPDF and AutoTable properly
+      const jsPDF = (await import('jspdf')).default;
+      console.log('jsPDF imported successfully');
+      
+      // Import AutoTable extension
+      await import('jspdf-autotable');
+      console.log('jsPDF AutoTable imported successfully');
+      
+      const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width;
         
         // Header with company info
@@ -258,30 +262,15 @@ export default function ServiceBilling() {
         doc.setFontSize(8);
         doc.text('Terms: Payment is due within 30 days. Thank you for your business!', pageWidth / 2, footerY + 25, { align: "center" });
         
-        console.log('About to save PDF with filename:', `service-invoice-${invoice.invoiceNumber}.pdf`);
-        doc.save(`service-invoice-${invoice.invoiceNumber}.pdf`);
-        console.log('PDF save completed');
-      }).catch((error) => {
-        console.error('Error importing jsPDF AutoTable:', error);
-        toast({
-          title: "PDF Generation Failed",
-          description: "Failed to load PDF components. Please try again.",
-          variant: "destructive",
-        });
-      });
-    }).catch((error) => {
-      console.error('Error importing jsPDF:', error);
-      toast({
-        title: "PDF Generation Failed", 
-        description: "Failed to load PDF library. Please try again.",
-        variant: "destructive",
-      });
-    });
+      console.log('About to save PDF with filename:', `service-invoice-${invoice.invoiceNumber}.pdf`);
+      doc.save(`service-invoice-${invoice.invoiceNumber}.pdf`);
+      console.log('PDF save completed');
+      
     } catch (error) {
       console.error('Error in PDF generation:', error);
       toast({
         title: "PDF Generation Failed",
-        description: "An unexpected error occurred. Please try again.",
+        description: `Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });
     }

@@ -228,9 +228,14 @@ export default function AdvancedBilling() {
 
   const generatePDF = async (billData: any) => {
     try {
+      console.log('Starting advanced bill PDF generation');
+      
       // Dynamic import for PDF generation
       const jsPDF = (await import('jspdf')).default;
+      console.log('jsPDF imported successfully');
+      
       await import('jspdf-autotable');
+      console.log('jsPDF AutoTable imported successfully');
       
       const pdf = new jsPDF();
       const pageWidth = pdf.internal.pageSize.width;

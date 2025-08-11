@@ -122,11 +122,19 @@ export default function NewSaleBilling() {
     }
   };
 
-  const generatePDF = (invoice: any) => {
-    // Import jsPDF dynamically to avoid SSR issues
-    import('jspdf').then(({ default: jsPDF }) => {
-      import('jspdf-autotable').then(() => {
-        const doc = new jsPDF();
+  const generatePDF = async (invoice: any) => {
+    try {
+      console.log('Starting PDF generation for new sale invoice:', invoice);
+      
+      // Import jsPDF and AutoTable properly
+      const jsPDF = (await import('jspdf')).default;
+      console.log('jsPDF imported successfully');
+      
+      // Import AutoTable extension
+      await import('jspdf-autotable');
+      console.log('jsPDF AutoTable imported successfully');
+      
+      const doc = new jsPDF();
         const pageWidth = doc.internal.pageSize.width;
         
         // Professional header with company branding
@@ -298,8 +306,16 @@ export default function NewSaleBilling() {
         doc.text("Terms: Payment due within 30 days. All sales final. Warranty as per manufacturer terms.", pageWidth / 2, footerY + 35, { align: "center" });
         
         doc.save(`new-sale-invoice-${invoice.invoiceNumber}.pdf`);
+        console.log('PDF generation completed successfully');
+        
+    } catch (error) {
+      console.error('Error in PDF generation:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: `Failed to generate PDF: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        variant: "destructive",
       });
-    });
+    }
   };
 
   if (isLoading) {
