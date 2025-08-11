@@ -55,10 +55,28 @@ export default function Customers() {
         description: "Customer has been successfully deleted.",
       });
     },
-    onError: (error: Error) => {
+    onError: (error: any) => {
+      console.error("Delete error:", error);
+      let errorMessage = "Failed to delete customer";
+      
+      // Parse error message from different formats
+      if (error?.message) {
+        const match = error.message.match(/\d+: (.+)/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = match[1] || errorMessage;
+          }
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Cannot Delete Customer",
+        description: errorMessage,
         variant: "destructive",
       });
     },
