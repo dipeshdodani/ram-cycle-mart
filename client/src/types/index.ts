@@ -1,6 +1,7 @@
 export interface DashboardMetrics {
   todaySales: string;
   activeRepairs: number;
+  dueToday: number;
   newCustomers: number;
   lowStockItems: number;
 }

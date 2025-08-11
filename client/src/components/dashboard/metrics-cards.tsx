@@ -1,6 +1,7 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, Wrench, Users, Package } from "lucide-react";
+import { useLocation } from "wouter";
 import type { DashboardMetrics } from "@/types";
 
 interface MetricsCardsProps {
@@ -9,6 +10,8 @@ interface MetricsCardsProps {
 }
 
 export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) {
+  const [, setLocation] = useLocation();
+
   const metricItems = [
     {
       title: "Today's Sales",
@@ -17,14 +20,16 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
       color: "bg-primary-100 text-primary-600",
       change: "+12.5% from yesterday",
       changeColor: "text-green-600",
+      clickPath: "/invoices",
     },
     {
       title: "Active Repairs",
       value: metrics?.activeRepairs?.toString() || "0",
       icon: Wrench,
       color: "bg-green-100 text-green-600",
-      change: "5 due today",
+      change: `${metrics?.dueToday || 0} due today`,
       changeColor: "text-yellow-600",
+      clickPath: "/work-orders",
     },
     {
       title: "New Customers",
@@ -33,6 +38,7 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
       color: "bg-blue-100 text-blue-600",
       change: "This week",
       changeColor: "text-blue-600",
+      clickPath: "/customers",
     },
     {
       title: "Low Stock Items",
@@ -41,6 +47,7 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
       color: "bg-orange-100 text-orange-600",
       change: "Need reorder",
       changeColor: "text-orange-600",
+      clickPath: "/inventory",
     },
   ];
 
@@ -68,7 +75,11 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       {metricItems.map((item, index) => (
-        <Card key={index} className="overflow-hidden shadow-sm">
+        <Card 
+          key={index} 
+          className="overflow-hidden shadow-sm cursor-pointer hover:shadow-md transition-all duration-200 hover:scale-105 dark:hover:shadow-lg"
+          onClick={() => setLocation(item.clickPath)}
+        >
           <CardContent className="p-6">
             <div className="flex items-center">
               <div className="flex-shrink-0">
@@ -77,8 +88,8 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
                 </div>
               </div>
               <div className="ml-4">
-                <div className="text-sm font-medium text-gray-500">{item.title}</div>
-                <div className="text-2xl font-bold text-gray-900">{item.value}</div>
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400">{item.title}</div>
+                <div className="text-2xl font-bold text-gray-900 dark:text-gray-100">{item.value}</div>
                 <div className={`text-sm ${item.changeColor}`}>
                   {item.change}
                 </div>

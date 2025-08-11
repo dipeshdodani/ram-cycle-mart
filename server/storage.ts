@@ -599,11 +599,20 @@ export class DatabaseStorage implements IStorage {
         sql`${invoices.createdAt} < ${tomorrow}`
       ));
 
-    // Active repairs
+    // Active repairs (pending and in_progress)
     const [activeRepairs] = await db
       .select({ count: count() })
       .from(workOrders)
       .where(sql`${workOrders.status} IN ('pending', 'in_progress')`);
+
+    // Work orders due today
+    const [dueToday] = await db
+      .select({ count: count() })
+      .from(workOrders)
+      .where(and(
+        sql`${workOrders.status} IN ('pending', 'in_progress')`,
+        sql`DATE(${workOrders.dueDate}) = DATE(${today})`
+      ));
 
     // New customers this week
     const weekAgo = new Date();
@@ -622,6 +631,7 @@ export class DatabaseStorage implements IStorage {
     return {
       todaySales: todaySales.total || '0',
       activeRepairs: activeRepairs.count || 0,
+      dueToday: dueToday.count || 0,
       newCustomers: newCustomers.count || 0,
       lowStockItems: lowStockCount.count || 0,
     };
