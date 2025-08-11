@@ -117,7 +117,9 @@ export class DatabaseStorage implements IStorage {
         firstName: users.firstName,
         lastName: users.lastName,
         email: users.email,
+        phone: users.phone,
         role: users.role,
+        isActive: users.isActive,
         name: sql<string>`CONCAT(${users.firstName}, ' ', ${users.lastName})`.as('name')
       })
       .from(users)
