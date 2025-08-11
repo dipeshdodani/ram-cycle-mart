@@ -37,15 +37,15 @@ export default function Navbar() {
             <div className="hidden md:ml-8 md:flex md:space-x-8">
               {navItems.map((item) => (
                 <Link key={item.path} href={item.path}>
-                  <a
-                    className={`px-1 pt-1 pb-4 text-sm font-medium border-b-2 transition-colors ${
+                  <span
+                    className={`px-1 pt-1 pb-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
                       location === item.path
                         ? "text-primary-600 dark:text-primary-400 border-primary-600 dark:border-primary-400"
                         : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600"
                     }`}
                   >
                     {item.label}
-                  </a>
+                  </span>
                 </Link>
               ))}
             </div>

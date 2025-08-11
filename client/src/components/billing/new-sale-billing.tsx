@@ -25,7 +25,7 @@ import {
 
 export default function NewSaleBilling() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const { toast } = useToast();
@@ -36,7 +36,7 @@ export default function NewSaleBilling() {
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("type", "new_sale");
-      if (statusFilter) params.append("status", statusFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
       const url = `/api/invoices?${params.toString()}`;
       const res = await fetch(url);
@@ -217,7 +217,7 @@ export default function NewSaleBilling() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="overdue">Overdue</SelectItem>

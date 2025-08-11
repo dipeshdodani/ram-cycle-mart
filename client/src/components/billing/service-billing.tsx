@@ -24,7 +24,7 @@ import {
 
 export default function ServiceBilling() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -34,7 +34,7 @@ export default function ServiceBilling() {
     queryFn: async () => {
       const params = new URLSearchParams();
       params.append("type", "service");
-      if (statusFilter) params.append("status", statusFilter);
+      if (statusFilter && statusFilter !== "all") params.append("status", statusFilter);
       
       const url = `/api/invoices?${params.toString()}`;
       const res = await fetch(url);
@@ -190,7 +190,7 @@ export default function ServiceBilling() {
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="">All Statuses</SelectItem>
+              <SelectItem value="all">All Statuses</SelectItem>
               <SelectItem value="pending">Pending</SelectItem>
               <SelectItem value="paid">Paid</SelectItem>
               <SelectItem value="overdue">Overdue</SelectItem>
