@@ -461,6 +461,9 @@ export function registerRoutes(app: Express): Server {
     try {
       const validatedData = insertInvoiceSchema.parse(req.body);
       
+      // Generate invoice number
+      const invoiceNumber = `INV-${Date.now()}`;
+      
       // For new sale invoices, update inventory
       if (req.body.type === 'new_sale' && req.body.items) {
         const items = JSON.parse(req.body.items);
@@ -487,9 +490,12 @@ export function registerRoutes(app: Express): Server {
         }
       }
       
-      const invoice = await storage.createInvoice(validatedData);
+      const invoice = await storage.createInvoice({
+        ...validatedData,
+        invoiceNumber,
+      });
       res.status(201).json(invoice);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Invoice creation error:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
@@ -497,7 +503,7 @@ export function registerRoutes(app: Express): Server {
           errors: error.errors
         });
       } else {
-        res.status(400).json({ message: error.message || "Failed to create invoice" });
+        res.status(400).json({ message: error?.message || "Failed to create invoice" });
       }
     }
   });

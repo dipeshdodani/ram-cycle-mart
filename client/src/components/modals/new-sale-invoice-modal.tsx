@@ -38,7 +38,7 @@ const newSaleInvoiceSchema = z.object({
   items: z.array(itemSchema).min(1, "At least one item is required"),
   taxRate: z.string().default("0.18"),
   notes: z.string().optional(),
-  dueDate: z.string().min(1, "Due date is required"),
+  dueDate: z.string().min(1, "Purchase date is required"),
 });
 
 type NewSaleInvoiceFormData = z.infer<typeof newSaleInvoiceSchema>;
@@ -116,7 +116,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
         taxAmount: taxAmount.toString(),
         total: total.toString(),
         notes: data.notes,
-        dueDate: new Date(data.dueDate).toISOString(),
+        dueDate: data.dueDate,
       };
 
       const res = await apiRequest("POST", "/api/invoices", invoiceData);
@@ -355,7 +355,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
               name="dueDate"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Due Date *</FormLabel>
+                  <FormLabel>Purchase Date *</FormLabel>
                   <FormControl>
                     <Input
                       {...field}

@@ -85,7 +85,7 @@ export default function RecentWorkOrders({ workOrders, isLoading }: RecentWorkOr
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg font-medium text-gray-900">Recent Work Orders</CardTitle>
           <Link href="/work-orders">
-            <a className="text-sm text-primary-600 hover:text-primary-500">View all</a>
+            <span className="text-sm text-primary-600 hover:text-primary-500 cursor-pointer">View all</span>
           </Link>
         </div>
       </CardHeader>

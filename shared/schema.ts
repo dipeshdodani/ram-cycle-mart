@@ -242,11 +242,10 @@ export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({
   id: true,
+  invoiceNumber: true, // Auto-generated
   createdAt: true,
   updatedAt: true,
 }).extend({
-  customerId: z.string().optional().nullable(),
-  invoiceNumber: z.string(),
   dueDate: z.string().transform(val => new Date(val))
 });
 
