@@ -230,98 +230,192 @@ export default function AdvancedBilling() {
     try {
       // Dynamic import for PDF generation
       const jsPDF = (await import('jspdf')).default;
+      await import('jspdf-autotable');
       
       const pdf = new jsPDF();
       const pageWidth = pdf.internal.pageSize.width;
       
-      // Header
-      pdf.setFontSize(24);
+      // Header with company branding
+      pdf.setFontSize(28);
       pdf.setFont("helvetica", "bold");
-      pdf.text("Ram Cycle Mart", pageWidth / 2, 30, { align: "center" });
+      pdf.text("Ram Cycle Mart", pageWidth / 2, 25, { align: "center" });
+      
+      pdf.setFontSize(14);
+      pdf.setFont("helvetica", "normal");
+      pdf.text("Professional Cycle Service & Repair", pageWidth / 2, 35, { align: "center" });
+      pdf.text("Phone: +91 98765 43210 | Email: info@ramcyclemart.com", pageWidth / 2, 45, { align: "center" });
+      
+      // Decorative line
+      pdf.setLineWidth(0.8);
+      pdf.setDrawColor(66, 135, 245);
+      pdf.line(20, 52, pageWidth - 20, 52);
+      
+      // Invoice title
+      pdf.setFontSize(20);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(66, 135, 245);
+      pdf.text("ADVANCED BILL", 20, 70);
+      
+      // Reset text color
+      pdf.setTextColor(0, 0, 0);
+      
+      // Bill information section
+      pdf.setFontSize(11);
+      pdf.setFont("helvetica", "normal");
+      
+      // Left column - Bill details
+      pdf.setFont("helvetica", "bold");
+      pdf.text("BILL INFORMATION", 20, 85);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Bill Number: ${billData.invoiceNumber || 'BILL-' + Date.now()}`, 20, 95);
+      pdf.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 20, 102);
+      pdf.text(`Time: ${new Date().toLocaleTimeString('en-IN')}`, 20, 109);
+      
+      // Right column - Customer details
+      pdf.setFont("helvetica", "bold");
+      pdf.text("CUSTOMER DETAILS", pageWidth / 2 + 10, 85);
+      pdf.setFont("helvetica", "normal");
+      pdf.text(`Name: ${bill.customerName}`, pageWidth / 2 + 10, 95);
+      if (bill.customerPhone) {
+        pdf.text(`Phone: ${bill.customerPhone}`, pageWidth / 2 + 10, 102);
+      }
+      if (bill.customerEmail) {
+        pdf.text(`Email: ${bill.customerEmail}`, pageWidth / 2 + 10, 109);
+      }
+      
+      // Items table with professional styling
+      const itemsTableData = bill.items.map((item: any) => [
+        item.description,
+        item.quantity.toString(),
+        formatCurrency(item.unitPrice),
+        formatCurrency(item.total)
+      ]);
+      
+      let startY = 125;
+      
+      (pdf as any).autoTable({
+        startY: startY,
+        head: [['Description', 'Quantity', 'Unit Price', 'Amount']],
+        body: itemsTableData,
+        headStyles: {
+          fillColor: [66, 135, 245],
+          textColor: [255, 255, 255],
+          fontSize: 12,
+          fontStyle: 'bold',
+          halign: 'center'
+        },
+        bodyStyles: {
+          fontSize: 11,
+          cellPadding: 6,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.5
+        },
+        columnStyles: {
+          0: { cellWidth: 80, halign: 'left' },
+          1: { cellWidth: 25, halign: 'center' },
+          2: { cellWidth: 35, halign: 'right' },
+          3: { cellWidth: 40, halign: 'right' }
+        },
+        alternateRowStyles: {
+          fillColor: [248, 249, 250]
+        },
+        margin: { left: 20, right: 20 }
+      });
+      
+      // Summary table
+      const summaryData = [
+        ['Subtotal:', formatCurrency(bill.subtotal)]
+      ];
+      
+      if (bill.discount > 0) {
+        summaryData.push([`Discount (${bill.discount}%):`, `-${formatCurrency(bill.subtotal * bill.discount / 100)}`]);
+      }
+      
+      // GST calculation
+      const gstAmount = bill.total - (bill.subtotal - (bill.subtotal * bill.discount / 100));
+      if (gstAmount > 0) {
+        summaryData.push(['GST (18%):', formatCurrency(gstAmount)]);
+      }
+      
+      const finalY = (pdf as any).lastAutoTable.finalY + 10;
+      
+      (pdf as any).autoTable({
+        startY: finalY,
+        body: summaryData,
+        bodyStyles: {
+          fontSize: 11,
+          cellPadding: 4,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.5
+        },
+        columnStyles: {
+          0: { cellWidth: 140, halign: 'right', fontStyle: 'bold' },
+          1: { cellWidth: 40, halign: 'right' }
+        },
+        margin: { left: 20, right: 20 },
+        theme: 'plain'
+      });
+      
+      // Total amount row with emphasis
+      const totalY = (pdf as any).lastAutoTable.finalY + 5;
+      (pdf as any).autoTable({
+        startY: totalY,
+        body: [['TOTAL AMOUNT:', formatCurrency(bill.total)]],
+        bodyStyles: {
+          fontSize: 14,
+          cellPadding: 6,
+          fontStyle: 'bold',
+          fillColor: [66, 135, 245],
+          textColor: [255, 255, 255]
+        },
+        columnStyles: {
+          0: { cellWidth: 140, halign: 'right' },
+          1: { cellWidth: 40, halign: 'right' }
+        },
+        margin: { left: 20, right: 20 },
+        theme: 'plain'
+      });
+      
+      // Notes section
+      if (bill.notes) {
+        const notesY = (pdf as any).lastAutoTable.finalY + 15;
+        pdf.setFont("helvetica", "bold");
+        pdf.setFontSize(11);
+        pdf.text("NOTES:", 20, notesY);
+        pdf.setFont("helvetica", "normal");
+        pdf.setFontSize(10);
+        
+        // Split notes into multiple lines if needed
+        const splitNotes = pdf.splitTextToSize(bill.notes, pageWidth - 40);
+        pdf.text(splitNotes, 20, notesY + 8);
+      }
+      
+      // Professional footer with thank you message
+      const footerY = Math.max((pdf as any).lastAutoTable?.finalY + 40, 240);
+      
+      // Thank you message
+      pdf.setFontSize(16);
+      pdf.setFont("helvetica", "bold");
+      pdf.setTextColor(66, 135, 245);
+      pdf.text("Thank you for shopping with us!", pageWidth / 2, footerY, { align: "center" });
       
       pdf.setFontSize(12);
       pdf.setFont("helvetica", "normal");
-      pdf.text("Cycle Service & Repair", pageWidth / 2, 40, { align: "center" });
-      pdf.text("Phone: +91 98765 43210 | Email: info@ramcyclemart.com", pageWidth / 2, 50, { align: "center" });
+      pdf.setTextColor(0, 0, 0);
+      pdf.text("We appreciate your business and trust in our services.", pageWidth / 2, footerY + 10, { align: "center" });
+      pdf.text("Visit us again for all your cycle service needs!", pageWidth / 2, footerY + 20, { align: "center" });
       
-      // Bill Details
-      pdf.setFontSize(16);
-      pdf.setFont("helvetica", "bold");
-      pdf.text("BILL/INVOICE", 20, 80);
-      
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "normal");
-      pdf.text(`Bill No: ${billData.invoiceNumber || 'BILL-' + Date.now()}`, 20, 95);
-      pdf.text(`Date: ${new Date().toLocaleDateString('en-IN')}`, 20, 105);
-      
-      // Customer Details
-      pdf.text("Bill To:", 120, 95);
-      pdf.text(`${bill.customerName}`, 120, 105);
-      if (bill.customerPhone) pdf.text(`Phone: ${bill.customerPhone}`, 120, 115);
-      if (bill.customerEmail) pdf.text(`Email: ${bill.customerEmail}`, 120, 125);
-      
-      // Items Table
-      let yPos = 145;
-      pdf.setFontSize(10);
-      pdf.setFont("helvetica", "bold");
-      
-      // Table headers
-      pdf.text("Description", 20, yPos);
-      pdf.text("Qty", 120, yPos);
-      pdf.text("Rate", 140, yPos);
-      pdf.text("Amount", 170, yPos);
-      
-      pdf.line(20, yPos + 3, 190, yPos + 3);
-      yPos += 15;
-      
-      pdf.setFont("helvetica", "normal");
-      
-      // Items
-      bill.items.forEach((item) => {
-        pdf.text(item.description, 20, yPos);
-        pdf.text(item.quantity.toString(), 120, yPos);
-        pdf.text(formatCurrency(item.unitPrice), 140, yPos);
-        pdf.text(formatCurrency(item.total), 170, yPos);
-        yPos += 10;
-      });
-      
-      // Totals
-      yPos += 10;
-      pdf.line(20, yPos, 190, yPos);
-      yPos += 15;
-      
-      pdf.text("Subtotal:", 140, yPos);
-      pdf.text(formatCurrency(bill.subtotal), 170, yPos);
-      yPos += 10;
-      
-      if (bill.discount > 0) {
-        pdf.text(`Discount (${bill.discount}%):`, 140, yPos);
-        pdf.text(`-${formatCurrency(bill.subtotal * bill.discount / 100)}`, 170, yPos);
-        yPos += 10;
-      }
-      
-      pdf.setFont("helvetica", "bold");
-      pdf.text("Total:", 140, yPos);
-      pdf.text(formatCurrency(bill.total), 170, yPos);
-      
-      // Notes
-      if (bill.notes) {
-        yPos += 20;
-        pdf.setFont("helvetica", "normal");
-        pdf.text("Notes:", 20, yPos);
-        pdf.text(bill.notes, 20, yPos + 10);
-      }
-      
-      // Footer
-      pdf.setFontSize(8);
-      pdf.text("Thank you for your business!", pageWidth / 2, 280, { align: "center" });
+      // Bottom line with terms
+      pdf.setFontSize(9);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text("Terms: Payment due within 30 days. All services come with quality guarantee.", pageWidth / 2, footerY + 35, { align: "center" });
       
       // Download PDF
-      pdf.save(`Bill-${billData.invoiceNumber || Date.now()}.pdf`);
+      pdf.save(`Advanced-Bill-${billData.invoiceNumber || Date.now()}.pdf`);
       
       toast({
-        title: "PDF Generated",
-        description: "Bill PDF has been downloaded successfully.",
+        title: "Professional PDF Generated",
+        description: "Advanced bill PDF with table format has been downloaded successfully.",
       });
       
     } catch (error) {

@@ -127,42 +127,73 @@ export default function NewSaleBilling() {
     import('jspdf').then(({ default: jsPDF }) => {
       import('jspdf-autotable').then(() => {
         const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
         
-        // Header
-        doc.setFontSize(20);
-        doc.text(companySettings?.companyName || 'Ram Cycle Mart', 20, 20);
+        // Professional header with company branding
+        doc.setFontSize(28);
+        doc.setFont("helvetica", "bold");
+        doc.text(companySettings?.companyName || 'Ram Cycle Mart', pageWidth / 2, 25, { align: "center" });
         
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "normal");
+        doc.text('Professional Cycle Service & Sales', pageWidth / 2, 35, { align: "center" });
+        
+        // Company details
         if (companySettings?.address) {
-          doc.setFontSize(10);
-          doc.text(companySettings.address, 20, 28);
+          doc.setFontSize(11);
+          doc.text(companySettings.address, pageWidth / 2, 45, { align: "center" });
         }
+        
+        doc.setFontSize(11);
+        doc.text('Phone: +91 98765 43210 | Email: info@ramcyclemart.com', pageWidth / 2, 52, { align: "center" });
         
         if (companySettings?.gstNumber) {
-          doc.setFontSize(10);
-          doc.text(`GST: ${companySettings.gstNumber}`, 20, 34);
+          doc.text(`GST Number: ${companySettings.gstNumber}`, pageWidth / 2, 59, { align: "center" });
         }
         
-        doc.setFontSize(16);
-        doc.text('New Sale Invoice', 20, 45);
+        // Decorative line
+        doc.setLineWidth(0.8);
+        doc.setDrawColor(66, 135, 245);
+        doc.line(20, 65, pageWidth - 20, 65);
         
-        // Invoice details
-        doc.setFontSize(12);
-        doc.text(`Invoice #: ${invoice.invoiceNumber}`, 20, 60);
-        doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString()}`, 20, 68);
-        doc.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 20, 76);
+        // Invoice title
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(66, 135, 245);
+        doc.text('NEW SALE INVOICE', 20, 80);
         
-        // Customer info
-        doc.text('Bill To:', 20, 90);
-        doc.text(`${invoice.customer?.firstName} ${invoice.customer?.lastName}`, 20, 98);
+        // Reset text color
+        doc.setTextColor(0, 0, 0);
+        
+        // Invoice information section
+        doc.setFontSize(11);
+        doc.setFont("helvetica", "normal");
+        
+        // Left column - Invoice details
+        doc.setFont("helvetica", "bold");
+        doc.text("INVOICE INFORMATION", 20, 95);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 20, 105);
+        doc.text(`Issue Date: ${new Date(invoice.createdAt).toLocaleDateString('en-IN')}`, 20, 112);
+        doc.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString('en-IN')}`, 20, 119);
+        doc.text(`Status: ${invoice.paymentStatus.toUpperCase()}`, 20, 126);
+        
+        // Right column - Customer details  
+        doc.setFont("helvetica", "bold");
+        doc.text("CUSTOMER DETAILS", pageWidth / 2 + 10, 95);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Name: ${invoice.customer?.firstName} ${invoice.customer?.lastName}`, pageWidth / 2 + 10, 105);
         if (invoice.customer?.phone) {
-          doc.text(`Phone: ${invoice.customer.phone}`, 20, 106);
+          doc.text(`Phone: ${invoice.customer.phone}`, pageWidth / 2 + 10, 112);
         }
         if (invoice.customer?.email) {
-          doc.text(`Email: ${invoice.customer.email}`, 20, 114);
+          doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 10, 119);
         }
         
-        // Items table
+        // Items table with professional styling
         const items = JSON.parse(invoice.items || '[]');
+        let startY = 140;
+        
         if (items.length > 0) {
           const tableData = items.map((item: any) => [
             item.name,
@@ -172,23 +203,99 @@ export default function NewSaleBilling() {
           ]);
           
           (doc as any).autoTable({
-            startY: 125,
-            head: [['Item', 'Qty', 'Price', 'Total']],
+            startY: startY,
+            head: [['Item Description', 'Quantity', 'Unit Price', 'Total Amount']],
             body: tableData,
+            headStyles: {
+              fillColor: [66, 135, 245],
+              textColor: [255, 255, 255],
+              fontSize: 12,
+              fontStyle: 'bold',
+              halign: 'center'
+            },
+            bodyStyles: {
+              fontSize: 11,
+              cellPadding: 6,
+              lineColor: [200, 200, 200],
+              lineWidth: 0.5
+            },
+            columnStyles: {
+              0: { cellWidth: 70, halign: 'left' },
+              1: { cellWidth: 25, halign: 'center' },
+              2: { cellWidth: 40, halign: 'right' },
+              3: { cellWidth: 45, halign: 'right' }
+            },
+            alternateRowStyles: {
+              fillColor: [248, 249, 250]
+            },
+            margin: { left: 20, right: 20 }
           });
         }
         
-        const finalY = (doc as any).lastAutoTable.finalY || 140;
+        // Summary calculations and table
+        const finalY = (doc as any).lastAutoTable?.finalY + 15 || 160;
         
-        // Amounts
-        doc.text(`Subtotal: ${formatCurrency(parseFloat(invoice.subtotal))}`, 130, finalY + 15);
-        doc.text(`GST (${(parseFloat(invoice.taxRate) * 100).toFixed(1)}%): ${formatCurrency(parseFloat(invoice.taxAmount))}`, 130, finalY + 23);
-        doc.setFontSize(14);
-        doc.text(`Total: ${formatCurrency(parseFloat(invoice.total))}`, 130, finalY + 33);
+        const summaryData = [
+          ['Subtotal:', formatCurrency(parseFloat(invoice.subtotal))],
+          [`GST (${(parseFloat(invoice.taxRate) * 100).toFixed(1)}%):`, formatCurrency(parseFloat(invoice.taxAmount))]
+        ];
         
-        // Status
+        (doc as any).autoTable({
+          startY: finalY,
+          body: summaryData,
+          bodyStyles: {
+            fontSize: 11,
+            cellPadding: 4,
+            lineColor: [200, 200, 200],
+            lineWidth: 0.5
+          },
+          columnStyles: {
+            0: { cellWidth: 135, halign: 'right', fontStyle: 'bold' },
+            1: { cellWidth: 45, halign: 'right' }
+          },
+          margin: { left: 20, right: 20 },
+          theme: 'plain'
+        });
+        
+        // Total amount with emphasis
+        const totalY = (doc as any).lastAutoTable.finalY + 5;
+        (doc as any).autoTable({
+          startY: totalY,
+          body: [['TOTAL AMOUNT:', formatCurrency(parseFloat(invoice.total))]],
+          bodyStyles: {
+            fontSize: 14,
+            cellPadding: 8,
+            fontStyle: 'bold',
+            fillColor: [66, 135, 245],
+            textColor: [255, 255, 255]
+          },
+          columnStyles: {
+            0: { cellWidth: 135, halign: 'right' },
+            1: { cellWidth: 45, halign: 'right' }
+          },
+          margin: { left: 20, right: 20 },
+          theme: 'plain'
+        });
+        
+        // Professional footer with thank you message
+        const footerY = Math.max((doc as any).lastAutoTable.finalY + 40, 240);
+        
+        // Thank you message
+        doc.setFontSize(16);
+        doc.setFont("helvetica", "bold");
+        doc.setTextColor(66, 135, 245);
+        doc.text("Thank you for shopping with us!", pageWidth / 2, footerY, { align: "center" });
+        
         doc.setFontSize(12);
-        doc.text(`Status: ${invoice.paymentStatus.toUpperCase()}`, 20, finalY + 50);
+        doc.setFont("helvetica", "normal");
+        doc.setTextColor(0, 0, 0);
+        doc.text("We are delighted to serve you and appreciate your trust in our products.", pageWidth / 2, footerY + 10, { align: "center" });
+        doc.text("Visit us again for quality cycles and exceptional service!", pageWidth / 2, footerY + 20, { align: "center" });
+        
+        // Terms and conditions
+        doc.setFontSize(9);
+        doc.setTextColor(100, 100, 100);
+        doc.text("Terms: Payment due within 30 days. All sales final. Warranty as per manufacturer terms.", pageWidth / 2, footerY + 35, { align: "center" });
         
         doc.save(`new-sale-invoice-${invoice.invoiceNumber}.pdf`);
       });

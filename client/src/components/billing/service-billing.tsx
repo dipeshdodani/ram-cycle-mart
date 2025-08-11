@@ -123,48 +123,139 @@ export default function ServiceBilling() {
   const generatePDF = (invoice: any) => {
     // Import jsPDF dynamically to avoid SSR issues
     import('jspdf').then(({ default: jsPDF }) => {
-      const doc = new jsPDF();
-      
-      // Header
-      doc.setFontSize(20);
-      doc.text('Ram Cycle Mart', 20, 20);
-      doc.setFontSize(16);
-      doc.text('Service Invoice', 20, 30);
-      
-      // Invoice details
-      doc.setFontSize(12);
-      doc.text(`Invoice #: ${invoice.invoiceNumber}`, 20, 50);
-      doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString()}`, 20, 60);
-      doc.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString()}`, 20, 70);
-      
-      // Customer info
-      doc.text('Bill To:', 20, 90);
-      doc.text(`${invoice.customer?.firstName} ${invoice.customer?.lastName}`, 20, 100);
-      if (invoice.customer?.phone) {
-        doc.text(`Phone: ${invoice.customer.phone}`, 20, 110);
-      }
-      if (invoice.customer?.email) {
-        doc.text(`Email: ${invoice.customer.email}`, 20, 120);
-      }
-      
-      // Work order info if available
-      if (invoice.workOrder) {
-        doc.text('Service Details:', 20, 140);
-        doc.text(`Work Order: ${invoice.workOrder.orderNumber}`, 20, 150);
-        doc.text(`Problem: ${invoice.workOrder.problemDescription}`, 20, 160);
-      }
-      
-      // Amounts
-      doc.text(`Subtotal: ${formatCurrency(parseFloat(invoice.subtotal))}`, 20, 180);
-      doc.text(`GST (${(parseFloat(invoice.taxRate) * 100).toFixed(1)}%): ${formatCurrency(parseFloat(invoice.taxAmount))}`, 20, 190);
-      doc.setFontSize(14);
-      doc.text(`Total: ${formatCurrency(parseFloat(invoice.total))}`, 20, 200);
-      
-      // Status
-      doc.setFontSize(12);
-      doc.text(`Status: ${invoice.paymentStatus.toUpperCase()}`, 20, 220);
-      
-      doc.save(`service-invoice-${invoice.invoiceNumber}.pdf`);
+      import('jspdf-autotable').then(() => {
+        const doc = new jsPDF();
+        const pageWidth = doc.internal.pageSize.width;
+        
+        // Header with company info
+        doc.setFontSize(24);
+        doc.setFont("helvetica", "bold");
+        doc.text('Ram Cycle Mart', pageWidth / 2, 25, { align: "center" });
+        
+        doc.setFontSize(12);
+        doc.setFont("helvetica", "normal");
+        doc.text('Cycle Service & Repair', pageWidth / 2, 35, { align: "center" });
+        doc.text('Phone: +91 98765 43210 | Email: info@ramcyclemart.com', pageWidth / 2, 45, { align: "center" });
+        
+        // Horizontal line
+        doc.setLineWidth(0.5);
+        doc.line(20, 50, pageWidth - 20, 50);
+        
+        // Invoice title and details
+        doc.setFontSize(18);
+        doc.setFont("helvetica", "bold");
+        doc.text('SERVICE INVOICE', 20, 65);
+        
+        // Invoice details section
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        
+        // Left column - Invoice details
+        doc.text(`Invoice Number: ${invoice.invoiceNumber}`, 20, 80);
+        doc.text(`Date: ${new Date(invoice.createdAt).toLocaleDateString('en-IN')}`, 20, 87);
+        doc.text(`Due Date: ${new Date(invoice.dueDate).toLocaleDateString('en-IN')}`, 20, 94);
+        doc.text(`Status: ${invoice.paymentStatus.toUpperCase()}`, 20, 101);
+        
+        // Right column - Customer details
+        doc.setFont("helvetica", "bold");
+        doc.text('BILL TO:', pageWidth / 2 + 20, 80);
+        doc.setFont("helvetica", "normal");
+        doc.text(`${invoice.customer?.firstName} ${invoice.customer?.lastName}`, pageWidth / 2 + 20, 87);
+        if (invoice.customer?.phone) {
+          doc.text(`Phone: ${invoice.customer.phone}`, pageWidth / 2 + 20, 94);
+        }
+        if (invoice.customer?.email) {
+          doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 20, 101);
+        }
+        
+        // Service details table
+        let startY = 115;
+        const serviceData = [];
+        
+        if (invoice.workOrder) {
+          serviceData.push(['Work Order', invoice.workOrder.orderNumber]);
+          serviceData.push(['Problem Description', invoice.workOrder.problemDescription || 'N/A']);
+          serviceData.push(['Service Type', 'Cycle Repair & Service']);
+        } else {
+          serviceData.push(['Service Type', 'General Service']);
+          serviceData.push(['Description', 'Cycle Repair & Maintenance']);
+        }
+        
+        (doc as any).autoTable({
+          startY: startY,
+          head: [['Service Details', 'Information']],
+          body: serviceData,
+          headStyles: {
+            fillColor: [66, 135, 245],
+            textColor: [255, 255, 255],
+            fontSize: 11,
+            fontStyle: 'bold'
+          },
+          bodyStyles: {
+            fontSize: 10,
+            cellPadding: 4
+          },
+          columnStyles: {
+            0: { cellWidth: 50, fontStyle: 'bold' },
+            1: { cellWidth: 120 }
+          },
+          margin: { left: 20, right: 20 }
+        });
+        
+        // Billing table
+        const finalY = (doc as any).lastAutoTable.finalY + 15;
+        
+        const billingData = [
+          ['Service Charges', '', '', formatCurrency(parseFloat(invoice.subtotal))],
+          ['GST (' + (parseFloat(invoice.taxRate) * 100).toFixed(1) + '%)', '', '', formatCurrency(parseFloat(invoice.taxAmount))]
+        ];
+        
+        (doc as any).autoTable({
+          startY: finalY,
+          head: [['Description', 'Qty', 'Rate', 'Amount']],
+          body: billingData,
+          foot: [['', '', 'TOTAL AMOUNT:', formatCurrency(parseFloat(invoice.total))]],
+          headStyles: {
+            fillColor: [66, 135, 245],
+            textColor: [255, 255, 255],
+            fontSize: 11,
+            fontStyle: 'bold'
+          },
+          footStyles: {
+            fillColor: [245, 245, 245],
+            textColor: [0, 0, 0],
+            fontSize: 12,
+            fontStyle: 'bold'
+          },
+          bodyStyles: {
+            fontSize: 10,
+            cellPadding: 4
+          },
+          columnStyles: {
+            0: { cellWidth: 80 },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 40, halign: 'right' },
+            3: { cellWidth: 40, halign: 'right' }
+          },
+          margin: { left: 20, right: 20 }
+        });
+        
+        // Thank you message
+        const footerY = (doc as any).lastAutoTable.finalY + 30;
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text('Thank you for shopping with us!', pageWidth / 2, footerY, { align: "center" });
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text('We appreciate your business and look forward to serving you again.', pageWidth / 2, footerY + 10, { align: "center" });
+        
+        // Terms and conditions
+        doc.setFontSize(8);
+        doc.text('Terms: Payment is due within 30 days. Thank you for your business!', pageWidth / 2, footerY + 25, { align: "center" });
+        
+        doc.save(`service-invoice-${invoice.invoiceNumber}.pdf`);
+      });
     });
   };
 
