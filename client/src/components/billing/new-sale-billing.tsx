@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, ShoppingCart, Download, Settings, Trash2, Edit, DollarSign, Clock, CheckCircle, AlertCircle, Package } from "lucide-react";
+import * as XLSX from 'xlsx';
 import NewSaleInvoiceModal from "@/components/modals/new-sale-invoice-modal";
 import CompanySettingsModal from "@/components/modals/company-settings-modal";
 import { useToast } from "@/hooks/use-toast";
@@ -119,6 +120,70 @@ export default function NewSaleBilling() {
       });
     },
   });
+
+  // Excel export function for new sale invoices
+  const exportToExcel = () => {
+    if (!invoices || invoices.length === 0) {
+      toast({
+        title: "No Data",
+        description: "No new sale invoices to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = invoices.map((invoice: any) => {
+      const items = JSON.parse(invoice.items || '[]');
+      const itemsText = items.map((item: any) => 
+        `${item.name} (Qty: ${item.quantity}, Price: ₹${item.price})`
+      ).join('; ');
+
+      return {
+        'Invoice Number': invoice.invoiceNumber,
+        'Customer Name': `${invoice.customer?.firstName || ''} ${invoice.customer?.lastName || ''}`.trim(),
+        'Phone': invoice.customer?.phone || '',
+        'Email': invoice.customer?.email || '',
+        'Items Sold': itemsText,
+        'Subtotal (₹)': parseFloat(invoice.subtotal).toFixed(2),
+        'Tax Rate (%)': (parseFloat(invoice.taxRate || 0) * 100).toFixed(1),
+        'Tax Amount (₹)': parseFloat(invoice.taxAmount || 0).toFixed(2),
+        'Total Amount (₹)': parseFloat(invoice.total).toFixed(2),
+        'Payment Status': invoice.paymentStatus,
+        'Payment Date': invoice.paymentDate ? new Date(invoice.paymentDate).toLocaleDateString() : '',
+        'Due Date': new Date(invoice.dueDate).toLocaleDateString(),
+        'Created Date': new Date(invoice.createdAt).toLocaleDateString(),
+        'Notes': invoice.notes || ''
+      };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'New Sale Invoices');
+
+    // Auto-fit columns
+    const range = XLSX.utils.decode_range(worksheet['!ref']!);
+    const colWidths = [];
+    for (let C = range.s.c; C <= range.e.c; C++) {
+      let maxWidth = 10;
+      for (let R = range.s.r; R <= range.e.r; R++) {
+        const cellAddress = XLSX.utils.encode_cell({ r: R, c: C });
+        const cell = worksheet[cellAddress];
+        if (cell && cell.v) {
+          maxWidth = Math.max(maxWidth, cell.v.toString().length);
+        }
+      }
+      colWidths.push({ wch: Math.min(maxWidth + 2, 50) });
+    }
+    worksheet['!cols'] = colWidths;
+
+    const fileName = `New_Sale_Invoices_${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    toast({
+      title: "Export Successful",
+      description: `New sale invoices exported to ${fileName}`,
+    });
+  };
 
   const filteredInvoices = invoices?.filter((invoice: any) =>
     invoice.customer?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -422,6 +487,14 @@ export default function NewSaleBilling() {
           </Select>
         </div>
         <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={exportToExcel}
+            className="flex items-center gap-2"
+          >
+            <Download className="h-4 w-4" />
+            Export Excel
+          </Button>
           <Button 
             variant="outline" 
             onClick={() => setIsSettingsModalOpen(true)}
