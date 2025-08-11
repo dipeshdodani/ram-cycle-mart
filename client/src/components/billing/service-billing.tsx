@@ -233,10 +233,10 @@ export default function ServiceBilling() {
             cellPadding: 4
           },
           columnStyles: invoice.type === 'new_sale' ? {
-            0: { cellWidth: 70, halign: 'left' },
-            1: { cellWidth: 25, halign: 'center' },
-            2: { cellWidth: 40, halign: 'right' },
-            3: { cellWidth: 45, halign: 'right' }
+            0: { cellWidth: 60, halign: 'left' },
+            1: { cellWidth: 20, halign: 'center' },
+            2: { cellWidth: 45, halign: 'right' },
+            3: { cellWidth: 55, halign: 'right' }
           } : {
             0: { cellWidth: 50, fontStyle: 'bold' },
             1: { cellWidth: 120 }
@@ -277,10 +277,10 @@ export default function ServiceBilling() {
             cellPadding: 4
           },
           columnStyles: {
-            0: { cellWidth: 80 },
+            0: { cellWidth: 70 },
             1: { cellWidth: 20, halign: 'center' },
             2: { cellWidth: 40, halign: 'right' },
-            3: { cellWidth: 40, halign: 'right' }
+            3: { cellWidth: 50, halign: 'right' }
           },
           margin: { left: 20, right: 20 }
         });

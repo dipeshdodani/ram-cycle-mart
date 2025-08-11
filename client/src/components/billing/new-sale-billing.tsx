@@ -241,10 +241,10 @@ export default function NewSaleBilling() {
               lineWidth: 0.5
             },
             columnStyles: {
-              0: { cellWidth: 70, halign: 'left' },
-              1: { cellWidth: 25, halign: 'center' },
-              2: { cellWidth: 40, halign: 'right' },
-              3: { cellWidth: 45, halign: 'right' }
+              0: { cellWidth: 60, halign: 'left' },
+              1: { cellWidth: 20, halign: 'center' },
+              2: { cellWidth: 45, halign: 'right' },
+              3: { cellWidth: 55, halign: 'right' }
             },
             alternateRowStyles: {
               fillColor: [248, 249, 250]
@@ -271,8 +271,8 @@ export default function NewSaleBilling() {
             lineWidth: 0.5
           },
           columnStyles: {
-            0: { cellWidth: 135, halign: 'right', fontStyle: 'bold' },
-            1: { cellWidth: 45, halign: 'right' }
+            0: { cellWidth: 125, halign: 'right', fontStyle: 'bold' },
+            1: { cellWidth: 55, halign: 'right' }
           },
           margin: { left: 20, right: 20 },
           theme: 'plain'
@@ -291,8 +291,8 @@ export default function NewSaleBilling() {
             textColor: [255, 255, 255]
           },
           columnStyles: {
-            0: { cellWidth: 135, halign: 'right' },
-            1: { cellWidth: 45, halign: 'right' }
+            0: { cellWidth: 125, halign: 'right' },
+            1: { cellWidth: 55, halign: 'right' }
           },
           margin: { left: 20, right: 20 },
           theme: 'plain'
