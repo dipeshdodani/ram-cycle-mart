@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle } from "lucide-react";
+import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle, Trash2 } from "lucide-react";
 import InvoiceModal from "@/components/modals/invoice-modal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -52,6 +52,45 @@ export default function Billing() {
       toast({
         title: "Error",
         description: "Failed to update invoice",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteInvoiceMutation = useMutation({
+    mutationFn: async (invoiceId: string) => {
+      const res = await apiRequest("DELETE", `/api/invoices/${invoiceId}`);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
+      toast({
+        title: "Invoice deleted",
+        description: "Invoice has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Delete error:", error);
+      let errorMessage = "Failed to delete invoice";
+      
+      if (error?.message) {
+        const match = error.message.match(/\d+: (.+)/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = match[1] || errorMessage;
+          }
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
+        title: "Cannot Delete Invoice",
+        description: errorMessage,
         variant: "destructive",
       });
     },
@@ -370,6 +409,19 @@ export default function Billing() {
                               onClick={() => window.open(`/invoices/${invoice.id}/print`, '_blank')}
                             >
                               <Download className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => {
+                                if (confirm('Are you sure you want to delete this invoice? This action cannot be undone.')) {
+                                  deleteInvoiceMutation.mutate(invoice.id);
+                                }
+                              }}
+                              disabled={deleteInvoiceMutation.isPending}
+                              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            >
+                              <Trash2 className="h-4 w-4" />
                             </Button>
                           </div>
                         </td>
