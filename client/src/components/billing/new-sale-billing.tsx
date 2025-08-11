@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, ShoppingCart, Download, Settings, Trash2, Edit } from "lucide-react";
+import { Search, Plus, ShoppingCart, Download, Settings, Trash2, Edit, DollarSign, Clock, CheckCircle, AlertCircle, Package } from "lucide-react";
 import NewSaleInvoiceModal from "@/components/modals/new-sale-invoice-modal";
 import CompanySettingsModal from "@/components/modals/company-settings-modal";
 import { useToast } from "@/hooks/use-toast";
@@ -52,6 +52,19 @@ export default function NewSaleBilling() {
       return res.json();
     },
   });
+
+  // Calculate new sale-specific metrics
+  const salesMetrics = invoices ? {
+    totalSalesInvoices: invoices.length,
+    totalSalesRevenue: invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.total), 0),
+    pendingSales: invoices.filter((inv: any) => inv.paymentStatus === 'pending').length,
+    completedSales: invoices.filter((inv: any) => inv.paymentStatus === 'paid').length,
+    overdueSales: invoices.filter((inv: any) => {
+      const dueDate = new Date(inv.dueDate);
+      const today = new Date();
+      return inv.paymentStatus === 'pending' && dueDate < today;
+    }).length
+  } : null;
 
   const updateInvoiceMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -324,6 +337,66 @@ export default function NewSaleBilling() {
 
   return (
     <div className="space-y-6">
+      {/* Sales Metrics Dashboard Cards */}
+      {salesMetrics && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <Card className="border-purple-200 dark:border-purple-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-purple-700 dark:text-purple-300">Total Sales Invoices</CardTitle>
+              <Package className="h-4 w-4 text-purple-600 dark:text-purple-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-purple-800 dark:text-purple-200">{salesMetrics.totalSalesInvoices}</div>
+              <p className="text-xs text-purple-600 dark:text-purple-400">All new sale invoices</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-green-200 dark:border-green-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-green-700 dark:text-green-300">Sales Revenue</CardTitle>
+              <DollarSign className="h-4 w-4 text-green-600 dark:text-green-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-green-800 dark:text-green-200">{formatCurrency(salesMetrics.totalSalesRevenue)}</div>
+              <p className="text-xs text-green-600 dark:text-green-400">Total earnings from sales</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-yellow-200 dark:border-yellow-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-yellow-700 dark:text-yellow-300">Pending Sales</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-600 dark:text-yellow-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-yellow-800 dark:text-yellow-200">{salesMetrics.pendingSales}</div>
+              <p className="text-xs text-yellow-600 dark:text-yellow-400">Awaiting payment</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-blue-200 dark:border-blue-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-blue-700 dark:text-blue-300">Completed Sales</CardTitle>
+              <CheckCircle className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-blue-800 dark:text-blue-200">{salesMetrics.completedSales}</div>
+              <p className="text-xs text-blue-600 dark:text-blue-400">Paid sales</p>
+            </CardContent>
+          </Card>
+
+          <Card className="border-red-200 dark:border-red-800">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-red-700 dark:text-red-300">Overdue Sales</CardTitle>
+              <AlertCircle className="h-4 w-4 text-red-600 dark:text-red-400" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-red-800 dark:text-red-200">{salesMetrics.overdueSales}</div>
+              <p className="text-xs text-red-600 dark:text-red-400">Past due date</p>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row gap-4 justify-between">
         <div className="flex flex-col sm:flex-row gap-4">

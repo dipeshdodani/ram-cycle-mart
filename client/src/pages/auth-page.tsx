@@ -43,10 +43,15 @@ export default function AuthPage() {
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <Cog className="h-12 w-12 text-primary-600" />
-              <h1 className="ml-3 text-3xl font-bold text-gray-900">SewCraft Pro</h1>
+              <div className="h-12 w-12 flex items-center justify-center bg-blue-600 rounded-full mr-3">
+                <div className="h-8 w-8 border-2 border-white rounded-full relative">
+                  <div className="absolute inset-1 border border-white rounded-full"></div>
+                  <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-white rounded-full"></div>
+                </div>
+              </div>
+              <h1 className="text-3xl font-bold text-gray-900">Ram Cycle Mart</h1>
             </div>
-            <p className="text-gray-600">Sewing Machine Shop Management System</p>
+            <p className="text-gray-600">Cycle Service & Repair Shop Management System</p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -204,10 +209,10 @@ export default function AuthPage() {
       <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:py-8 bg-primary">
         <div className="text-white">
           <h2 className="text-4xl font-bold mb-6">
-            Complete Shop Management Solution
+            Complete Cycle Shop Management Solution
           </h2>
           <p className="text-xl mb-8 text-primary-100">
-            Streamline your sewing machine shop operations with our comprehensive management system.
+            Streamline your cycle service and repair shop operations with our comprehensive management system.
           </p>
           
           <div className="space-y-6">
@@ -222,8 +227,8 @@ export default function AuthPage() {
             <div className="flex items-center space-x-4">
               <Wrench className="h-8 w-8 text-primary-200" />
               <div>
-                <h3 className="font-semibold text-lg">Work Order Tracking</h3>
-                <p className="text-primary-100">Manage repairs and maintenance efficiently</p>
+                <h3 className="font-semibold text-lg">Cycle Repair Tracking</h3>
+                <p className="text-primary-100">Manage cycle repairs and maintenance efficiently</p>
               </div>
             </div>
             
