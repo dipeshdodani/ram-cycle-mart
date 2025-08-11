@@ -373,10 +373,22 @@ export function registerRoutes(app: Express): Server {
       console.log("PATCH technician with data:", req.body);
       console.log("Technician ID:", req.params.id);
       
-      // For updates, password is optional - remove it if empty
+      // For updates, clean up empty fields that shouldn't be updated
       const updateData = { ...req.body };
+      
+      // Remove password if empty
       if (!updateData.password || updateData.password.trim() === '') {
         delete updateData.password;
+      }
+      
+      // Remove username if empty (don't update to empty string)
+      if (!updateData.username || updateData.username.trim() === '') {
+        delete updateData.username;
+      }
+      
+      // Remove phone if empty
+      if (!updateData.phone || updateData.phone.trim() === '') {
+        delete updateData.phone;
       }
       
       const validatedData = insertUserSchema.partial().parse(updateData);
@@ -391,6 +403,15 @@ export function registerRoutes(app: Express): Server {
           message: "Invalid technician data",
           errors: error.errors
         });
+      } else if (error.code === '23505') {
+        // Handle unique constraint violations
+        let message = "Failed to update technician";
+        if (error.constraint === 'users_username_unique') {
+          message = "Username already exists. Please choose a different username.";
+        } else if (error.constraint === 'users_email_unique') {
+          message = "Email already exists. Please use a different email address.";
+        }
+        res.status(400).json({ message });
       } else {
         res.status(400).json({ 
           message: "Failed to update technician",
