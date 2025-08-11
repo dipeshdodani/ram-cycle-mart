@@ -176,12 +176,22 @@ export class DatabaseStorage implements IStorage {
       .where(eq(sewingMachines.customerId, id))
       .limit(1);
 
+    const relatedInvoices = await db
+      .select({ id: invoices.id })
+      .from(invoices)
+      .where(eq(invoices.customerId, id))
+      .limit(1);
+
     if (relatedWorkOrders.length > 0) {
       throw new Error("Cannot delete customer with existing work orders. Please complete or cancel all work orders first.");
     }
 
     if (relatedMachines.length > 0) {
       throw new Error("Cannot delete customer with registered cycles. Please remove all cycles first.");
+    }
+
+    if (relatedInvoices.length > 0) {
+      throw new Error("Cannot delete customer with existing invoices. Please remove all invoices first.");
     }
 
     await db.delete(customers).where(eq(customers.id, id));
