@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -39,18 +39,49 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
   const form = useForm<InsertInventoryItem>({
     resolver: zodResolver(insertInventoryItemSchema),
     defaultValues: {
-      name: editingItem?.name || "",
-      description: editingItem?.description || "",
-      sku: editingItem?.sku || "",
-      category: editingItem?.category || "",
-      quantity: editingItem?.quantity || 0,
-      minimumStock: editingItem?.minimumStock || 0,
-      cost: editingItem?.cost || "",
-      price: editingItem?.price || "",
-      brand: editingItem?.brand || "",
-      location: editingItem?.location || "",
+      name: "",
+      description: "",
+      sku: "",
+      category: "",
+      quantity: 0,
+      minimumStock: 0,
+      cost: "",
+      price: "",
+      brand: "",
+      location: "",
     },
   });
+
+  // Reset form when editingItem changes
+  useEffect(() => {
+    if (editingItem) {
+      form.reset({
+        name: editingItem.name || "",
+        description: editingItem.description || "",
+        sku: editingItem.sku || "",
+        category: editingItem.category || "",
+        quantity: editingItem.quantity || 0,
+        minimumStock: editingItem.minimumStock || 0,
+        cost: editingItem.cost?.toString() || "",
+        price: editingItem.price?.toString() || "",
+        brand: editingItem.brand || "",
+        location: editingItem.location || "",
+      });
+    } else {
+      form.reset({
+        name: "",
+        description: "",
+        sku: "",
+        category: "",
+        quantity: 0,
+        minimumStock: 0,
+        cost: "",
+        price: "",
+        brand: "",
+        location: "",
+      });
+    }
+  }, [editingItem, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: InsertInventoryItem) => {
@@ -163,7 +194,8 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
                     <Textarea 
                       placeholder="Describe the item..." 
                       className="min-h-[80px]"
-                      {...field} 
+                      {...field}
+                      value={field.value || ""}
                     />
                   </FormControl>
                   <FormMessage />
@@ -204,7 +236,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
                   <FormItem>
                     <FormLabel>Brand</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter brand name" {...field} />
+                      <Input placeholder="Enter brand name" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -305,7 +337,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
                 <FormItem>
                   <FormLabel>Storage Location</FormLabel>
                   <FormControl>
-                    <Input placeholder="Enter storage location" {...field} />
+                    <Input placeholder="Enter storage location" {...field} value={field.value || ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
