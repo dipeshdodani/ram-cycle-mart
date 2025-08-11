@@ -270,25 +270,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/invoices", async (req, res) => {
-    try {
-      console.log("Creating invoice with data:", req.body);
-      const validatedData = insertInvoiceSchema.parse(req.body);
-      console.log("Validated data:", validatedData);
-      const invoice = await storage.createInvoice(validatedData);
-      res.status(201).json(invoice);
-    } catch (error) {
-      console.error("Invoice creation error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid invoice data",
-          errors: error.errors
-        });
-      } else {
-        res.status(400).json({ message: "Invalid invoice data" });
-      }
-    }
-  });
+
 
   app.put("/api/invoices/:id", async (req, res) => {
     try {
@@ -465,8 +447,8 @@ export function registerRoutes(app: Express): Server {
       const invoiceNumber = `INV-${Date.now()}`;
       
       // For new sale invoices, update inventory
-      if (req.body.type === 'new_sale' && req.body.items) {
-        const items = JSON.parse(req.body.items);
+      if (validatedData.type === 'new_sale' && validatedData.items) {
+        const items = JSON.parse(validatedData.items);
         
         // Validate and update inventory for each item
         for (const item of items) {
@@ -484,8 +466,9 @@ export function registerRoutes(app: Express): Server {
           }
           
           // Reduce inventory quantity
+          const newQuantity = inventoryItem.quantity - item.quantity;
           await storage.updateInventoryItem(item.inventoryItemId, {
-            quantity: inventoryItem.quantity - item.quantity
+            quantity: newQuantity
           });
         }
       }
