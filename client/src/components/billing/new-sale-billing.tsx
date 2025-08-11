@@ -127,11 +127,11 @@ export default function NewSaleBilling() {
       console.log('Starting PDF generation for new sale invoice:', invoice);
       
       // Import jsPDF and AutoTable properly
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       console.log('jsPDF imported successfully');
       
-      // Import AutoTable extension
-      await import('jspdf-autotable');
+      // Import and apply AutoTable extension
+      const autoTable = (await import('jspdf-autotable')).default;
       console.log('jsPDF AutoTable imported successfully');
       
       const doc = new jsPDF();
@@ -210,7 +210,7 @@ export default function NewSaleBilling() {
             formatCurrency(item.quantity * item.price)
           ]);
           
-          (doc as any).autoTable({
+          autoTable(doc, {
             startY: startY,
             head: [['Item Description', 'Quantity', 'Unit Price', 'Total Amount']],
             body: tableData,
@@ -248,7 +248,7 @@ export default function NewSaleBilling() {
           [`GST (${(parseFloat(invoice.taxRate) * 100).toFixed(1)}%):`, formatCurrency(parseFloat(invoice.taxAmount))]
         ];
         
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: finalY,
           body: summaryData,
           bodyStyles: {
@@ -267,7 +267,7 @@ export default function NewSaleBilling() {
         
         // Total amount with emphasis
         const totalY = (doc as any).lastAutoTable.finalY + 5;
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: totalY,
           body: [['TOTAL AMOUNT:', formatCurrency(parseFloat(invoice.total))]],
           bodyStyles: {

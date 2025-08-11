@@ -234,7 +234,7 @@ export default function AdvancedBilling() {
       const jsPDF = (await import('jspdf')).default;
       console.log('jsPDF imported successfully');
       
-      await import('jspdf-autotable');
+      const autoTable = (await import('jspdf-autotable')).default;
       console.log('jsPDF AutoTable imported successfully');
       
       const pdf = new jsPDF();
@@ -298,7 +298,7 @@ export default function AdvancedBilling() {
       
       let startY = 125;
       
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         startY: startY,
         head: [['Description', 'Quantity', 'Unit Price', 'Amount']],
         body: itemsTableData,
@@ -344,7 +344,7 @@ export default function AdvancedBilling() {
       
       const finalY = (pdf as any).lastAutoTable.finalY + 10;
       
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         startY: finalY,
         body: summaryData,
         bodyStyles: {
@@ -363,7 +363,7 @@ export default function AdvancedBilling() {
       
       // Total amount row with emphasis
       const totalY = (pdf as any).lastAutoTable.finalY + 5;
-      (pdf as any).autoTable({
+      autoTable(pdf, {
         startY: totalY,
         body: [['TOTAL AMOUNT:', formatCurrency(bill.total)]],
         bodyStyles: {

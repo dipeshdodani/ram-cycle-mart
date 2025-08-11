@@ -125,11 +125,11 @@ export default function ServiceBilling() {
       console.log('Starting PDF generation for invoice:', invoice);
       
       // Import jsPDF and AutoTable properly
-      const jsPDF = (await import('jspdf')).default;
+      const { default: jsPDF } = await import('jspdf');
       console.log('jsPDF imported successfully');
       
-      // Import AutoTable extension
-      await import('jspdf-autotable');
+      // Import and apply AutoTable extension
+      const autoTable = (await import('jspdf-autotable')).default;
       console.log('jsPDF AutoTable imported successfully');
       
       const doc = new jsPDF();
@@ -189,7 +189,7 @@ export default function ServiceBilling() {
           serviceData.push(['Description', 'Cycle Repair & Maintenance']);
         }
         
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: startY,
           head: [['Service Details', 'Information']],
           body: serviceData,
@@ -218,7 +218,7 @@ export default function ServiceBilling() {
           ['GST (' + (parseFloat(invoice.taxRate) * 100).toFixed(1) + '%)', '', '', formatCurrency(parseFloat(invoice.taxAmount))]
         ];
         
-        (doc as any).autoTable({
+        autoTable(doc, {
           startY: finalY,
           head: [['Description', 'Qty', 'Rate', 'Amount']],
           body: billingData,
