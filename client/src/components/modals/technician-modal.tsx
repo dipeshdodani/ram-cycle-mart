@@ -5,6 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { insertUserSchema, type InsertUser } from "@shared/schema";
 import { useEffect } from "react";
+import { z } from "zod";
 import {
   Dialog,
   DialogContent,
