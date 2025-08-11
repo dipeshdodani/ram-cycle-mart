@@ -26,6 +26,7 @@ export interface IStorage {
   // Customer management
   getCustomers(search?: string): Promise<Customer[]>;
   getCustomer(id: string): Promise<Customer | undefined>;
+  getCustomerByPhone(phone: string): Promise<Customer | undefined>;
   createCustomer(customer: InsertCustomer): Promise<Customer>;
   updateCustomer(id: string, customer: Partial<InsertCustomer>): Promise<Customer>;
   deleteCustomer(id: string): Promise<void>;
@@ -139,6 +140,11 @@ export class DatabaseStorage implements IStorage {
     return customer || undefined;
   }
 
+  async getCustomerByPhone(phone: string): Promise<Customer | undefined> {
+    const [customer] = await db.select().from(customers).where(eq(customers.phone, phone));
+    return customer || undefined;
+  }
+
   async createCustomer(customer: InsertCustomer): Promise<Customer> {
     const [newCustomer] = await db
       .insert(customers)
@@ -170,8 +176,12 @@ export class DatabaseStorage implements IStorage {
       .where(eq(sewingMachines.customerId, id))
       .limit(1);
 
-    if (relatedWorkOrders.length > 0 || relatedMachines.length > 0) {
-      throw new Error("Cannot delete customer with existing work orders or machines. Please remove related records first.");
+    if (relatedWorkOrders.length > 0) {
+      throw new Error("Cannot delete customer with existing work orders. Please complete or cancel all work orders first.");
+    }
+
+    if (relatedMachines.length > 0) {
+      throw new Error("Cannot delete customer with registered cycles. Please remove all cycles first.");
     }
 
     await db.delete(customers).where(eq(customers.id, id));

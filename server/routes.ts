@@ -48,10 +48,27 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/customers", async (req, res) => {
     try {
       const validatedData = insertCustomerSchema.parse(req.body);
+      
+      // Check for duplicate customer by phone number
+      const existingCustomer = await storage.getCustomerByPhone(validatedData.phone);
+      if (existingCustomer) {
+        return res.status(409).json({ 
+          message: "Customer with this phone number already exists" 
+        });
+      }
+      
       const customer = await storage.createCustomer(validatedData);
       res.status(201).json(customer);
     } catch (error) {
-      res.status(400).json({ message: "Invalid customer data" });
+      console.error("Customer creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid customer data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Invalid customer data" });
+      }
     }
   });
 
@@ -70,7 +87,12 @@ export function registerRoutes(app: Express): Server {
       await storage.deleteCustomer(req.params.id);
       res.status(204).send();
     } catch (error) {
-      res.status(500).json({ message: "Failed to delete customer" });
+      console.error("Customer deletion error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Failed to delete customer" });
+      }
     }
   });
 
