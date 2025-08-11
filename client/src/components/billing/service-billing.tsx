@@ -317,9 +317,9 @@ export default function ServiceBilling() {
             </SelectContent>
           </Select>
         </div>
-        <Button onClick={() => setIsModalOpen(true)} className="flex items-center gap-2">
+        <Button onClick={() => window.location.href = '/work-orders'} className="flex items-center gap-2">
           <Plus className="h-4 w-4" />
-          New Service Invoice
+          Create Work Order
         </Button>
       </div>
 
@@ -430,27 +430,16 @@ export default function ServiceBilling() {
               <p className="text-gray-600 dark:text-gray-400 mb-4">
                 Get started by creating your first service invoice.
               </p>
-              <Button onClick={() => setIsModalOpen(true)}>
+              <Button onClick={() => window.location.href = '/work-orders'}>
                 <Plus className="h-4 w-4 mr-2" />
-                New Service Invoice
+                Create Work Order
               </Button>
             </CardContent>
           </Card>
         )}
       </div>
 
-      <ServiceInvoiceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-      />
-      
-      {editingInvoice && (
-        <ServiceInvoiceModal
-          isOpen={!!editingInvoice}
-          onClose={() => setEditingInvoice(null)}
-          invoice={editingInvoice}
-        />
-      )}
+      {/* ServiceInvoiceModal temporarily removed - functionality integrated into main component */}
     </div>
   );
 }
