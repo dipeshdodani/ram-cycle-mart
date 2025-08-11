@@ -192,6 +192,20 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.delete("/api/work-orders/:id", async (req, res) => {
+    try {
+      await storage.deleteWorkOrder(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Work order deletion error:", error);
+      if (error instanceof Error) {
+        res.status(400).json({ message: error.message });
+      } else {
+        res.status(500).json({ message: "Failed to delete work order" });
+      }
+    }
+  });
+
   // Inventory routes
   app.get("/api/inventory", async (req, res) => {
     try {

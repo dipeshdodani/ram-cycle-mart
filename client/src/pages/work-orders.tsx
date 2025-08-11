@@ -1,13 +1,15 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Clock, CheckCircle, AlertCircle } from "lucide-react";
+import { Plus, Clock, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
 import WorkOrderModal from "@/components/modals/work-order-modal";
 import WorkOrderDetailsModal from "@/components/modals/work-order-details-modal";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { WorkOrderFilters } from "@/types";
 
 export default function WorkOrders() {
@@ -15,6 +17,8 @@ export default function WorkOrders() {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [filters, setFilters] = useState<WorkOrderFilters>({});
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: workOrders, isLoading } = useQuery({
     queryKey: ["/api/work-orders", filters],
@@ -27,6 +31,45 @@ export default function WorkOrders() {
       const url = `/api/work-orders${params.toString() ? `?${params.toString()}` : ""}`;
       const res = await fetch(url);
       return res.json();
+    },
+  });
+
+  const deleteWorkOrderMutation = useMutation({
+    mutationFn: async (workOrderId: string) => {
+      const res = await apiRequest("DELETE", `/api/work-orders/${workOrderId}`);
+      return res;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/work-orders"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/dashboard/metrics"] });
+      toast({
+        title: "Work Order Deleted",
+        description: "Work order has been successfully deleted.",
+      });
+    },
+    onError: (error: any) => {
+      console.error("Delete error:", error);
+      let errorMessage = "Failed to delete work order";
+      
+      if (error?.message) {
+        const match = error.message.match(/\d+: (.+)/);
+        if (match) {
+          try {
+            const errorData = JSON.parse(match[1]);
+            errorMessage = errorData.message || errorMessage;
+          } catch {
+            errorMessage = match[1] || errorMessage;
+          }
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      toast({
+        title: "Cannot Delete Work Order",
+        description: errorMessage,
+        variant: "destructive",
+      });
     },
   });
 
@@ -226,6 +269,19 @@ export default function WorkOrders() {
                         }}
                       >
                         Edit Work Order
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          if (confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
+                            deleteWorkOrderMutation.mutate(order.id);
+                          }
+                        }}
+                        disabled={deleteWorkOrderMutation.isPending}
+                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
                   </CardContent>
