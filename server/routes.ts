@@ -243,6 +243,18 @@ export function registerRoutes(app: Express): Server {
       const item = await storage.updateInventoryItem(req.params.id, validatedData);
       res.json(item);
     } catch (error) {
+      console.error("PUT inventory update error:", error);
+      res.status(400).json({ message: "Failed to update inventory item" });
+    }
+  });
+
+  app.patch("/api/inventory/:id", async (req, res) => {
+    try {
+      const validatedData = insertInventoryItemSchema.partial().parse(req.body);
+      const item = await storage.updateInventoryItem(req.params.id, validatedData);
+      res.json(item);
+    } catch (error) {
+      console.error("PATCH inventory update error:", error);
       res.status(400).json({ message: "Failed to update inventory item" });
     }
   });
