@@ -54,8 +54,8 @@ export interface IStorage {
   deleteInventoryItem(id: string): Promise<void>;
   getLowStockItems(): Promise<InventoryItem[]>;
   
-  // Invoice management
-  getInvoices(filters?: { type?: string; status?: string }): Promise<any[]>;
+  // Invoice management  
+  getInvoices(filters?: { customerId?: string; type?: string; status?: string }): Promise<any[]>;
   getInvoice(id: string): Promise<any>;
   createInvoice(invoice: InsertInvoice): Promise<Invoice>;
   updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice>;
