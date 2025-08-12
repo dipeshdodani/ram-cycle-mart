@@ -131,10 +131,17 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
   });
 
   const onSubmit = (data: InsertInventoryItem) => {
+    // Convert string prices to numbers for backend validation
+    const processedData = {
+      ...data,
+      cost: parseFloat(data.cost as string) || 0,
+      price: parseFloat(data.price as string) || 0,
+    };
+    
     if (editingItem) {
-      updateMutation.mutate(data);
+      updateMutation.mutate(processedData);
     } else {
-      createMutation.mutate(data);
+      createMutation.mutate(processedData);
     }
   };
 

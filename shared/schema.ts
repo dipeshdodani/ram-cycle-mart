@@ -240,6 +240,9 @@ export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit
   id: true,
   createdAt: true,
   updatedAt: true,
+}).extend({
+  cost: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
+  price: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
 });
 
 export const insertInvoiceSchema = createInsertSchema(invoices).omit({

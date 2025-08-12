@@ -229,11 +229,20 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/inventory", async (req, res) => {
     try {
+      console.log("Inventory POST request body:", req.body);
       const validatedData = insertInventoryItemSchema.parse(req.body);
       const item = await storage.createInventoryItem(validatedData);
       res.status(201).json(item);
     } catch (error) {
-      res.status(400).json({ message: "Invalid inventory item data" });
+      console.error("Inventory creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid inventory item data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Invalid inventory item data" });
+      }
     }
   });
 
