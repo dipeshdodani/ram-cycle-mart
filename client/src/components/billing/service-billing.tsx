@@ -251,8 +251,10 @@ export default function ServiceBilling() {
           doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 20, customerYOffset);
           customerYOffset += 7;
         }
-        if (invoice.customer?.gstNumber) {
-          doc.text(`GST No: ${invoice.customer.gstNumber}`, pageWidth / 2 + 20, customerYOffset);
+        // Prioritize manual GST number from invoice over customer's stored GST
+        const gstNumber = invoice.customerGstNumber || invoice.customer?.gstNumber;
+        if (gstNumber) {
+          doc.text(`GST No: ${gstNumber}`, pageWidth / 2 + 20, customerYOffset);
         }
         
         // Details table - different content based on invoice type

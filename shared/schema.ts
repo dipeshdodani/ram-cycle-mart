@@ -119,6 +119,7 @@ export const invoices = pgTable("invoices", {
   invoiceNumber: text("invoice_number").notNull().unique(),
   customerId: varchar("customer_id").notNull().references(() => customers.id),
   workOrderId: varchar("work_order_id").references(() => workOrders.id),
+  customerGstNumber: text("customer_gst_number"), // Manual GST number for this invoice
   type: invoiceTypeEnum("type").notNull().default("service"),
   items: text("items").default("[]"), // JSON array of items for new sale invoices
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),

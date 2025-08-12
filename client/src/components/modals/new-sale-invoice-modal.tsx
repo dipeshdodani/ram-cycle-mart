@@ -35,6 +35,7 @@ const itemSchema = z.object({
 
 const newSaleInvoiceSchema = z.object({
   customerId: z.string().min(1, "Customer is required"),
+  customerGstNumber: z.string().optional(),
   items: z.array(itemSchema).min(1, "At least one item is required"),
   taxRate: z.string().default("0.18"),
   notes: z.string().optional(),
@@ -56,6 +57,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
     resolver: zodResolver(newSaleInvoiceSchema),
     defaultValues: {
       customerId: "",
+      customerGstNumber: "",
       items: [{ inventoryItemId: "", quantity: 1, price: 0 }],
       taxRate: "0.18",
       notes: "",
@@ -101,6 +103,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
 
       const invoiceData = {
         customerId: data.customerId,
+        customerGstNumber: data.customerGstNumber || null,
         type: "new_sale",
         items: JSON.stringify(data.items.map(item => {
           const inventoryItem = inventoryItems?.find((inv: any) => inv.id === item.inventoryItemId);
@@ -217,6 +220,26 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
                 )}
               />
 
+              <FormField
+                control={form.control}
+                name="customerGstNumber"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Customer GST Number (Optional - B2B)</FormLabel>
+                    <FormControl>
+                      <Input 
+                        placeholder="Enter GST number (e.g., 22AAAAA0000A1Z5)" 
+                        {...field} 
+                        value={field.value || ""}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="taxRate"
