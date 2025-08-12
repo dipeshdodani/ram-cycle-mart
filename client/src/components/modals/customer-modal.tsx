@@ -199,7 +199,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input type="email" placeholder="Enter email address" {...field} />
+                      <Input type="email" placeholder="Enter email address" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -230,7 +230,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormControl>
                     <TransliterationInput
                       placeholder="Enter street address"
-                      value={field.value}
+                      value={field.value || ""}
                       onChange={field.onChange}
                     />
                   </FormControl>
@@ -249,7 +249,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                     <FormControl>
                       <TransliterationInput
                         placeholder="Enter city"
-                        value={field.value}
+                        value={field.value || ""}
                         onChange={field.onChange}
                       />
                     </FormControl>
@@ -267,7 +267,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                     <FormControl>
                       <TransliterationInput
                         placeholder="Enter state"
-                        value={field.value}
+                        value={field.value || ""}
                         onChange={field.onChange}
                       />
                     </FormControl>
@@ -283,7 +283,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormItem>
                     <FormLabel>ZIP Code</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter ZIP code" {...field} />
+                      <Input placeholder="Enter ZIP code" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -318,7 +318,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                   <FormControl>
                     <TransliterationTextarea
                       placeholder="Add any additional notes about the customer..."
-                      value={field.value}
+                      value={field.value || ""}
                       onChange={field.onChange}
                       rows={4}
                     />
