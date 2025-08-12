@@ -242,11 +242,17 @@ export default function ServiceBilling() {
         doc.text('BILL TO:', pageWidth / 2 + 20, 80);
         doc.setFont("helvetica", "normal");
         doc.text(`${invoice.customer?.firstName} ${invoice.customer?.lastName}`, pageWidth / 2 + 20, 87);
+        let customerYOffset = 94;
         if (invoice.customer?.phone) {
-          doc.text(`Phone: ${invoice.customer.phone}`, pageWidth / 2 + 20, 94);
+          doc.text(`Phone: ${invoice.customer.phone}`, pageWidth / 2 + 20, customerYOffset);
+          customerYOffset += 7;
         }
         if (invoice.customer?.email) {
-          doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 20, 101);
+          doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 20, customerYOffset);
+          customerYOffset += 7;
+        }
+        if (invoice.customer?.gstNumber) {
+          doc.text(`GST No: ${invoice.customer.gstNumber}`, pageWidth / 2 + 20, customerYOffset);
         }
         
         // Details table - different content based on invoice type

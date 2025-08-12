@@ -269,11 +269,17 @@ export default function NewSaleBilling() {
         doc.text("CUSTOMER DETAILS", pageWidth / 2 + 10, 95);
         doc.setFont("helvetica", "normal");
         doc.text(`Name: ${invoice.customer?.firstName} ${invoice.customer?.lastName}`, pageWidth / 2 + 10, 105);
+        let customerYOffset = 112;
         if (invoice.customer?.phone) {
-          doc.text(`Phone: ${invoice.customer.phone}`, pageWidth / 2 + 10, 112);
+          doc.text(`Phone: ${invoice.customer.phone}`, pageWidth / 2 + 10, customerYOffset);
+          customerYOffset += 7;
         }
         if (invoice.customer?.email) {
-          doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 10, 119);
+          doc.text(`Email: ${invoice.customer.email}`, pageWidth / 2 + 10, customerYOffset);
+          customerYOffset += 7;
+        }
+        if (invoice.customer?.gstNumber) {
+          doc.text(`GST No: ${invoice.customer.gstNumber}`, pageWidth / 2 + 10, customerYOffset);
         }
         
         // Items table with professional styling

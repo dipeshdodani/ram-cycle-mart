@@ -48,6 +48,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
       city: "",
       state: "",
       zipCode: "",
+      gstNumber: "",
       notes: "",
     },
   });
@@ -64,6 +65,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
         city: customer.city || "",
         state: customer.state || "",
         zipCode: customer.zipCode || "",
+        gstNumber: customer.gstNumber || "",
         notes: customer.notes || "",
       });
     } else {
@@ -76,6 +78,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
         city: "",
         state: "",
         zipCode: "",
+        gstNumber: "",
         notes: "",
       });
     }
@@ -287,6 +290,24 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
                 )}
               />
             </div>
+
+            <FormField
+              control={form.control}
+              name="gstNumber"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>GST Number (Optional - For B2B)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder="Enter GST number (e.g., 22AAAAA0000A1Z5)" 
+                      {...field} 
+                      value={field.value || ""} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <FormField
               control={form.control}
