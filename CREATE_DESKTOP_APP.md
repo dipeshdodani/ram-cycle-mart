@@ -33,22 +33,16 @@ I've created everything needed to convert your Ram Cycle Mart web application in
 
 ## Quick Start - Build Your Desktop App
 
-### Step 1: Prepare Environment
-```bash
-# Make sure you have Node.js 18+ installed
-node --version
+### Step 1: Prerequisites (Windows)
+1. **Download Node.js** from https://nodejs.org (LTS version)
+2. **Install Node.js** with default settings
+3. **Restart your computer** after installation
+4. **Extract** the `ram-cycle-mart-desktop.tar.gz` file
 
-# Install ImageMagick for icon conversion (optional but recommended)
-# Ubuntu/Debian: sudo apt install imagemagick
-# Windows: Download from https://imagemagick.org/
-```
-
-### Step 2: Run the Build Script
-```bash
-# Execute the automated build script
-chmod +x build-desktop.sh
-./build-desktop.sh
-```
+### Step 2: Build Process (Windows)
+1. **Open Command Prompt** in the extracted folder
+2. **Install dependencies**: `npm install`
+3. **Build desktop app**: `npm run dist:win`
 
 ### Step 3: Get Your .exe Files
 After building, find your files in:
