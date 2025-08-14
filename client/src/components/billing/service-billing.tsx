@@ -11,6 +11,7 @@ import * as XLSX from 'xlsx';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
+import InvoiceModal from "@/components/modals/invoice-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -536,7 +537,10 @@ export default function ServiceBilling() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setEditingInvoice(invoice)}
+                    onClick={() => {
+                      setEditingInvoice(invoice);
+                      setIsModalOpen(true);
+                    }}
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -612,7 +616,15 @@ export default function ServiceBilling() {
         )}
       </div>
 
-      {/* ServiceInvoiceModal temporarily removed - functionality integrated into main component */}
+      {/* Invoice Modal for editing */}
+      <InvoiceModal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingInvoice(null);
+        }} 
+        invoice={editingInvoice}
+      />
     </div>
   );
 }

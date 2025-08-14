@@ -187,17 +187,18 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
                             />
                           </SelectTrigger>
                         </FormControl>
-                      <SelectContent>
-                        {Array.isArray(customers) && customers?.map((customer: any) => (
-                          <SelectItem key={customer.id} value={customer.id}>
-                            {customer.firstName} {customer.lastName}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                        <SelectContent>
+                          {Array.isArray(customers) && customers?.map((customer: any) => (
+                            <SelectItem key={customer.id} value={customer.id}>
+                              {customer.firstName} {customer.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
 
               {/* Work Order Selection */}
@@ -225,10 +226,11 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
                           </SelectItem>
                         ))}
                       </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 

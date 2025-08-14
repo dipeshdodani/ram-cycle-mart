@@ -29,6 +29,7 @@ import { formatCurrency } from "@/lib/currency";
 
 const itemSchema = z.object({
   inventoryItemId: z.string().min(1, "Item is required"),
+  name: z.string().optional(), // Custom name/description override
   quantity: z.number().min(1, "Quantity must be at least 1"),
   price: z.number().min(0, "Price must be positive"),
 });
@@ -58,7 +59,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
     defaultValues: {
       customerId: "",
       customerGstNumber: "",
-      items: [{ inventoryItemId: "", quantity: 1, price: 0 }],
+      items: [{ inventoryItemId: "", name: "", quantity: 1, price: 0 }],
       taxRate: "0.18",
       notes: "",
       dueDate: "",
@@ -109,7 +110,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
           const inventoryItem = inventoryItems?.find((inv: any) => inv.id === item.inventoryItemId);
           return {
             inventoryItemId: item.inventoryItemId,
-            name: inventoryItem?.name || '',
+            name: item.name || inventoryItem?.name || '',  // Use custom name if provided, otherwise use inventory name
             quantity: item.quantity,
             price: item.price,
           };
@@ -158,11 +159,16 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
     }
   }, [isOpen, form]);
 
-  // Auto-fill price when item is selected
+  // Auto-fill price and name when item is selected
   const handleItemSelect = (itemId: string, index: number) => {
     const item = inventoryItems?.find((inv: any) => inv.id === itemId);
     if (item) {
       form.setValue(`items.${index}.price`, parseFloat(item.price));
+      // Only set inventory name if no custom name is already entered
+      const currentCustomName = form.getValues(`items.${index}.name`);
+      if (!currentCustomName) {
+        form.setValue(`items.${index}.name`, item.name);
+      }
     }
   };
 
@@ -274,7 +280,7 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={() => append({ inventoryItemId: "", quantity: 1, price: 0 })}
+                  onClick={() => append({ inventoryItemId: "", name: "", quantity: 1, price: 0 })}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Add Item
@@ -283,8 +289,9 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
 
               <div className="space-y-4">
                 {fields.map((field, index) => (
-                  <div key={field.id} className="grid grid-cols-1 md:grid-cols-5 gap-4 p-4 border rounded-lg">
-                    <FormField
+                  <div key={field.id} className="space-y-4 p-4 border rounded-lg">
+                    <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+                      <FormField
                       control={form.control}
                       name={`items.${index}.inventoryItemId`}
                       render={({ field }) => (
@@ -363,18 +370,37 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
                       )}
                     />
 
-                    <div className="flex items-end">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => remove(index)}
-                        disabled={fields.length === 1}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex items-end">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => remove(index)}
+                          disabled={fields.length === 1}
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
+
+                    {/* Custom Description Field */}
+                    <FormField
+                      control={form.control}
+                      name={`items.${index}.name`}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Custom Description (Optional)</FormLabel>
+                          <FormControl>
+                            <Input
+                              {...field}
+                              placeholder="Enter custom item description (overrides inventory name)"
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   </div>
                 ))}
               </div>
