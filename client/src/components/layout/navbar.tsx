@@ -85,7 +85,7 @@ export default function Navbar() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
+              <DropdownMenuContent align="end" className="w-56 mt-2" sideOffset={5}>
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                   Sign Out
                 </DropdownMenuItem>
