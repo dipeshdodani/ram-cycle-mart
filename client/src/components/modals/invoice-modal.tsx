@@ -73,8 +73,8 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
 
   // Auto-calculate tax and total when subtotal or tax rate changes
   const calculateTotals = () => {
-    const subtotalNum = parseFloat(subtotal) || 0;
-    const taxRateNum = parseFloat(taxRate) || 0;
+    const subtotalNum = parseFloat(subtotal || "0") || 0;
+    const taxRateNum = parseFloat(taxRate || "0") || 0;
     const taxAmount = subtotalNum * taxRateNum;
     const total = subtotalNum + taxAmount;
     
@@ -174,17 +174,21 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
               <FormField
                 control={form.control}
                 name="customerId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Customer *</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select customer" />
-                        </SelectTrigger>
-                      </FormControl>
+                render={({ field }) => {
+                  const selectedCustomer = Array.isArray(customers) ? customers.find((c: any) => c.id === field.value) : null;
+                  return (
+                    <FormItem>
+                      <FormLabel>Customer *</FormLabel>
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue 
+                              placeholder={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : "Select customer"} 
+                            />
+                          </SelectTrigger>
+                        </FormControl>
                       <SelectContent>
-                        {customers?.map((customer: any) => (
+                        {Array.isArray(customers) && customers?.map((customer: any) => (
                           <SelectItem key={customer.id} value={customer.id}>
                             {customer.firstName} {customer.lastName}
                           </SelectItem>
@@ -200,18 +204,22 @@ export default function InvoiceModal({ isOpen, onClose, invoice }: InvoiceModalP
               <FormField
                 control={form.control}
                 name="workOrderId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Work Order (Optional)</FormLabel>
-                    <Select value={field.value || ""} onValueChange={(value) => field.onChange(value || null)}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select work order" />
-                        </SelectTrigger>
-                      </FormControl>
+                render={({ field }) => {
+                  const selectedWorkOrder = Array.isArray(workOrders) ? workOrders.find((w: any) => w.id === field.value) : null;
+                  return (
+                    <FormItem>
+                      <FormLabel>Work Order (Optional)</FormLabel>
+                      <Select value={field.value || ""} onValueChange={(value) => field.onChange(value || null)}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue 
+                              placeholder={selectedWorkOrder ? `${selectedWorkOrder.orderNumber} - ${selectedWorkOrder.problemDescription?.substring(0, 30)}...` : "Select work order"} 
+                            />
+                          </SelectTrigger>
+                        </FormControl>
                       <SelectContent>
                         <SelectItem value="none">No work order</SelectItem>
-                        {workOrders?.map((workOrder: any) => (
+                        {Array.isArray(workOrders) && workOrders?.map((workOrder: any) => (
                           <SelectItem key={workOrder.id} value={workOrder.id}>
                             {workOrder.orderNumber} - {workOrder.problemDescription.substring(0, 50)}...
                           </SelectItem>

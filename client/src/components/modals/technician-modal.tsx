@@ -136,7 +136,7 @@ export default function TechnicianModal({ isOpen, onClose, technician }: Technic
       // For updates, remove password if it's empty
       const updateData = { ...data };
       if (!updateData.password) {
-        delete updateData.password;
+        delete (updateData as any).password;
       }
       updateMutation.mutate(updateData);
     } else {
@@ -226,7 +226,7 @@ export default function TechnicianModal({ isOpen, onClose, technician }: Technic
                   <FormItem>
                     <FormLabel>Phone</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter phone number" {...field} />
+                      <Input placeholder="Enter phone number" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>

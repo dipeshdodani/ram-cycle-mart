@@ -182,18 +182,20 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                 control={form.control}
                 name="customerId"
                 render={({ field }) => {
-                  const selectedCustomer = customers?.find((c: any) => c.id === field.value);
+                  const selectedCustomer = Array.isArray(customers) ? customers.find((c: any) => c.id === field.value) : null;
                   return (
                     <FormItem>
                       <FormLabel>Customer</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select customer" />
+                            <SelectValue 
+                              placeholder={selectedCustomer ? `${selectedCustomer.firstName} ${selectedCustomer.lastName}` : "Select customer"} 
+                            />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {customers?.map((customer: any) => (
+                          {Array.isArray(customers) && customers?.map((customer: any) => (
                             <SelectItem key={customer.id} value={customer.id}>
                               {customer.firstName} {customer.lastName}
                             </SelectItem>
@@ -216,26 +218,31 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
               <FormField
                 control={form.control}
                 name="machineId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Inventory Item (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select inventory item" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {machines?.map((item: any) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.name} - {item.category} (Stock: {item.quantity})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const selectedMachine = Array.isArray(machines) ? machines.find((m: any) => m.id === field.value) : null;
+                  return (
+                    <FormItem>
+                      <FormLabel>Inventory Item (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue 
+                              placeholder={selectedMachine ? `${selectedMachine.name} - ${selectedMachine.category}` : "Select inventory item"} 
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.isArray(machines) && machines?.map((item: any) => (
+                            <SelectItem key={item.id} value={item.id}>
+                              {item.name} - {item.category} (Stock: {item.quantity})
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 
@@ -292,26 +299,31 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
               <FormField
                 control={form.control}
                 name="assignedTechnicianId"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Assigned Technician (Optional)</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select technician" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {technicians?.map((technician: any) => (
-                          <SelectItem key={technician.id} value={technician.id}>
-                            {technician.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const selectedTechnician = Array.isArray(technicians) ? technicians.find((t: any) => t.id === field.value) : null;
+                  return (
+                    <FormItem>
+                      <FormLabel>Assigned Technician (Optional)</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue 
+                              placeholder={selectedTechnician ? `${selectedTechnician.firstName} ${selectedTechnician.lastName}` : "Select technician"} 
+                            />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.isArray(technicians) && technicians?.map((technician: any) => (
+                            <SelectItem key={technician.id} value={technician.id}>
+                              {technician.firstName} {technician.lastName}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
             </div>
 

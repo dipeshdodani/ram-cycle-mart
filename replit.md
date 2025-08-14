@@ -22,6 +22,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes & Bug Fixes
 
+### Edit Modal Pre-filling Fix (Aug 14, 2025)
+- **Fixed edit modal pre-filling issue** across entire application - all edit forms now show current values instead of selection prompts
+- **Updated work order modal** to display selected customer, machine, and technician names when editing
+- **Enhanced invoice modal** to show selected customer and work order information during editing
+- **Fixed TypeScript errors** in all modal components with proper array validation
+- **Improved user experience** - editing now shows "Edit Work Order" with pre-filled customer name instead of "Select customer"
+
 ### Array Data Handling (Aug 14, 2025)
 - **Fixed critical reduce function errors** in inventory, invoice, customers, and reports pages
 - **Enhanced API error handling** to ensure data is always arrays before using reduce/filter/map
