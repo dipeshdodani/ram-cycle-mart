@@ -36,9 +36,11 @@ export function setupAuth(app: Express) {
     store: storage.sessionStore,
     cookie: {
       secure: false, // Allow cookies over HTTP in development
-      httpOnly: true, // Prevent XSS attacks
+      httpOnly: true, // Prevent XSS attacks  
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: 'lax', // Allow cookies to be sent with requests from same site
     },
+    name: 'ramcyclemart.sid', // Custom session name
   };
 
   app.set("trust proxy", 1);

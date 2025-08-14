@@ -31,6 +31,14 @@ export function registerRoutes(app: Express): Server {
     next();
   }
 
+  // Role-based middleware for owner-only features
+  function requireOwner(req: any, res: any, next: any) {
+    if (!req.isAuthenticated() || req.user.role !== 'owner') {
+      return res.status(403).json({ message: "Owner access required" });
+    }
+    next();
+  }
+
   // Customer routes
   app.get("/api/customers", requireAuth, async (req, res) => {
     try {
@@ -533,6 +541,93 @@ export function registerRoutes(app: Express): Server {
       } else {
         res.status(400).json({ message: "Failed to update company settings" });
       }
+    }
+  });
+
+  // User management routes (Owner only)
+  app.get("/api/users", requireOwner, async (req, res) => {
+    try {
+      const users = await storage.getUsers();
+      // Don't send password hashes to frontend
+      const safeUsers = users.map(user => {
+        const { password, ...safeUser } = user;
+        return safeUser;
+      });
+      res.json(safeUsers);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post("/api/users", requireOwner, async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Check for duplicate username
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(409).json({ 
+          message: "Username already exists" 
+        });
+      }
+      
+      const user = await storage.createUser({
+        ...validatedData,
+        password: await hashPassword(validatedData.password),
+      });
+      
+      // Don't send password hash back
+      const { password, ...safeUser } = user;
+      res.status(201).json(safeUser);
+    } catch (error) {
+      console.error("User creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid user data",
+          errors: error.errors
+        });
+      } else {
+        res.status(500).json({ message: "Failed to create user" });
+      }
+    }
+  });
+
+  app.put("/api/users/:id", requireOwner, async (req, res) => {
+    try {
+      const { password, ...updateData } = req.body;
+      let finalUpdateData = updateData;
+      
+      // Hash password if provided
+      if (password) {
+        finalUpdateData.password = await hashPassword(password);
+      }
+      
+      const user = await storage.updateUser(req.params.id, finalUpdateData);
+      if (!user) {
+        return res.status(404).json({ message: "User not found" });
+      }
+      
+      // Don't send password hash back
+      const { password: _, ...safeUser } = user;
+      res.json(safeUser);
+    } catch (error) {
+      console.error("User update error:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete("/api/users/:id", requireOwner, async (req, res) => {
+    try {
+      // Prevent owner from deleting themselves
+      if (req.user.id === req.params.id) {
+        return res.status(400).json({ message: "Cannot delete your own account" });
+      }
+      
+      await storage.deleteUser(req.params.id);
+      res.status(200).json({ message: "User deleted successfully" });
+    } catch (error) {
+      console.error("User deletion error:", error);
+      res.status(500).json({ message: "Failed to delete user" });
     }
   });
 

@@ -12,15 +12,27 @@ export default function Navbar() {
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
 
-  const navItems = [
-    { path: "/", label: "Dashboard" },
-    { path: "/customers", label: "Customers" },
-    { path: "/work-orders", label: "Work Orders" },
-    { path: "/technicians", label: "Technicians" },
-    { path: "/invoices", label: "Invoices" },
-    { path: "/inventory", label: "Inventory" },
-    { path: "/reports", label: "Reports" },
-  ];
+  const getNavItems = () => {
+    const baseItems = [
+      { path: "/", label: "Dashboard" },
+      { path: "/customers", label: "Customers" },
+      { path: "/work-orders", label: "Work Orders" },
+      { path: "/technicians", label: "Technicians" },
+      { path: "/invoices", label: "Invoices" },
+      { path: "/inventory", label: "Inventory" },
+      { path: "/reports", label: "Reports" },
+      { path: "/advanced-billing", label: "Advanced Billing" },
+    ];
+    
+    // Add Users page for owners only
+    if (user?.role === "owner") {
+      baseItems.push({ path: "/users", label: "Users" });
+    }
+    
+    return baseItems;
+  };
+
+  const navItems = getNavItems();
 
   const getInitials = (firstName: string, lastName: string) => {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
