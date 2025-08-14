@@ -29,17 +29,14 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Set trust proxy for development with Vite
-  app.set('trust proxy', 1);
-  
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
-    resave: true,
-    saveUninitialized: true,
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
       secure: false,
-      httpOnly: false, // Allow JS access for debugging
+      httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000,
       sameSite: 'lax' as const,
       path: '/',
