@@ -182,31 +182,45 @@ export default function AdvancedBilling() {
   };
 
   const addItem = () => {
-    if (!currentItem.description.trim() || currentItem.unitPrice <= 0) {
+    try {
+      if (!currentItem.description.trim() || currentItem.unitPrice <= 0) {
+        toast({
+          title: "Invalid Item",
+          description: "Please enter item description and valid price.",
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      const newItem: BillItem = {
+        id: `item-${Date.now()}`,
+        description: currentItem.description.trim(),
+        quantity: Math.max(1, currentItem.quantity || 1),
+        unitPrice: Math.max(0, currentItem.unitPrice || 0),
+        total: (currentItem.quantity || 1) * (currentItem.unitPrice || 0),
+        type: currentItem.type || "parts",
+        brand: currentItem.brand || ""
+      };
+      
+      const updatedItems = [...(bill.items || []), newItem];
+      setBill(prev => ({ ...prev, items: updatedItems }));
+      calculateTotals(updatedItems, bill.discount || 0);
+      
+      setCurrentItem({ description: "", quantity: 1, unitPrice: 0, type: "", brand: "" });
+      setSelectedInventoryItem("");
+      
       toast({
-        title: "Invalid Item",
-        description: "Please enter item description and valid price.",
+        title: "Item Added",
+        description: "Manual item has been added to the bill.",
+      });
+    } catch (error) {
+      console.error("Error adding manual item:", error);
+      toast({
+        title: "Error",
+        description: "Failed to add manual item. Please try again.",
         variant: "destructive",
       });
-      return;
     }
-    
-    const newItem: BillItem = {
-      id: `item-${Date.now()}`,
-      description: currentItem.description,
-      quantity: currentItem.quantity,
-      unitPrice: currentItem.unitPrice,
-      total: currentItem.quantity * currentItem.unitPrice,
-      type: currentItem.type,
-      brand: currentItem.brand
-    };
-    
-    const updatedItems = [...bill.items, newItem];
-    setBill(prev => ({ ...prev, items: updatedItems }));
-    calculateTotals(updatedItems, bill.discount);
-    
-    setCurrentItem({ description: "", quantity: 1, unitPrice: 0, type: "", brand: "" });
-    setSelectedInventoryItem("");
   };
 
   const addInventoryItem = () => {

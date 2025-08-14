@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Clock, CheckCircle, AlertCircle, Trash2 } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, Clock, CheckCircle, AlertCircle, Trash2, Eye, Edit } from "lucide-react";
 import WorkOrderModal from "@/components/modals/work-order-modal";
 import WorkOrderDetailsModal from "@/components/modals/work-order-details-modal";
 import { useToast } from "@/hooks/use-toast";
@@ -170,135 +171,135 @@ export default function WorkOrders() {
           </Card>
 
           {/* Work Orders */}
-          {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-2">
-                        <div className="h-4 bg-gray-200 rounded w-32"></div>
-                        <div className="h-3 bg-gray-200 rounded w-48"></div>
-                        <div className="h-3 bg-gray-200 rounded w-24"></div>
+          <Card>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Order #</TableHead>
+                  <TableHead>Customer</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Priority</TableHead>
+                  <TableHead>Problem</TableHead>
+                  <TableHead>Technician</TableHead>
+                  <TableHead>Due Date</TableHead>
+                  <TableHead>Cost</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {isLoading ? (
+                  Array.from({ length: 5 }).map((_, i) => (
+                    <TableRow key={i}>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
+                    </TableRow>
+                  ))
+                ) : workOrders && workOrders.length > 0 ? (
+                  workOrders.map((order: any) => (
+                    <TableRow key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <TableCell className="font-medium">
+                        {order.orderNumber}
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="font-medium">{order.customer?.firstName} {order.customer?.lastName}</div>
+                          <div className="text-sm text-gray-500">{order.customer?.phone}</div>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={`${getStatusColor(order.status)} flex items-center gap-1`}>
+                          {getStatusIcon(order.status)}
+                          {formatStatus(order.status)}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="capitalize">
+                          {order.priority}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-xs">
+                        <div className="truncate" title={order.problemDescription}>
+                          {order.problemDescription}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {order.technician ? (
+                          <div className="text-sm">
+                            {order.technician.firstName} {order.technician.lastName}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">Unassigned</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {order.dueDate ? formatDate(order.dueDate) : "Not set"}
+                      </TableCell>
+                      <TableCell>
+                        {order.estimatedCost ? formatCurrency(order.estimatedCost) : "Not set"}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end space-x-2">
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedWorkOrder(order);
+                              setIsDetailsModalOpen(true);
+                            }}
+                            title="View Details"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            onClick={() => {
+                              setSelectedWorkOrder(order);
+                              setIsModalOpen(true);
+                            }}
+                            title="Edit Work Order"
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="ghost"
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            onClick={() => {
+                              if (confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
+                                deleteWorkOrderMutation.mutate(order.id);
+                              }
+                            }}
+                            disabled={deleteWorkOrderMutation.isPending}
+                            title="Delete Work Order"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell colSpan={9} className="text-center p-12">
+                      <div className="text-gray-500">
+                        <Clock className="h-12 w-12 mx-auto mb-4" />
+                        <h3 className="text-lg font-medium mb-2">No work orders found</h3>
+                        <p>Create your first work order to get started</p>
                       </div>
-                      <div className="h-6 bg-gray-200 rounded w-20"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : workOrders && workOrders.length > 0 ? (
-            <div className="space-y-4">
-              {workOrders.map((order: any) => (
-                <Card key={order.id} className="hover:shadow-md transition-shadow">
-                  <CardContent className="p-6">
-                    <div className="flex justify-between items-start mb-4">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {order.orderNumber}
-                        </h3>
-                        <p className="text-gray-600 mt-1">
-                          {order.customer?.firstName} {order.customer?.lastName}
-                        </p>
-                        <p className="text-sm text-gray-500">
-                          {order.customer?.phone}
-                        </p>
-                      </div>
-                      <Badge className={`${getStatusColor(order.status)} flex items-center gap-1`}>
-                        {getStatusIcon(order.status)}
-                        {formatStatus(order.status)}
-                      </Badge>
-                    </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Machine</p>
-                        <p className="text-sm text-gray-900">
-                          {order.machine ? `${order.machine.brand} ${order.machine.model}` : "Not specified"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Priority</p>
-                        <p className="text-sm text-gray-900 capitalize">{order.priority}</p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Estimated Cost</p>
-                        <p className="text-sm text-gray-900">
-                          {order.estimatedCost ? formatCurrency(order.estimatedCost) : "Not set"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-gray-500">Due Date</p>
-                        <p className="text-sm text-gray-900">
-                          {order.dueDate ? formatDate(order.dueDate) : "Not set"}
-                        </p>
-                      </div>
-                    </div>
-
-                    <div className="mb-4">
-                      <p className="text-sm font-medium text-gray-500 mb-1">Problem Description</p>
-                      <p className="text-sm text-gray-900">{order.problemDescription}</p>
-                    </div>
-
-                    {order.technician && (
-                      <div className="mb-4">
-                        <p className="text-sm font-medium text-gray-500">Assigned Technician</p>
-                        <p className="text-sm text-gray-900">
-                          {order.technician.firstName} {order.technician.lastName}
-                        </p>
-                      </div>
-                    )}
-
-                    <div className="flex justify-end space-x-2">
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedWorkOrder(order);
-                          setIsDetailsModalOpen(true);
-                        }}
-                      >
-                        View Details
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        className="bg-primary text-primary-foreground hover:bg-primary/90"
-                        onClick={() => {
-                          setSelectedWorkOrder(order);
-                          setIsModalOpen(true);
-                        }}
-                      >
-                        Edit Work Order
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
-                            deleteWorkOrderMutation.mutate(order.id);
-                          }
-                        }}
-                        disabled={deleteWorkOrderMutation.isPending}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : (
-            <Card>
-              <CardContent className="p-12 text-center">
-                <div className="text-gray-500">
-                  <Clock className="h-12 w-12 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium mb-2">No work orders found</h3>
-                  <p>Get started by creating your first work order</p>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </Card>
         </div>
       </div>
 

@@ -22,6 +22,13 @@ Preferred communication style: Simple, everyday language.
 
 ## Recent Changes & Bug Fixes
 
+### UI Improvements & Bug Fixes (Aug 14, 2025)
+- **Converted Work Orders to Table Format**: Changed from card layout to efficient table view with sortable columns for easier management
+- **Converted Technicians to Table Format**: Replaced card grid with streamlined table showing name, role, email, phone, active work orders, and status
+- **Fixed Customer Save/Delete Errors**: Updated error handling to properly parse JSON responses and handle empty responses
+- **Fixed Advanced Billing Manual Item Addition**: Added comprehensive error handling, validation, and fallback values for manual item entry
+- **Enhanced Table UI**: Added hover effects, proper spacing, and consistent action buttons across all table interfaces
+
 ### Edit Modal Pre-filling Fix (Aug 14, 2025)
 - **Fixed edit modal pre-filling issue** across entire application - all edit forms now show current values instead of selection prompts
 - **Updated work order modal** to display selected customer, machine, and technician names when editing

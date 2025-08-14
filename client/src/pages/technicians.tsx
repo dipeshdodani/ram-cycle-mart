@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Plus, User, Wrench, Search, Mail, Phone } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Plus, User, Wrench, Search, Mail, Phone, Edit } from "lucide-react";
 import TechnicianModal from "@/components/modals/technician-modal";
 
 export default function Technicians() {
@@ -60,92 +61,110 @@ export default function Technicians() {
           </CardContent>
         </Card>
 
-        {/* Technicians Grid */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="animate-pulse">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4">
-                    <div className="h-12 w-12 bg-gray-200 rounded-full"></div>
-                    <div className="space-y-2 flex-1">
-                      <div className="h-4 bg-gray-200 rounded w-32"></div>
-                      <div className="h-3 bg-gray-200 rounded w-24"></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : filteredTechnicians.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredTechnicians.map((technician: any) => (
-              <Card key={technician.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="h-12 w-12 bg-primary/10 rounded-full flex items-center justify-center">
-                      <User className="h-6 w-6 text-primary" />
-                    </div>
-                    <div>
-                      <h3 className="text-lg font-semibold text-gray-900">
-                        {technician.firstName} {technician.lastName}
-                      </h3>
-                      <Badge variant="outline" className="capitalize mt-1">
+        {/* Technicians Table */}
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Name</TableHead>
+                <TableHead>Role</TableHead>
+                <TableHead>Email</TableHead>
+                <TableHead>Phone</TableHead>
+                <TableHead>Work Orders</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <TableRow key={i}>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-40 animate-pulse"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
+                    <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
+                  </TableRow>
+                ))
+              ) : filteredTechnicians.length > 0 ? (
+                filteredTechnicians.map((technician: any) => (
+                  <TableRow key={technician.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <TableCell>
+                      <div className="flex items-center space-x-3">
+                        <div className="h-8 w-8 bg-primary/10 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-primary" />
+                        </div>
+                        <div>
+                          <div className="font-medium">{technician.firstName} {technician.lastName}</div>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
                         {technician.role}
                       </Badge>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="h-4 w-4 mr-2" />
-                      {technician.email}
-                    </div>
-                    {technician.phone && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Phone className="h-4 w-4 mr-2" />
-                        {technician.phone}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center text-sm">
+                        <Mail className="h-4 w-4 mr-2 text-gray-400" />
+                        {technician.email}
                       </div>
-                    )}
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Wrench className="h-4 w-4 mr-2" />
-                      {technician.activeWorkOrders || 0} Active Work Orders
+                    </TableCell>
+                    <TableCell>
+                      {technician.phone ? (
+                        <div className="flex items-center text-sm">
+                          <Phone className="h-4 w-4 mr-2 text-gray-400" />
+                          {technician.phone}
+                        </div>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
+                    </TableCell>
+                    <TableCell>
+                      <div className="flex items-center text-sm">
+                        <Wrench className="h-4 w-4 mr-2 text-gray-400" />
+                        {technician.activeWorkOrders || 0}
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge 
+                        variant={technician.isActive ? "default" : "secondary"}
+                        className={technician.isActive ? "bg-green-100 text-green-800" : ""}
+                      >
+                        {technician.isActive ? "Active" : "Inactive"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedTechnician(technician);
+                          setIsModalOpen(true);
+                        }}
+                        title="Edit Technician"
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell colSpan={7} className="text-center p-12">
+                    <div className="text-gray-500">
+                      <User className="h-12 w-12 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium mb-2">No technicians found</h3>
+                      <p>Get started by adding your first technician</p>
                     </div>
-                  </div>
-
-                  <div className="flex items-center justify-between mt-6">
-                    <Badge 
-                      variant={technician.isActive ? "default" : "secondary"}
-                      className={technician.isActive ? "bg-green-100 text-green-800" : ""}
-                    >
-                      {technician.isActive ? "Active" : "Inactive"}
-                    </Badge>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => {
-                        setSelectedTechnician(technician);
-                        setIsModalOpen(true);
-                      }}
-                    >
-                      Edit
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <div className="text-gray-500">
-                <User className="h-12 w-12 mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No technicians found</h3>
-                <p>Get started by adding your first technician</p>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </Card>
       </div>
 
       <TechnicianModal 
