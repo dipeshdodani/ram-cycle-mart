@@ -29,24 +29,35 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
+  // Ensure we're not behind a proxy for session handling
+  app.set("trust proxy", false);
+
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
-    resave: true, // Force session save 
-    saveUninitialized: true, // Create session immediately
+    resave: false, // Don't save session if unmodified
+    saveUninitialized: false, // Don't create session until something stored
     store: storage.sessionStore,
-    rolling: true, // Reset expiration on each request
     cookie: {
       secure: false, // Allow cookies over HTTP in development
-      httpOnly: true, // Prevent XSS attacks
+      httpOnly: false, // Allow JS access in development for debugging
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax', // Allow cookies to be sent with requests from same site
+      sameSite: 'lax' as const, // Allow cookies to be sent with requests from same site
       path: '/', // Ensure cookie applies to all paths
+      domain: undefined, // Don't set domain in development
     },
     name: 'connect.sid', // Use default session name
   };
 
-  app.set("trust proxy", 1);
   app.use(session(sessionSettings));
+  
+  // Debug session middleware
+  app.use((req: any, res, next) => {
+    if (req.path.startsWith('/api/') && req.path !== '/api/login') {
+      console.log(`Session debug for ${req.path}: sessionID=${req.sessionID}, session exists=${!!req.session}, passport=${JSON.stringify(req.session?.passport)}`);
+    }
+    next();
+  });
+  
   app.use(passport.initialize());
   app.use(passport.session());
 
