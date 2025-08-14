@@ -25,9 +25,12 @@ export function registerRoutes(app: Express): Server {
 
   // Authentication middleware for protected routes
   function requireAuth(req: any, res: any, next: any) {
+    console.log(`Auth check for ${req.method} ${req.path}: session=${!!req.session}, user=${!!req.user}, authenticated=${req.isAuthenticated()}`);
     if (!req.isAuthenticated()) {
+      console.log(`Authentication failed for ${req.method} ${req.path}`);
       return res.status(401).json({ message: "Authentication required" });
     }
+    console.log(`Authentication successful for ${req.method} ${req.path}, user: ${req.user.username}`);
     next();
   }
 

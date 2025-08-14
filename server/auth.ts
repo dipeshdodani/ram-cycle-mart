@@ -31,16 +31,16 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
-    resave: false,
-    saveUninitialized: false,
+    resave: true, // Force session save on each request
+    saveUninitialized: true, // Save uninitialized sessions
     store: storage.sessionStore,
     cookie: {
       secure: false, // Allow cookies over HTTP in development
-      httpOnly: true, // Prevent XSS attacks  
+      httpOnly: false, // Allow JS access for debugging in dev
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: 'lax', // Allow cookies to be sent with requests from same site
     },
-    name: 'ramcyclemart.sid', // Custom session name
+    name: 'connect.sid', // Use default session name
   };
 
   app.set("trust proxy", 1);
@@ -74,10 +74,21 @@ export function setupAuth(app: Express) {
     }),
   );
 
-  passport.serializeUser((user, done) => done(null, user.id));
+  passport.serializeUser((user, done) => {
+    console.log(`Serializing user: ${user.id} (${user.username})`);
+    done(null, user.id);
+  });
+  
   passport.deserializeUser(async (id: string, done) => {
-    const user = await storage.getUser(id);
-    done(null, user);
+    try {
+      console.log(`Deserializing user ID: ${id}`);
+      const user = await storage.getUser(id);
+      console.log(`Deserialized user: ${user ? user.username : 'not found'}`);
+      done(null, user);
+    } catch (error) {
+      console.error(`Deserialization error for ID ${id}:`, error);
+      done(error, null);
+    }
   });
 
   app.post("/api/register", async (req, res, next) => {
