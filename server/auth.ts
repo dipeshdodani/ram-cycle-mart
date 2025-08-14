@@ -48,11 +48,26 @@ export function setupAuth(app: Express) {
 
   passport.use(
     new LocalStrategy(async (username, password, done) => {
-      const user = await storage.getUserByUsername(username);
-      if (!user || !(await comparePasswords(password, user.password))) {
-        return done(null, false);
-      } else {
+      try {
+        console.log(`Login attempt for username: ${username}`);
+        const user = await storage.getUserByUsername(username);
+        if (!user) {
+          console.log(`User not found: ${username}`);
+          return done(null, false);
+        }
+        
+        const passwordMatch = await comparePasswords(password, user.password);
+        console.log(`Password match for ${username}: ${passwordMatch}`);
+        
+        if (!passwordMatch) {
+          return done(null, false);
+        }
+        
+        console.log(`Login successful for: ${username}`);
         return done(null, user);
+      } catch (error) {
+        console.error(`Login error for ${username}:`, error);
+        return done(error);
       }
     }),
   );
@@ -80,8 +95,26 @@ export function setupAuth(app: Express) {
     });
   });
 
-  app.post("/api/login", passport.authenticate("local"), (req, res) => {
-    res.status(200).json(req.user);
+  app.post("/api/login", (req, res, next) => {
+    passport.authenticate("local", (err: any, user: any, info: any) => {
+      if (err) {
+        console.error("Authentication error:", err);
+        return res.status(500).json({ message: "Authentication error" });
+      }
+      if (!user) {
+        console.log("Authentication failed for:", req.body.username);
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+      
+      req.login(user, (loginErr: any) => {
+        if (loginErr) {
+          console.error("Login error:", loginErr);
+          return res.status(500).json({ message: "Login failed" });
+        }
+        console.log("Login successful for:", user.username);
+        res.status(200).json(user);
+      });
+    })(req, res, next);
   });
 
   app.post("/api/logout", (req, res, next) => {
