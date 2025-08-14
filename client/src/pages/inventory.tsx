@@ -5,7 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Search, Plus, Package, AlertTriangle, TrendingDown } from "lucide-react";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Search, Plus, Package, AlertTriangle, TrendingDown, Edit, Minus, Plus as PlusIcon } from "lucide-react";
 import InventoryModal from "@/components/modals/inventory-modal";
 import { useToast } from "@/hooks/use-toast";
 import type { InventoryItem } from "@shared/schema";
@@ -202,119 +203,117 @@ export default function Inventory() {
             </Card>
           )}
 
-          {/* Inventory Items */}
+          {/* Inventory Items Table */}
           {isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i} className="animate-pulse">
-                  <CardContent className="p-6">
-                    <div className="space-y-3">
-                      <div className="h-4 bg-gray-200 rounded w-3/4"></div>
-                      <div className="h-3 bg-gray-200 rounded w-1/2"></div>
-                      <div className="h-3 bg-gray-200 rounded w-full"></div>
-                      <div className="h-6 bg-gray-200 rounded w-1/4"></div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <Card>
+              <CardContent className="p-6">
+                <div className="animate-pulse space-y-4">
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full"></div>
+                </div>
+              </CardContent>
+            </Card>
           ) : inventoryItems && inventoryItems.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {inventoryItems.map((item) => {
-                const stockStatus = getStockStatus(item);
-                return (
-                  <Card key={item.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h3 className="font-semibold text-gray-900 mb-1">{item.name}</h3>
-                          <p className="text-sm text-gray-500">SKU: {item.sku}</p>
-                        </div>
-                        <Badge className={`${stockStatus.color} flex items-center gap-1`}>
-                          <stockStatus.icon className="h-3 w-3" />
-                          {stockStatus.status.charAt(0).toUpperCase() + stockStatus.status.slice(1)}
-                        </Badge>
-                      </div>
-
-                      {item.description && (
-                        <p className="text-sm text-gray-600 mb-3">{item.description}</p>
-                      )}
-
-                      <div className="grid grid-cols-2 gap-3 text-sm mb-4">
-                        <div>
-                          <p className="font-medium text-gray-500">Category</p>
-                          <p className="text-gray-900">{item.category}</p>
-                        </div>
-                        {item.brand && (
-                          <div>
-                            <p className="font-medium text-gray-500">Brand</p>
-                            <p className="text-gray-900">{item.brand}</p>
-                          </div>
-                        )}
-                        <div>
-                          <p className="font-medium text-gray-500">Cost</p>
-                          <p className="text-gray-900">{formatCurrency(item.cost)}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-500">Price</p>
-                          <p className="text-gray-900">{formatCurrency(item.price)}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-500">In Stock</p>
-                          <p className="text-gray-900 font-semibold">{item.quantity}</p>
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-500">Min Stock</p>
-                          <p className="text-gray-900">{item.minimumStock}</p>
-                        </div>
-                      </div>
-
-                      {item.location && (
-                        <div className="text-sm mb-4">
-                          <p className="font-medium text-gray-500">Location</p>
-                          <p className="text-gray-900">{item.location}</p>
-                        </div>
-                      )}
-
-                      <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
-                          variant="outline" 
-                          className="flex-1"
-                          onClick={() => handleEditItem(item)}
-                        >
-                          Edit
-                        </Button>
-                        <div className="flex items-center space-x-1">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateInventoryMutation.mutate({ 
-                              id: item.id, 
-                              quantity: Math.max(0, item.quantity - 1) 
-                            })}
-                            disabled={updateInventoryMutation.isPending || item.quantity <= 0}
-                          >
-                            -
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => updateInventoryMutation.mutate({ 
-                              id: item.id, 
-                              quantity: item.quantity + 1 
-                            })}
-                            disabled={updateInventoryMutation.isPending}
-                          >
-                            +
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
+            <Card>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[200px]">Name & SKU</TableHead>
+                        <TableHead className="w-[150px]">Category</TableHead>
+                        <TableHead className="w-[100px]">Brand</TableHead>
+                        <TableHead className="w-[120px]">Cost</TableHead>
+                        <TableHead className="w-[120px]">Price</TableHead>
+                        <TableHead className="w-[100px]">Stock</TableHead>
+                        <TableHead className="w-[100px]">Min Stock</TableHead>
+                        <TableHead className="w-[120px]">Status</TableHead>
+                        <TableHead className="w-[150px]">Location</TableHead>
+                        <TableHead className="w-[200px]">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {inventoryItems.map((item) => {
+                        const stockStatus = getStockStatus(item);
+                        return (
+                          <TableRow key={item.id} className="hover:bg-gray-50">
+                            <TableCell>
+                              <div>
+                                <div className="font-medium text-gray-900">{item.name}</div>
+                                <div className="text-sm text-gray-500">SKU: {item.sku}</div>
+                                {item.description && (
+                                  <div className="text-sm text-gray-600 mt-1">{item.description}</div>
+                                )}
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-gray-900">{item.category}</TableCell>
+                            <TableCell className="text-gray-900">{item.brand || "-"}</TableCell>
+                            <TableCell className="text-gray-900">{formatCurrency(item.cost)}</TableCell>
+                            <TableCell className="text-gray-900 font-medium">{formatCurrency(item.price)}</TableCell>
+                            <TableCell>
+                              <span className="font-semibold text-gray-900">{item.quantity}</span>
+                            </TableCell>
+                            <TableCell className="text-gray-600">{item.minimumStock}</TableCell>
+                            <TableCell>
+                              <Badge className={`${stockStatus.color} flex items-center gap-1 w-fit`}>
+                                <stockStatus.icon className="h-3 w-3" />
+                                {stockStatus.status.charAt(0).toUpperCase() + stockStatus.status.slice(1)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-900">{item.location || "-"}</TableCell>
+                            <TableCell>
+                              <div className="flex items-center space-x-2">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline"
+                                  onClick={() => handleEditItem(item)}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <Edit className="h-4 w-4" />
+                                </Button>
+                                <div className="flex items-center border rounded">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => updateInventoryMutation.mutate({ 
+                                      id: item.id, 
+                                      quantity: Math.max(0, item.quantity - 1) 
+                                    })}
+                                    disabled={updateInventoryMutation.isPending || item.quantity <= 0}
+                                    className="h-8 w-8 p-0 rounded-none"
+                                  >
+                                    <Minus className="h-3 w-3" />
+                                  </Button>
+                                  <span className="px-2 text-sm font-medium min-w-[30px] text-center">
+                                    {item.quantity}
+                                  </span>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => updateInventoryMutation.mutate({ 
+                                      id: item.id, 
+                                      quantity: item.quantity + 1 
+                                    })}
+                                    disabled={updateInventoryMutation.isPending}
+                                    className="h-8 w-8 p-0 rounded-none"
+                                  >
+                                    <PlusIcon className="h-3 w-3" />
+                                  </Button>
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
           ) : (
             <Card>
               <CardContent className="p-12 text-center">
