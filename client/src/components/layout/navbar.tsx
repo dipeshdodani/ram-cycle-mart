@@ -62,7 +62,7 @@ export default function Navbar() {
               ))}
             </div>
           </div>
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>
@@ -71,7 +71,7 @@ export default function Navbar() {
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center space-x-3 p-2">
+                <Button variant="ghost" className="flex items-center space-x-3 p-2 ml-2">
                   <div className="text-sm text-right hidden sm:block">
                     <div className="font-medium text-gray-900 dark:text-gray-100">
                       {user?.firstName} {user?.lastName}
@@ -85,7 +85,7 @@ export default function Navbar() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 mt-2" sideOffset={5}>
+              <DropdownMenuContent align="end" className="w-56" sideOffset={8} alignOffset={-8}>
                 <DropdownMenuItem onClick={() => logoutMutation.mutate()}>
                   Sign Out
                 </DropdownMenuItem>
