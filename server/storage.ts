@@ -432,7 +432,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Invoice methods
-  async getInvoices(filters?: { type?: string; status?: string }): Promise<any[]> {
+  async getInvoices(filters?: { customerId?: string; type?: string; status?: string }): Promise<any[]> {
     let query = db
       .select({
         id: invoices.id,
@@ -470,6 +470,10 @@ export class DatabaseStorage implements IStorage {
 
     // Build where conditions array
     const whereConditions = [];
+    
+    if (filters?.customerId) {
+      whereConditions.push(eq(invoices.customerId, filters.customerId));
+    }
     
     if (filters?.type) {
       whereConditions.push(eq(invoices.type, filters.type as any));

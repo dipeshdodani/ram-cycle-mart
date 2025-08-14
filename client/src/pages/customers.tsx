@@ -283,17 +283,19 @@ export default function Customers() {
 
       {/* Customer History Modal */}
       <Dialog open={showHistory} onOpenChange={setShowHistory}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>
               Purchase History - {selectedCustomer?.firstName} {selectedCustomer?.lastName}
             </DialogTitle>
           </DialogHeader>
           
-          <div className="space-y-4">
+          <div className="space-y-4 max-h-[60vh] overflow-y-auto">
             {customerHistory && customerHistory.length > 0 ? (
-              <div className="space-y-3">
-                {customerHistory.map((invoice: any) => (
+              <div className="space-y-3 pr-2">
+                {customerHistory
+                  .filter((invoice: any) => invoice.customerId === selectedCustomer?.id)
+                  .map((invoice: any) => (
                   <Card key={invoice.id} className="border">
                     <CardContent className="p-4">
                       <div className="flex justify-between items-start">
@@ -317,6 +319,11 @@ export default function Customers() {
                               {invoice.notes}
                             </p>
                           )}
+                          {invoice.workOrder && (
+                            <p className="text-sm text-blue-600">
+                              Work Order: {invoice.workOrder.orderNumber}
+                            </p>
+                          )}
                         </div>
                         <div className="text-right">
                           <p className="text-lg font-semibold text-green-600">
@@ -333,22 +340,46 @@ export default function Customers() {
                   </Card>
                 ))}
                 
-                <div className="pt-4 border-t">
+                <div className="pt-4 border-t sticky bottom-0 bg-white dark:bg-gray-800">
                   <div className="flex justify-between items-center">
                     <span className="font-medium">Total Purchase Value:</span>
                     <span className="text-lg font-bold text-green-600">
                       {formatCurrency(
-                        customerHistory.reduce((sum: number, invoice: any) => 
-                          sum + Number(invoice.total), 0
-                        )
+                        customerHistory
+                          .filter((invoice: any) => invoice.customerId === selectedCustomer?.id)
+                          .reduce((sum: number, invoice: any) => 
+                            sum + Number(invoice.total), 0
+                          )
                       )}
                     </span>
+                  </div>
+                  <div className="flex justify-end mt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => {
+                        setShowHistory(false);
+                        setSelectedCustomer(null);
+                      }}
+                    >
+                      Close
+                    </Button>
                   </div>
                 </div>
               </div>
             ) : (
               <div className="text-center py-8">
                 <p className="text-gray-500">No purchase history found for this customer.</p>
+                <div className="flex justify-center mt-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowHistory(false);
+                      setSelectedCustomer(null);
+                    }}
+                  >
+                    Close
+                  </Button>
+                </div>
               </div>
             )}
           </div>

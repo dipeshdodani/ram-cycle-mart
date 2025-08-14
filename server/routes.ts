@@ -324,6 +324,7 @@ export function registerRoutes(app: Express): Server {
       const status = req.query.status as string;
       
       const invoices = await storage.getInvoices({ 
+        customerId,
         type, 
         status 
       });
