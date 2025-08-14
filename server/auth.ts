@@ -84,6 +84,10 @@ export function setupAuth(app: Express) {
       console.log(`Deserializing user ID: ${id}`);
       const user = await storage.getUser(id);
       console.log(`Deserialized user: ${user ? user.username : 'not found'}`);
+      if (!user) {
+        console.log(`User ${id} not found during deserialization`);
+        return done(null, false);
+      }
       done(null, user);
     } catch (error) {
       console.error(`Deserialization error for ID ${id}:`, error);
