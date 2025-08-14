@@ -31,14 +31,16 @@ async function comparePasswords(supplied: string, stored: string) {
 export function setupAuth(app: Express) {
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
-    resave: true, // Force session save on each request
-    saveUninitialized: true, // Save uninitialized sessions
+    resave: true, // Force session save 
+    saveUninitialized: true, // Create session immediately
     store: storage.sessionStore,
+    rolling: true, // Reset expiration on each request
     cookie: {
       secure: false, // Allow cookies over HTTP in development
-      httpOnly: false, // Allow JS access for debugging in dev
+      httpOnly: true, // Prevent XSS attacks
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
       sameSite: 'lax', // Allow cookies to be sent with requests from same site
+      path: '/', // Ensure cookie applies to all paths
     },
     name: 'connect.sid', // Use default session name
   };
