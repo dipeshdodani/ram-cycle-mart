@@ -23,8 +23,16 @@ export function registerRoutes(app: Express): Server {
   // Setup authentication routes
   setupAuth(app);
 
+  // Authentication middleware for protected routes
+  function requireAuth(req: any, res: any, next: any) {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ message: "Authentication required" });
+    }
+    next();
+  }
+
   // Customer routes
-  app.get("/api/customers", async (req, res) => {
+  app.get("/api/customers", requireAuth, async (req, res) => {
     try {
       const search = req.query.search as string;
       const customers = await storage.getCustomers(search);
@@ -34,7 +42,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/customers/:id", async (req, res) => {
+  app.get("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       const customer = await storage.getCustomer(req.params.id);
       if (!customer) {
@@ -46,7 +54,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/customers", async (req, res) => {
+  app.post("/api/customers", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCustomerSchema.parse(req.body);
       
@@ -73,7 +81,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/customers/:id", async (req, res) => {
+  app.put("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCustomerSchema.partial().parse(req.body);
       const customer = await storage.updateCustomer(req.params.id, validatedData);
@@ -83,7 +91,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/customers/:id", async (req, res) => {
+  app.delete("/api/customers/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteCustomer(req.params.id);
       res.status(204).send();
@@ -98,7 +106,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Sewing machine routes
-  app.get("/api/sewing-machines", async (req, res) => {
+  app.get("/api/sewing-machines", requireAuth, async (req, res) => {
     try {
       const customerId = req.query.customerId as string;
       const machines = await storage.getSewingMachines(customerId);
@@ -108,7 +116,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/sewing-machines", async (req, res) => {
+  app.post("/api/sewing-machines", requireAuth, async (req, res) => {
     try {
       const validatedData = insertSewingMachineSchema.parse(req.body);
       const machine = await storage.createSewingMachine(validatedData);
@@ -119,7 +127,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Work order routes
-  app.get("/api/work-orders", async (req, res) => {
+  app.get("/api/work-orders", requireAuth, async (req, res) => {
     try {
       const filters = {
         status: req.query.status as string,
@@ -133,7 +141,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/work-orders/:id", async (req, res) => {
+  app.get("/api/work-orders/:id", requireAuth, async (req, res) => {
     try {
       const workOrder = await storage.getWorkOrder(req.params.id);
       if (!workOrder) {
@@ -145,7 +153,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/work-orders", async (req, res) => {
+  app.post("/api/work-orders", requireAuth, async (req, res) => {
     try {
       const validatedData = insertWorkOrderSchema.parse(req.body);
       const workOrder = await storage.createWorkOrder(validatedData);
@@ -155,7 +163,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/work-orders/:id", async (req, res) => {
+  app.put("/api/work-orders/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertWorkOrderSchema.partial().parse(req.body);
       const workOrder = await storage.updateWorkOrder(req.params.id, validatedData);
@@ -173,7 +181,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/work-orders/:id", async (req, res) => {
+  app.patch("/api/work-orders/:id", requireAuth, async (req, res) => {
     try {
       console.log("PATCH work order with data:", req.body);
       const validatedData = insertWorkOrderSchema.partial().parse(req.body);
@@ -193,7 +201,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/work-orders/:id", async (req, res) => {
+  app.delete("/api/work-orders/:id", requireAuth, async (req, res) => {
     try {
       await storage.deleteWorkOrder(req.params.id);
       res.status(204).send();
@@ -208,7 +216,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Inventory routes
-  app.get("/api/inventory", async (req, res) => {
+  app.get("/api/inventory", requireAuth, async (req, res) => {
     try {
       const search = req.query.search as string;
       const items = await storage.getInventoryItems(search);
@@ -218,7 +226,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/inventory/low-stock", async (req, res) => {
+  app.get("/api/inventory/low-stock", requireAuth, async (req, res) => {
     try {
       const items = await storage.getLowStockItems();
       res.json(items);
@@ -227,7 +235,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/inventory", async (req, res) => {
+  app.post("/api/inventory", requireAuth, async (req, res) => {
     try {
       console.log("Inventory POST request body:", req.body);
       const validatedData = insertInventoryItemSchema.parse(req.body);
@@ -246,7 +254,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/inventory/:id", async (req, res) => {
+  app.put("/api/inventory/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertInventoryItemSchema.partial().parse(req.body);
       const item = await storage.updateInventoryItem(req.params.id, validatedData);
@@ -257,7 +265,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/inventory/:id", async (req, res) => {
+  app.patch("/api/inventory/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertInventoryItemSchema.partial().parse(req.body);
       const item = await storage.updateInventoryItem(req.params.id, validatedData);
@@ -269,14 +277,13 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Invoice routes
-  app.get("/api/invoices", async (req, res) => {
+  app.get("/api/invoices", requireAuth, async (req, res) => {
     try {
       const customerId = req.query.customerId as string;
       const type = req.query.type as string;
       const status = req.query.status as string;
       
       const invoices = await storage.getInvoices({ 
-        customerId, 
         type, 
         status 
       });
@@ -286,7 +293,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/invoices/:id", async (req, res) => {
+  app.get("/api/invoices/:id", requireAuth, async (req, res) => {
     try {
       const invoice = await storage.getInvoice(req.params.id);
       if (!invoice) {
@@ -298,9 +305,56 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  app.post("/api/invoices", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertInvoiceSchema.parse(req.body);
+      
+      // Generate invoice number
+      const invoiceNumber = `INV-${Date.now()}`;
+      
+      // For new sale invoices, update inventory
+      if (validatedData.type === 'new_sale' && validatedData.items) {
+        const items = JSON.parse(validatedData.items);
+        
+        // Validate and update inventory for each item
+        for (const item of items) {
+          const inventoryItem = await storage.getInventoryItem(item.inventoryItemId);
+          if (!inventoryItem) {
+            return res.status(400).json({ 
+              message: `Inventory item not found: ${item.name}` 
+            });
+          }
+          
+          if (inventoryItem.quantity < item.quantity) {
+            return res.status(400).json({ 
+              message: `Insufficient stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}, Required: ${item.quantity}` 
+            });
+          }
+          
+          // Reduce inventory quantity
+          const newQuantity = inventoryItem.quantity - item.quantity;
+          await storage.updateInventoryItem(item.inventoryItemId, {
+            quantity: newQuantity
+          });
+        }
+      }
+      
+      const invoice = await storage.createInvoice(validatedData);
+      res.status(201).json(invoice);
+    } catch (error) {
+      console.error("Invoice creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid invoice data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to create invoice" });
+      }
+    }
+  });
 
-
-  app.put("/api/invoices/:id", async (req, res) => {
+  app.put("/api/invoices/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertInvoiceSchema.partial().parse(req.body);
       const invoice = await storage.updateInvoice(req.params.id, validatedData);
@@ -326,7 +380,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Dashboard metrics
-  app.get("/api/dashboard/metrics", async (req, res) => {
+  app.get("/api/dashboard/metrics", requireAuth, async (req, res) => {
     try {
       const metrics = await storage.getDashboardMetrics();
       res.json(metrics);
@@ -335,7 +389,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/dashboard/activity", async (req, res) => {
+  app.get("/api/dashboard/activity", requireAuth, async (req, res) => {
     try {
       const activity = await storage.getRecentActivity();
       res.json(activity);
@@ -345,7 +399,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Technicians routes (users with technician role)
-  app.get("/api/technicians", async (req, res) => {
+  app.get("/api/technicians", requireAuth, async (req, res) => {
     try {
       const technicians = await storage.getTechnicians();
       res.json(technicians);
@@ -354,7 +408,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/technicians", async (req, res) => {
+  app.post("/api/technicians", requireAuth, async (req, res) => {
     try {
       console.log("Received technician data:", req.body);
       const validatedData = insertUserSchema.parse(req.body);
@@ -366,7 +420,7 @@ export function registerRoutes(app: Express): Server {
       
       const technician = await storage.createUser(technicianData);
       res.status(201).json(technician);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Technician creation error:", error);
       if (error.issues) {
         console.error("Validation issues:", error.issues);
@@ -379,7 +433,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/technicians/:id", async (req, res) => {
+  app.patch("/api/technicians/:id", requireAuth, async (req, res) => {
     try {
       console.log("PATCH technician with data:", req.body);
       console.log("Technician ID:", req.params.id);
@@ -414,154 +468,29 @@ export function registerRoutes(app: Express): Server {
           message: "Invalid technician data",
           errors: error.errors
         });
-      } else if (error.code === '23505') {
+      } else if ((error as any).code === '23505') {
         // Handle unique constraint violations
         let message = "Failed to update technician";
-        if (error.constraint === 'users_username_unique') {
+        if ((error as any).constraint === 'users_username_unique') {
           message = "Username already exists. Please choose a different username.";
-        } else if (error.constraint === 'users_email_unique') {
+        } else if ((error as any).constraint === 'users_email_unique') {
           message = "Email already exists. Please use a different email address.";
         }
         res.status(400).json({ message });
       } else {
         res.status(400).json({ 
           message: "Failed to update technician",
-          error: error.message || error.toString()
+          error: (error as any).message || (error as Error).toString()
         });
       }
     }
   });
 
-  // Enhanced Invoice routes
-  app.get("/api/invoices", async (req, res) => {
-    try {
-      const { type, status } = req.query;
-      const filters: { type?: string; status?: string } = {};
-      
-      if (type && typeof type === 'string') {
-        filters.type = type;
-      }
-      
-      if (status && typeof status === 'string') {
-        filters.status = status;
-      }
-      
-      const invoices = await storage.getInvoices(filters);
-      res.json(invoices);
-    } catch (error) {
-      console.error("Invoice fetch error:", error);
-      res.status(500).json({ message: "Failed to fetch invoices" });
-    }
-  });
 
-  app.get("/api/invoices/:id", async (req, res) => {
-    try {
-      const invoice = await storage.getInvoice(req.params.id);
-      if (!invoice) {
-        return res.status(404).json({ message: "Invoice not found" });
-      }
-      res.json(invoice);
-    } catch (error) {
-      console.error("Invoice fetch error:", error);
-      res.status(500).json({ message: "Failed to fetch invoice" });
-    }
-  });
 
-  app.post("/api/invoices", async (req, res) => {
-    try {
-      const validatedData = insertInvoiceSchema.parse(req.body);
-      
-      // Generate invoice number
-      const invoiceNumber = `INV-${Date.now()}`;
-      
-      // For new sale invoices, update inventory
-      if (validatedData.type === 'new_sale' && validatedData.items) {
-        const items = JSON.parse(validatedData.items);
-        
-        // Validate and update inventory for each item
-        for (const item of items) {
-          const inventoryItem = await storage.getInventoryItem(item.inventoryItemId);
-          if (!inventoryItem) {
-            return res.status(400).json({ 
-              message: `Inventory item not found: ${item.name}` 
-            });
-          }
-          
-          if (inventoryItem.quantity < item.quantity) {
-            return res.status(400).json({ 
-              message: `Insufficient stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}, Required: ${item.quantity}` 
-            });
-          }
-          
-          // Reduce inventory quantity
-          const newQuantity = inventoryItem.quantity - item.quantity;
-          await storage.updateInventoryItem(item.inventoryItemId, {
-            quantity: newQuantity
-          });
-        }
-      }
-      
-      const invoice = await storage.createInvoice({
-        ...validatedData,
-        invoiceNumber,
-      });
-      res.status(201).json(invoice);
-    } catch (error: any) {
-      console.error("Invoice creation error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid invoice data",
-          errors: error.errors
-        });
-      } else {
-        res.status(400).json({ message: error?.message || "Failed to create invoice" });
-      }
-    }
-  });
-
-  app.put("/api/invoices/:id", async (req, res) => {
-    try {
-      // Skip validation and pass raw data to storage for processing
-      const invoice = await storage.updateInvoice(req.params.id, req.body);
-      res.json(invoice);
-    } catch (error) {
-      console.error("Invoice update error:", error);
-      res.status(400).json({ message: "Failed to update invoice" });
-    }
-  });
-
-  app.delete("/api/invoices/:id", async (req, res) => {
-    try {
-      const invoice = await storage.getInvoice(req.params.id);
-      if (!invoice) {
-        return res.status(404).json({ message: "Invoice not found" });
-      }
-      
-      // For new sale invoices, restore inventory when deleting
-      if (invoice.type === 'new_sale' && invoice.items) {
-        const items = JSON.parse(invoice.items);
-        
-        for (const item of items) {
-          const inventoryItem = await storage.getInventoryItem(item.inventoryItemId);
-          if (inventoryItem) {
-            // Restore inventory quantity
-            await storage.updateInventoryItem(item.inventoryItemId, {
-              quantity: inventoryItem.quantity + item.quantity
-            });
-          }
-        }
-      }
-      
-      await storage.deleteInvoice(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Invoice deletion error:", error);
-      res.status(400).json({ message: "Failed to delete invoice" });
-    }
-  });
 
   // Company Settings routes
-  app.get("/api/company-settings", async (req, res) => {
+  app.get("/api/company-settings", requireAuth, async (req, res) => {
     try {
       const settings = await storage.getCompanySettings();
       res.json(settings || {});
@@ -571,7 +500,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/company-settings", async (req, res) => {
+  app.post("/api/company-settings", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCompanySettingsSchema.parse(req.body);
       const settings = await storage.createCompanySettings(validatedData);
@@ -589,7 +518,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.put("/api/company-settings/:id", async (req, res) => {
+  app.put("/api/company-settings/:id", requireAuth, async (req, res) => {
     try {
       const validatedData = insertCompanySettingsSchema.partial().parse(req.body);
       const settings = await storage.updateCompanySettings(req.params.id, validatedData);
