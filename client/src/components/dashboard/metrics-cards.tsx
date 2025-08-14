@@ -2,6 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DollarSign, Wrench, Users, Package } from "lucide-react";
 import { useLocation } from "wouter";
+import { formatCurrency } from "@/lib/currency";
 import type { DashboardMetrics } from "@/types";
 
 interface MetricsCardsProps {
@@ -15,7 +16,7 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
   const metricItems = [
     {
       title: "Today's Sales",
-      value: metrics?.todaySales ? `₹${metrics.todaySales}` : "₹0",
+      value: metrics?.todaySales ? formatCurrency(metrics.todaySales) : formatCurrency(0),
       icon: DollarSign,
       color: "bg-primary-100 text-primary-600",
       change: "+12.5% from yesterday",
