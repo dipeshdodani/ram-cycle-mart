@@ -18,20 +18,36 @@ export default function Inventory() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: inventoryItems, isLoading } = useQuery<InventoryItem[]>({
+  const { data: inventoryData, isLoading } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory", searchTerm],
     queryFn: async () => {
       const url = searchTerm 
         ? `/api/inventory?search=${encodeURIComponent(searchTerm)}`
         : "/api/inventory";
       const res = await fetch(url);
-      return res.json();
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
-  const { data: lowStockItems } = useQuery<InventoryItem[]>({
+  const { data: lowStockData } = useQuery<InventoryItem[]>({
     queryKey: ["/api/inventory/low-stock"],
+    queryFn: async () => {
+      const res = await fetch("/api/inventory/low-stock");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
+
+  // Ensure data is always an array
+  const inventoryItems = Array.isArray(inventoryData) ? inventoryData : [];
+  const lowStockItems = Array.isArray(lowStockData) ? lowStockData : [];
 
   const updateInventoryMutation = useMutation({
     mutationFn: async ({ id, quantity }: { id: string; quantity: number }) => {
@@ -76,12 +92,12 @@ export default function Inventory() {
     setIsModalOpen(false);
   };
 
-  const totalValue = inventoryItems?.reduce((sum, item) => 
-    sum + (parseFloat(item.cost.toString()) * item.quantity), 0) || 0;
+  const totalValue = inventoryItems.reduce((sum, item) => 
+    sum + (parseFloat(item.cost.toString()) * item.quantity), 0);
 
-  const totalItems = inventoryItems?.reduce((sum, item) => sum + item.quantity, 0) || 0;
+  const totalItems = inventoryItems.reduce((sum, item) => sum + item.quantity, 0);
 
-  const lowStockCount = lowStockItems?.length || 0;
+  const lowStockCount = lowStockItems.length;
 
   return (
     <div className="min-h-screen bg-gray-50">

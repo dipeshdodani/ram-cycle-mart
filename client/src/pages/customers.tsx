@@ -22,26 +22,34 @@ export default function Customers() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: customers, isLoading } = useQuery<Customer[]>({
+  const { data: customersData, isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers", searchTerm],
     queryFn: async () => {
       const url = searchTerm 
         ? `/api/customers?search=${encodeURIComponent(searchTerm)}`
         : "/api/customers";
       const res = await fetch(url);
-      return res.json();
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
-  const { data: customerHistory } = useQuery({
+  const { data: customerHistoryData } = useQuery({
     queryKey: ["/api/invoices", selectedCustomer?.id],
     queryFn: async () => {
       if (!selectedCustomer?.id) return [];
       const res = await fetch(`/api/invoices?customerId=${selectedCustomer.id}`);
-      return res.json();
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!selectedCustomer?.id,
   });
+
+  // Ensure data is always arrays
+  const customers = Array.isArray(customersData) ? customersData : [];
+  const customerHistory = Array.isArray(customerHistoryData) ? customerHistoryData : [];
 
   const deleteMutation = useMutation({
     mutationFn: async (customerId: string) => {

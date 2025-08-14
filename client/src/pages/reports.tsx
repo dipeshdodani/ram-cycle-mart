@@ -25,21 +25,51 @@ export default function Reports() {
     queryKey: ["/api/dashboard/metrics"],
   });
 
-  const { data: workOrders } = useQuery({
+  const { data: workOrdersData } = useQuery({
     queryKey: ["/api/work-orders"],
+    queryFn: async () => {
+      const res = await fetch("/api/work-orders");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
-  const { data: customers } = useQuery({
+  const { data: customersData } = useQuery({
     queryKey: ["/api/customers"],
+    queryFn: async () => {
+      const res = await fetch("/api/customers");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
-  const { data: invoices } = useQuery({
+  const { data: invoicesData } = useQuery({
     queryKey: ["/api/invoices"],
+    queryFn: async () => {
+      const res = await fetch("/api/invoices");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
-  const { data: inventoryItems } = useQuery({
+  const { data: inventoryItemsData } = useQuery({
     queryKey: ["/api/inventory"],
+    queryFn: async () => {
+      const res = await fetch("/api/inventory");
+      if (!res.ok) return [];
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
+
+  // Ensure all data is arrays
+  const workOrders = Array.isArray(workOrdersData) ? workOrdersData : [];
+  const customers = Array.isArray(customersData) ? customersData : [];
+  const invoices = Array.isArray(invoicesData) ? invoicesData : [];
+  const inventoryItems = Array.isArray(inventoryItemsData) ? inventoryItemsData : [];
 
   // Generate mock data for charts since we don't have historical data endpoints
   const revenueData = [
@@ -51,24 +81,23 @@ export default function Reports() {
     { month: "Jun", revenue: 25300, orders: 50 },
   ];
 
-  const workOrderStatusData = workOrders ? [
+  const workOrderStatusData = [
     { name: "Pending", value: workOrders.filter((wo: any) => wo.status === "pending").length },
     { name: "In Progress", value: workOrders.filter((wo: any) => wo.status === "in_progress").length },
     { name: "Completed", value: workOrders.filter((wo: any) => wo.status === "completed").length },
     { name: "On Hold", value: workOrders.filter((wo: any) => wo.status === "on_hold").length },
     { name: "Cancelled", value: workOrders.filter((wo: any) => wo.status === "cancelled").length },
-  ].filter(item => item.value > 0) : [];
+  ].filter(item => item.value > 0);
 
-  const topCategories = inventoryItems ? 
-    Object.entries(
-      inventoryItems.reduce((acc: any, item: any) => {
-        acc[item.category] = (acc[item.category] || 0) + item.quantity;
-        return acc;
-      }, {})
-    )
+  const topCategories = Object.entries(
+    inventoryItems.reduce((acc: any, item: any) => {
+      acc[item.category] = (acc[item.category] || 0) + item.quantity;
+      return acc;
+    }, {})
+  )
     .map(([category, quantity]) => ({ category, quantity }))
     .sort((a: any, b: any) => b.quantity - a.quantity)
-    .slice(0, 5) : [];
+    .slice(0, 5);
 
   // Using imported formatCurrency from @/lib/currency
 

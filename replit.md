@@ -20,6 +20,14 @@ Ram Cycle Mart is a comprehensive cycle service and repair shop management syste
 
 Preferred communication style: Simple, everyday language.
 
+## Recent Changes & Bug Fixes
+
+### Array Data Handling (Aug 14, 2025)
+- **Fixed critical reduce function errors** in inventory, invoice, customers, and reports pages
+- **Enhanced API error handling** to ensure data is always arrays before using reduce/filter/map
+- **Updated query client** authentication handling to use returnNull on 401 errors
+- **Improved data integrity** across all frontend components with proper data validation
+
 ## System Architecture
 
 ### Frontend Architecture
