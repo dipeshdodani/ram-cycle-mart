@@ -29,23 +29,19 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Ensure we're not behind a proxy for session handling
-  app.set("trust proxy", false);
-
   const sessionSettings: session.SessionOptions = {
     secret: process.env.SESSION_SECRET!,
-    resave: false, // Don't save session if unmodified
-    saveUninitialized: false, // Don't create session until something stored
+    resave: false,
+    saveUninitialized: false,
     store: storage.sessionStore,
     cookie: {
-      secure: false, // Allow cookies over HTTP in development
-      httpOnly: false, // Allow JS access in development for debugging
-      maxAge: 24 * 60 * 60 * 1000, // 24 hours
-      sameSite: 'lax' as const, // Allow cookies to be sent with requests from same site
-      path: '/', // Ensure cookie applies to all paths
-      domain: undefined, // Don't set domain in development
+      secure: false,
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000,
+      sameSite: 'none' as const, // Allow cross-origin cookies for dev server
+      path: '/',
     },
-    name: 'connect.sid', // Use default session name
+    name: 'session-id',
   };
 
   app.use(session(sessionSettings));
