@@ -307,7 +307,14 @@ export default function NewSaleInvoiceModal({ isOpen, onClose }: NewSaleInvoiceM
                                 ?.filter((item: any) => item.quantity > 0)
                                 ?.map((item: any) => (
                                   <SelectItem key={item.id} value={item.id}>
-                                    {item.name} (Stock: {item.quantity})
+                                    <div className="flex items-center space-x-2">
+                                      <span className="capitalize text-xs bg-gray-100 px-2 py-1 rounded">
+                                        {item.type || 'Parts'}
+                                      </span>
+                                      <span>
+                                        {item.brand && `${item.brand} - `}{item.name} (Stock: {item.quantity})
+                                      </span>
+                                    </div>
                                   </SelectItem>
                                 ))}
                             </SelectContent>

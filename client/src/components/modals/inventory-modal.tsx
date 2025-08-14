@@ -36,17 +36,21 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const form = useForm<InsertInventoryItem>({
-    resolver: zodResolver(insertInventoryItemSchema),
+  const form = useForm({
+    resolver: zodResolver(insertInventoryItemSchema.extend({
+      cost: insertInventoryItemSchema.shape.cost.transform(String),
+      price: insertInventoryItemSchema.shape.price.transform(String)
+    })),
     defaultValues: {
+      type: "parts" as const,
       name: "",
       description: "",
       sku: "",
       category: "",
       quantity: 0,
       minimumStock: 0,
-      cost: "",
-      price: "",
+      cost: "0",
+      price: "0",
       brand: "",
       location: "",
     },
@@ -56,6 +60,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
   useEffect(() => {
     if (editingItem) {
       form.reset({
+        type: editingItem.type || "parts",
         name: editingItem.name || "",
         description: editingItem.description || "",
         sku: editingItem.sku || "",
@@ -69,6 +74,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
       });
     } else {
       form.reset({
+        type: "parts",
         name: "",
         description: "",
         sku: "",
@@ -130,12 +136,12 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
     },
   });
 
-  const onSubmit = (data: InsertInventoryItem) => {
+  const onSubmit = (data: any) => {
     // Convert string prices to numbers for backend validation
     const processedData = {
       ...data,
-      cost: parseFloat(data.cost as string) || 0,
-      price: parseFloat(data.price as string) || 0,
+      cost: parseFloat(data.cost) || 0,
+      price: parseFloat(data.price) || 0,
     };
     
     if (editingItem) {
@@ -161,15 +167,40 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            {/* Type Field - First */}
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="machine">Machine</SelectItem>
+                      <SelectItem value="repairs">Repairs</SelectItem>
+                      <SelectItem value="parts">Parts</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Brand and Product Name */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
-                name="name"
+                name="brand"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Item Name</FormLabel>
+                    <FormLabel>Brand (e.g., Brothers)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter item name" {...field} />
+                      <Input placeholder="Enter brand name" {...field} value={field.value || ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -178,12 +209,12 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
 
               <FormField
                 control={form.control}
-                name="sku"
+                name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>SKU</FormLabel>
+                    <FormLabel>Product Name (e.g., Automatic Sewing Machine)</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter SKU" {...field} />
+                      <Input placeholder="Enter product name" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -191,6 +222,22 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
               />
             </div>
 
+            {/* SKU */}
+            <FormField
+              control={form.control}
+              name="sku"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SKU (Stock Keeping Unit)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter SKU (leave empty for auto-generation)" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -210,46 +257,32 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
               )}
             />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="category"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Category</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select category" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="parts">Parts</SelectItem>
-                        <SelectItem value="accessories">Accessories</SelectItem>
-                        <SelectItem value="tools">Tools</SelectItem>
-                        <SelectItem value="supplies">Supplies</SelectItem>
-                        <SelectItem value="other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="brand"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brand</FormLabel>
+            {/* Category */}
+            <FormField
+              control={form.control}
+              name="category"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
-                      <Input placeholder="Enter brand name" {...field} value={field.value || ""} />
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
+                    <SelectContent>
+                      <SelectItem value="parts">Parts</SelectItem>
+                      <SelectItem value="accessories">Accessories</SelectItem>
+                      <SelectItem value="tools">Tools</SelectItem>
+                      <SelectItem value="supplies">Supplies</SelectItem>
+                      <SelectItem value="sewing-machines">Sewing Machines</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField

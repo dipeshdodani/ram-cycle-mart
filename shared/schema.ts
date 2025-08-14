@@ -16,6 +16,9 @@ export const workOrderPriorityEnum = pgEnum("work_order_priority", ["low", "norm
 // Payment status enum
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "overdue", "cancelled"]);
 
+// Inventory type enum
+export const inventoryTypeEnum = pgEnum("inventory_type", ["machine", "repairs", "parts"]);
+
 // Users table
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -86,6 +89,7 @@ export const workOrders = pgTable("work_orders", {
 // Inventory items table
 export const inventoryItems = pgTable("inventory_items", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  type: inventoryTypeEnum("type").notNull().default("parts"),
   sku: text("sku").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),

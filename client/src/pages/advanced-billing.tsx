@@ -22,6 +22,8 @@ interface BillItem {
   quantity: number;
   unitPrice: number;
   total: number;
+  type?: string;
+  brand?: string;
 }
 
 interface BillData {
@@ -57,8 +59,13 @@ export default function AdvancedBilling() {
   const [currentItem, setCurrentItem] = useState({
     description: "",
     quantity: 1,
-    unitPrice: 0
+    unitPrice: 0,
+    type: "",
+    brand: ""
   });
+
+  const [selectedInventoryItem, setSelectedInventoryItem] = useState("");
+  const [addMode, setAddMode] = useState<"manual" | "inventory">("manual");
 
   const [savedItems, setSavedItems] = useState<string[]>([]);
 
@@ -72,6 +79,10 @@ export default function AdvancedBilling() {
 
   const { data: customers } = useQuery({
     queryKey: ["/api/customers"],
+  });
+
+  const { data: inventoryItems } = useQuery({
+    queryKey: ["/api/inventory"],
   });
 
   const generateBillMutation = useMutation({
@@ -185,14 +196,55 @@ export default function AdvancedBilling() {
       description: currentItem.description,
       quantity: currentItem.quantity,
       unitPrice: currentItem.unitPrice,
-      total: currentItem.quantity * currentItem.unitPrice
+      total: currentItem.quantity * currentItem.unitPrice,
+      type: currentItem.type,
+      brand: currentItem.brand
     };
     
     const updatedItems = [...bill.items, newItem];
     setBill(prev => ({ ...prev, items: updatedItems }));
     calculateTotals(updatedItems, bill.discount);
     
-    setCurrentItem({ description: "", quantity: 1, unitPrice: 0 });
+    setCurrentItem({ description: "", quantity: 1, unitPrice: 0, type: "", brand: "" });
+    setSelectedInventoryItem("");
+  };
+
+  const addInventoryItem = () => {
+    const inventoryItem = Array.isArray(inventoryItems) ? inventoryItems.find((item: any) => item.id === selectedInventoryItem) : null;
+    
+    if (!inventoryItem) {
+      toast({
+        title: "No Item Selected",
+        description: "Please select an inventory item.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (inventoryItem.quantity <= 0) {
+      toast({
+        title: "Out of Stock",
+        description: "This item is currently out of stock.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const newItem: BillItem = {
+      id: `item-${Date.now()}`,
+      description: `${inventoryItem.brand ? inventoryItem.brand + ' - ' : ''}${inventoryItem.name}`,
+      quantity: 1,
+      unitPrice: parseFloat(inventoryItem.price),
+      total: parseFloat(inventoryItem.price),
+      type: inventoryItem.type,
+      brand: inventoryItem.brand
+    };
+    
+    const updatedItems = [...bill.items, newItem];
+    setBill(prev => ({ ...prev, items: updatedItems }));
+    calculateTotals(updatedItems, bill.discount);
+    
+    setSelectedInventoryItem("");
   };
 
   const removeItem = (itemId: string) => {
@@ -539,58 +591,141 @@ export default function AdvancedBilling() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="md:col-span-2">
-                      <label className="text-sm font-medium mb-2 block">Item Description</label>
-                      <div className="space-y-2">
-                        <Input
-                          placeholder="e.g., Bike chain replacement, Brake adjustment..."
-                          value={currentItem.description}
-                          onChange={(e) => setCurrentItem(prev => ({ ...prev, description: e.target.value }))}
-                        />
-                        {savedItems.length > 0 && (
-                          <div className="flex flex-wrap gap-1">
-                            <span className="text-xs text-gray-500">Quick add:</span>
-                            {savedItems.slice(0, 6).map((item, index) => (
-                              <Button
-                                key={index}
-                                variant="outline"
-                                size="sm"
-                                className="h-6 text-xs px-2"
-                                onClick={() => setCurrentItem(prev => ({ ...prev, description: item }))}
-                              >
-                                {item}
-                              </Button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Quantity</label>
-                      <Input
-                        type="number"
-                        min="1"
-                        value={currentItem.quantity}
-                        onChange={(e) => setCurrentItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
-                      />
-                    </div>
-                    <div>
-                      <label className="text-sm font-medium mb-2 block">Unit Price (₹)</label>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={currentItem.unitPrice}
-                        onChange={(e) => setCurrentItem(prev => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
-                      />
-                    </div>
+                  {/* Mode Selection */}
+                  <div className="flex space-x-2 mb-4">
+                    <Button
+                      variant={addMode === "manual" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setAddMode("manual")}
+                      className="flex-1"
+                    >
+                      Manual Entry
+                    </Button>
+                    <Button
+                      variant={addMode === "inventory" ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setAddMode("inventory")}
+                      className="flex-1"
+                    >
+                      From Inventory
+                    </Button>
                   </div>
-                  
-                  <Button onClick={addItem} className="w-full bg-primary hover:bg-primary/90">
-                    <Plus className="mr-2 h-4 w-4" />
-                    Add Item
-                  </Button>
+
+                  {addMode === "manual" ? (
+                    // Manual Entry Form
+                    <>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Type</label>
+                          <Select value={currentItem.type} onValueChange={(value) => setCurrentItem(prev => ({ ...prev, type: value }))}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="machine">Machine</SelectItem>
+                              <SelectItem value="repairs">Repairs</SelectItem>
+                              <SelectItem value="parts">Parts</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Brand</label>
+                          <Input
+                            placeholder="e.g., Brothers, Usha..."
+                            value={currentItem.brand}
+                            onChange={(e) => setCurrentItem(prev => ({ ...prev, brand: e.target.value }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Product Name</label>
+                        <div className="space-y-2">
+                          <Input
+                            placeholder="e.g., Automatic Sewing Machine, Chain replacement..."
+                            value={currentItem.description}
+                            onChange={(e) => setCurrentItem(prev => ({ ...prev, description: e.target.value }))}
+                          />
+                          {savedItems.length > 0 && (
+                            <div className="flex flex-wrap gap-1">
+                              <span className="text-xs text-gray-500">Quick add:</span>
+                              {savedItems.slice(0, 6).map((item, index) => (
+                                <Button
+                                  key={index}
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-6 text-xs px-2"
+                                  onClick={() => setCurrentItem(prev => ({ ...prev, description: item }))}
+                                >
+                                  {item}
+                                </Button>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Quantity</label>
+                          <Input
+                            type="number"
+                            min="1"
+                            value={currentItem.quantity}
+                            onChange={(e) => setCurrentItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
+                          />
+                        </div>
+                        <div>
+                          <label className="text-sm font-medium mb-2 block">Unit Price (₹)</label>
+                          <Input
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            value={currentItem.unitPrice}
+                            onChange={(e) => setCurrentItem(prev => ({ ...prev, unitPrice: parseFloat(e.target.value) || 0 }))}
+                          />
+                        </div>
+                      </div>
+                      
+                      <Button onClick={addItem} className="w-full bg-primary hover:bg-primary/90">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Manual Item
+                      </Button>
+                    </>
+                  ) : (
+                    // Inventory Selection Form
+                    <>
+                      <div>
+                        <label className="text-sm font-medium mb-2 block">Select Inventory Item</label>
+                        <Select value={selectedInventoryItem} onValueChange={setSelectedInventoryItem}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Choose from inventory" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {Array.isArray(inventoryItems) && inventoryItems
+                              ?.filter((item: any) => item.quantity > 0)
+                              ?.map((item: any) => (
+                                <SelectItem key={item.id} value={item.id}>
+                                  <div className="flex items-center space-x-2 w-full">
+                                    <Badge variant={item.type === 'machine' ? 'default' : item.type === 'repairs' ? 'secondary' : 'outline'} className="text-xs">
+                                      {item.type?.charAt(0).toUpperCase() + item.type?.slice(1) || 'Parts'}
+                                    </Badge>
+                                    <span>
+                                      {item.brand && `${item.brand} - `}{item.name} (Stock: {item.quantity}) - {formatCurrency(item.price)}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      
+                      <Button onClick={addInventoryItem} className="w-full bg-primary hover:bg-primary/90">
+                        <Plus className="mr-2 h-4 w-4" />
+                        Add Inventory Item
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
@@ -605,8 +740,16 @@ export default function AdvancedBilling() {
                       {bill.items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
                           <div className="flex-1">
-                            <h4 className="font-medium">{item.description}</h4>
+                            <div className="flex items-center space-x-2 mb-1">
+                              {item.type && (
+                                <Badge variant={item.type === 'machine' ? 'default' : item.type === 'repairs' ? 'secondary' : 'outline'} className="text-xs">
+                                  {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+                                </Badge>
+                              )}
+                              <h4 className="font-medium">{item.description}</h4>
+                            </div>
                             <p className="text-sm text-gray-500">
+                              {item.brand && `Brand: ${item.brand} | `}
                               {formatCurrency(item.unitPrice)} × {item.quantity} = {formatCurrency(item.total)}
                             </p>
                           </div>

@@ -224,9 +224,11 @@ export default function Inventory() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-[200px]">Name & SKU</TableHead>
-                        <TableHead className="w-[150px]">Category</TableHead>
+                        <TableHead className="w-[120px]">Type</TableHead>
                         <TableHead className="w-[100px]">Brand</TableHead>
+                        <TableHead className="w-[120px]">SKU</TableHead>
+                        <TableHead className="w-[180px]">Product Name</TableHead>
+                        <TableHead className="w-[150px]">Category</TableHead>
                         <TableHead className="w-[120px]">Cost</TableHead>
                         <TableHead className="w-[120px]">Price</TableHead>
                         <TableHead className="w-[100px]">Stock</TableHead>
@@ -242,16 +244,21 @@ export default function Inventory() {
                         return (
                           <TableRow key={item.id} className="hover:bg-gray-50">
                             <TableCell>
+                              <Badge variant={item.type === 'machine' ? 'default' : item.type === 'repairs' ? 'secondary' : 'outline'}>
+                                {item.type?.charAt(0).toUpperCase() + item.type?.slice(1) || 'Parts'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-gray-900 font-medium">{item.brand || "-"}</TableCell>
+                            <TableCell className="text-gray-600 font-mono text-sm">{item.sku}</TableCell>
+                            <TableCell>
                               <div>
                                 <div className="font-medium text-gray-900">{item.name}</div>
-                                <div className="text-sm text-gray-500">SKU: {item.sku}</div>
                                 {item.description && (
                                   <div className="text-sm text-gray-600 mt-1">{item.description}</div>
                                 )}
                               </div>
                             </TableCell>
                             <TableCell className="text-gray-900">{item.category}</TableCell>
-                            <TableCell className="text-gray-900">{item.brand || "-"}</TableCell>
                             <TableCell className="text-gray-900">{formatCurrency(item.cost)}</TableCell>
                             <TableCell className="text-gray-900 font-medium">{formatCurrency(item.price)}</TableCell>
                             <TableCell>
