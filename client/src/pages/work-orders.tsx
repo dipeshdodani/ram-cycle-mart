@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,11 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Clock, CheckCircle, AlertCircle, Trash2, Eye, Edit } from "lucide-react";
+import { Plus, Clock, CheckCircle, AlertCircle, Trash2, Eye, Edit, Download } from "lucide-react";
 import WorkOrderModal from "@/components/modals/work-order-modal";
 import WorkOrderDetailsModal from "@/components/modals/work-order-details-modal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { exportToExcel, formatDateForExcel, formatCurrencyForExcel, formatStatusForExcel } from "@/lib/excel-export";
+import Pagination from "@/components/ui/pagination";
 import type { WorkOrderFilters } from "@/types";
 
 export default function WorkOrders() {
@@ -18,10 +20,12 @@ export default function WorkOrders() {
   const [selectedWorkOrder, setSelectedWorkOrder] = useState<any>(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
   const [filters, setFilters] = useState<WorkOrderFilters>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: workOrders, isLoading } = useQuery({
+  const { data: workOrdersData, isLoading } = useQuery({
     queryKey: ["/api/work-orders", filters],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -31,9 +35,24 @@ export default function WorkOrders() {
       
       const url = `/api/work-orders${params.toString() ? `?${params.toString()}` : ""}`;
       const res = await fetch(url);
-      return res.json();
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
+
+  // Ensure data is always an array
+  const workOrders = Array.isArray(workOrdersData) ? workOrdersData : [];
+
+  // Paginated data
+  const paginatedWorkOrders = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return workOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [workOrders, currentPage, itemsPerPage]);
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const deleteWorkOrderMutation = useMutation({
     mutationFn: async (workOrderId: string) => {
@@ -123,6 +142,29 @@ export default function WorkOrders() {
     }).format(typeof amount === "string" ? parseFloat(amount) : amount);
   };
 
+  const handleExportToExcel = () => {
+    const columns = [
+      { key: 'orderNumber', header: 'Order Number' },
+      { key: 'customer.firstName', header: 'Customer Name', formatter: (customer: any) => customer ? `${customer.firstName} ${customer.lastName}` : '' },
+      { key: 'customer.phone', header: 'Customer Phone' },
+      { key: 'machine.name', header: 'Machine/Equipment' },
+      { key: 'problemDescription', header: 'Problem Description' },
+      { key: 'status', header: 'Status', formatter: formatStatusForExcel },
+      { key: 'priority', header: 'Priority', formatter: formatStatusForExcel },
+      { key: 'estimatedCost', header: 'Estimated Cost', formatter: formatCurrencyForExcel },
+      { key: 'actualCost', header: 'Actual Cost', formatter: formatCurrencyForExcel },
+      { key: 'createdAt', header: 'Created Date', formatter: formatDateForExcel },
+      { key: 'dueDate', header: 'Due Date', formatter: formatDateForExcel },
+      { key: 'technician.firstName', header: 'Technician', formatter: (tech: any) => tech ? `${tech.firstName} ${tech.lastName}` : '' },
+    ];
+
+    exportToExcel(workOrders, columns, 'work-orders');
+    toast({
+      title: "Export Successful",
+      description: "Work orders data has been exported to Excel.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50">
       <Navbar />
@@ -135,13 +177,23 @@ export default function WorkOrders() {
               <h1 className="text-2xl font-bold text-gray-900">Work Orders</h1>
               <p className="text-gray-600">Manage repair and maintenance orders</p>
             </div>
-            <Button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              New Work Order
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleExportToExcel}
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export Excel
+              </Button>
+              <Button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                New Work Order
+              </Button>
+            </div>
           </div>
 
           {/* Filters */}
@@ -201,8 +253,8 @@ export default function WorkOrders() {
                       <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
                     </TableRow>
                   ))
-                ) : workOrders && workOrders.length > 0 ? (
-                  workOrders.map((order: any) => (
+                ) : paginatedWorkOrders && paginatedWorkOrders.length > 0 ? (
+                  paginatedWorkOrders.map((order: any) => (
                     <TableRow key={order.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
                       <TableCell className="font-medium">
                         {order.orderNumber}
@@ -300,6 +352,19 @@ export default function WorkOrders() {
               </TableBody>
             </Table>
           </Card>
+
+          {/* Pagination */}
+          {workOrders.length > 0 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={workOrders.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
+          )}
         </div>
       </div>
 

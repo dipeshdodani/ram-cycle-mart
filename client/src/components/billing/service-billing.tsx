@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle, Trash2, Edit, Wrench, AlertCircle } from "lucide-react";
 import * as XLSX from 'xlsx';
+import Pagination from "@/components/ui/pagination";
 
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -29,6 +30,8 @@ export default function ServiceBilling() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -51,6 +54,40 @@ export default function ServiceBilling() {
 
   // Ensure invoices is always an array
   const invoices = Array.isArray(invoicesData) ? invoicesData : [];
+
+  // Filtered and paginated data
+  const filteredInvoices = useMemo(() => {
+    return invoices.filter((invoice: any) => {
+      const matchesSearch = !searchTerm || 
+        invoice.customer?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoice.customer?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoice.workOrder?.orderNumber?.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesStatus = statusFilter === "all" || invoice.paymentStatus === statusFilter;
+      
+      return matchesSearch && matchesStatus;
+    });
+  }, [invoices, searchTerm, statusFilter]);
+
+  const paginatedInvoices = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredInvoices.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredInvoices, currentPage, itemsPerPage]);
+
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleStatusFilterChange = (value: string) => {
+    setStatusFilter(value);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   // Calculate service-specific metrics
   const serviceMetrics = {
@@ -176,11 +213,7 @@ export default function ServiceBilling() {
     });
   };
 
-  const filteredInvoices = invoices?.filter((invoice: any) =>
-    invoice.customer?.firstName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.customer?.lastName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    invoice.invoiceNumber?.toLowerCase().includes(searchTerm.toLowerCase())
-  ) || [];
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -465,11 +498,11 @@ export default function ServiceBilling() {
             <Input
               placeholder="Search service invoices..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               className="pl-10 w-full sm:w-64"
             />
           </div>
-          <Select value={statusFilter} onValueChange={setStatusFilter}>
+          <Select value={statusFilter} onValueChange={handleStatusFilterChange}>
             <SelectTrigger className="w-full sm:w-48">
               <SelectValue placeholder="Filter by status" />
             </SelectTrigger>
@@ -499,7 +532,7 @@ export default function ServiceBilling() {
 
       {/* Invoices List */}
       <div className="grid gap-4">
-        {filteredInvoices.map((invoice: any) => (
+        {paginatedInvoices.map((invoice: any) => (
           <Card key={invoice.id} className="hover:shadow-md transition-shadow">
             <CardContent className="p-6">
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
@@ -599,7 +632,7 @@ export default function ServiceBilling() {
           </Card>
         ))}
 
-        {filteredInvoices.length === 0 && (
+        {paginatedInvoices.length === 0 && filteredInvoices.length === 0 && (
           <Card>
             <CardContent className="p-8 text-center">
               <FileText className="h-12 w-12 mx-auto text-gray-400 mb-4" />
@@ -615,6 +648,19 @@ export default function ServiceBilling() {
           </Card>
         )}
       </div>
+
+      {/* Pagination */}
+      {filteredInvoices.length > 0 && (
+        <div className="mt-6">
+          <Pagination
+            currentPage={currentPage}
+            totalItems={filteredInvoices.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={setCurrentPage}
+            onItemsPerPageChange={handleItemsPerPageChange}
+          />
+        </div>
+      )}
 
       {/* Invoice Modal for editing */}
       <InvoiceModal 

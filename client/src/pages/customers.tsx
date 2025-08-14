@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import Navbar from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,10 +6,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Search, Plus, Phone, Mail, MapPin, Trash2, History, Edit } from "lucide-react";
+import { Search, Plus, Phone, Mail, MapPin, Trash2, History, Edit, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
+import { exportToExcel, formatDateForExcel } from "@/lib/excel-export";
+import Pagination from "@/components/ui/pagination";
 import CustomerModal from "@/components/modals/customer-modal";
 import type { Customer } from "@shared/schema";
 
@@ -19,6 +21,8 @@ export default function Customers() {
   const [editingCustomer, setEditingCustomer] = useState<Customer | null>(null);
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
   const [showHistory, setShowHistory] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -50,6 +54,33 @@ export default function Customers() {
   // Ensure data is always arrays
   const customers = Array.isArray(customersData) ? customersData : [];
   const customerHistory = Array.isArray(customerHistoryData) ? customerHistoryData : [];
+
+  // Filtered and paginated data
+  const filteredCustomers = useMemo(() => {
+    if (!searchTerm) return customers;
+    return customers.filter(customer =>
+      customer.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      customer.phone.includes(searchTerm) ||
+      customer.email?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [customers, searchTerm]);
+
+  const paginatedCustomers = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredCustomers.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredCustomers, currentPage, itemsPerPage]);
+
+  // Reset to first page when search changes
+  const handleSearchChange = (value: string) => {
+    setSearchTerm(value);
+    setCurrentPage(1);
+  };
+
+  const handleItemsPerPageChange = (newItemsPerPage: number) => {
+    setItemsPerPage(newItemsPerPage);
+    setCurrentPage(1);
+  };
 
   const deleteMutation = useMutation({
     mutationFn: async (customerId: string) => {
@@ -111,6 +142,28 @@ export default function Customers() {
     return `${firstName.charAt(0)}${lastName.charAt(0)}`.toUpperCase();
   };
 
+  const handleViewHistory = (customer: Customer) => {
+    setSelectedCustomer(customer);
+    setShowHistory(true);
+  };
+
+  const handleExportToExcel = () => {
+    const columns = [
+      { key: 'firstName', header: 'First Name' },
+      { key: 'lastName', header: 'Last Name' },
+      { key: 'phone', header: 'Phone' },
+      { key: 'email', header: 'Email' },
+      { key: 'address', header: 'Address' },
+      { key: 'createdAt', header: 'Date Added', formatter: formatDateForExcel },
+    ];
+
+    exportToExcel(filteredCustomers, columns, 'customers');
+    toast({
+      title: "Export Successful",
+      description: "Customer data has been exported to Excel.",
+    });
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Navbar />
@@ -123,13 +176,23 @@ export default function Customers() {
               <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Customers</h1>
               <p className="text-gray-600 dark:text-gray-400">Manage customer information and history</p>
             </div>
-            <Button 
-              onClick={() => setIsModalOpen(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white border-0"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Customer
-            </Button>
+            <div className="flex space-x-3">
+              <Button 
+                onClick={handleExportToExcel}
+                variant="outline"
+                className="border-green-600 text-green-600 hover:bg-green-50"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Export Excel
+              </Button>
+              <Button 
+                onClick={() => setIsModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white border-0"
+              >
+                <Plus className="mr-2 h-4 w-4" />
+                Add Customer
+              </Button>
+            </div>
           </div>
 
           {/* Search */}
@@ -140,7 +203,7 @@ export default function Customers() {
                 <Input
                   placeholder="Search customers by name, phone, or email..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   className="pl-10"
                 />
               </div>
@@ -170,7 +233,7 @@ export default function Customers() {
             </div>
           ) : customers && customers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {customers.map((customer) => (
+              {paginatedCustomers.map((customer) => (
                 <Card key={customer.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-4 mb-4">
@@ -268,6 +331,19 @@ export default function Customers() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {/* Pagination */}
+          {filteredCustomers.length > 0 && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={currentPage}
+                totalItems={filteredCustomers.length}
+                itemsPerPage={itemsPerPage}
+                onPageChange={setCurrentPage}
+                onItemsPerPageChange={handleItemsPerPageChange}
+              />
+            </div>
           )}
         </div>
       </div>
