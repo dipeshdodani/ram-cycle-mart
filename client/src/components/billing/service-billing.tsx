@@ -31,7 +31,7 @@ export default function ServiceBilling() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: invoices, isLoading } = useQuery({
+  const { data: invoicesData, isLoading } = useQuery({
     queryKey: ["/api/invoices", "service", searchTerm, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -40,12 +40,19 @@ export default function ServiceBilling() {
       
       const url = `/api/invoices?${params.toString()}`;
       const res = await fetch(url);
-      return res.json();
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
+  // Ensure invoices is always an array
+  const invoices = Array.isArray(invoicesData) ? invoicesData : [];
+
   // Calculate service-specific metrics
-  const serviceMetrics = invoices ? {
+  const serviceMetrics = {
     totalServiceInvoices: invoices.length,
     totalServiceRevenue: invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.total), 0),
     pendingServices: invoices.filter((inv: any) => inv.paymentStatus === 'pending').length,
@@ -55,7 +62,7 @@ export default function ServiceBilling() {
       const today = new Date();
       return inv.paymentStatus === 'pending' && dueDate < today;
     }).length
-  } : null;
+  };
 
   const updateInvoiceMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {

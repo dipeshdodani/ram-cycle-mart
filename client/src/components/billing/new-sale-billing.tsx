@@ -33,7 +33,7 @@ export default function NewSaleBilling() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: invoices, isLoading } = useQuery({
+  const { data: invoicesData, isLoading } = useQuery({
     queryKey: ["/api/invoices", "new_sale", searchTerm, statusFilter],
     queryFn: async () => {
       const params = new URLSearchParams();
@@ -42,7 +42,11 @@ export default function NewSaleBilling() {
       
       const url = `/api/invoices?${params.toString()}`;
       const res = await fetch(url);
-      return res.json();
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -50,12 +54,18 @@ export default function NewSaleBilling() {
     queryKey: ["/api/company-settings"],
     queryFn: async () => {
       const res = await fetch("/api/company-settings");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       return res.json();
     },
   });
 
+  // Ensure invoices is always an array
+  const invoices = Array.isArray(invoicesData) ? invoicesData : [];
+
   // Calculate new sale-specific metrics
-  const salesMetrics = invoices ? {
+  const salesMetrics = {
     totalSalesInvoices: invoices.length,
     totalSalesRevenue: invoices.reduce((sum: number, inv: any) => sum + parseFloat(inv.total), 0),
     pendingSales: invoices.filter((inv: any) => inv.paymentStatus === 'pending').length,
@@ -65,7 +75,7 @@ export default function NewSaleBilling() {
       const today = new Date();
       return inv.paymentStatus === 'pending' && dueDate < today;
     }).length
-  } : null;
+  };
 
   const updateInvoiceMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
@@ -690,7 +700,6 @@ export default function NewSaleBilling() {
         <NewSaleInvoiceModal
           isOpen={!!editingInvoice}
           onClose={() => setEditingInvoice(null)}
-          invoice={editingInvoice}
         />
       )}
     </div>
