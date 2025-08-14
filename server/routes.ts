@@ -265,6 +265,15 @@ export function registerRoutes(app: Express): Server {
   app.post("/api/inventory", requireAuth, async (req, res) => {
     try {
       console.log("Inventory POST request body:", req.body);
+      
+      // If SKU is empty, generate a unique one
+      if (!req.body.sku || req.body.sku.trim() === '') {
+        const timestamp = Date.now();
+        const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
+        req.body.sku = `ITEM-${timestamp}-${randomSuffix}`;
+        console.log("Generated SKU:", req.body.sku);
+      }
+      
       const validatedData = insertInventoryItemSchema.parse(req.body);
       const item = await storage.createInventoryItem(validatedData);
       res.status(201).json(item);
@@ -272,11 +281,15 @@ export function registerRoutes(app: Express): Server {
       console.error("Inventory creation error:", error);
       if (error instanceof z.ZodError) {
         res.status(400).json({ 
-          message: "Invalid inventory item data",
+          message: "Validation error",
           errors: error.errors
         });
+      } else if (error.code === '23505' && error.constraint === 'inventory_items_sku_unique') {
+        res.status(400).json({ 
+          message: "An item with this SKU already exists. Please use a different SKU." 
+        });
       } else {
-        res.status(400).json({ message: "Invalid inventory item data" });
+        res.status(400).json({ message: "Failed to create inventory item" });
       }
     }
   });
