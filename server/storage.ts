@@ -1,9 +1,9 @@
 import { 
-  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, invoices, companySettings,
+  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, invoices, companySettings, paymentTransactions,
   type User, type InsertUser, type Customer, type InsertCustomer, 
   type SewingMachine, type InsertSewingMachine, type WorkOrder, type InsertWorkOrder,
   type InventoryItem, type InsertInventoryItem, type Invoice, type InsertInvoice,
-  type CompanySettings, type InsertCompanySettings
+  type CompanySettings, type InsertCompanySettings, type PaymentTransaction, type InsertPaymentTransaction
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, sql, count, sum, ilike, or } from "drizzle-orm";
@@ -68,6 +68,11 @@ export interface IStorage {
   getCompanySettings(): Promise<CompanySettings | undefined>;
   createCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings>;
   updateCompanySettings(id: string, settings: Partial<InsertCompanySettings>): Promise<CompanySettings>;
+  
+  // Payment transactions
+  getPaymentTransactions(invoiceId: string): Promise<PaymentTransaction[]>;
+  createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction>;
+  deletePaymentTransaction(id: string): Promise<void>;
   
   // Dashboard metrics
   getDashboardMetrics(): Promise<any>;
@@ -721,6 +726,79 @@ export class DatabaseStorage implements IStorage {
       .where(eq(companySettings.id, id))
       .returning();
     return updatedSettings;
+  }
+
+  // Payment transaction methods
+  async getPaymentTransactions(invoiceId: string): Promise<PaymentTransaction[]> {
+    return await db
+      .select()
+      .from(paymentTransactions)
+      .where(eq(paymentTransactions.invoiceId, invoiceId))
+      .orderBy(desc(paymentTransactions.createdAt));
+  }
+
+  async createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction> {
+    const [newTransaction] = await db
+      .insert(paymentTransactions)
+      .values(transaction)
+      .returning();
+
+    // Update invoice payment status and amounts
+    const payments = await this.getPaymentTransactions(transaction.invoiceId);
+    const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+    
+    const invoice = await this.getInvoice(transaction.invoiceId);
+    if (invoice) {
+      const remaining = Number(invoice.total) - totalPaid;
+      const paymentStatus = remaining <= 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'pending';
+      
+      await db
+        .update(invoices)
+        .set({ 
+          paidAmount: totalPaid.toString(),
+          remainingAmount: remaining.toString(),
+          paymentStatus: paymentStatus,
+          paymentDate: paymentStatus === 'paid' ? new Date() : null
+        })
+        .where(eq(invoices.id, transaction.invoiceId));
+    }
+
+    return newTransaction;
+  }
+
+  async deletePaymentTransaction(id: string): Promise<void> {
+    const transaction = await db
+      .select()
+      .from(paymentTransactions)
+      .where(eq(paymentTransactions.id, id))
+      .limit(1);
+
+    if (transaction.length > 0) {
+      const invoiceId = transaction[0].invoiceId;
+      
+      // Delete the transaction
+      await db.delete(paymentTransactions).where(eq(paymentTransactions.id, id));
+      
+      // Recalculate invoice payment status
+      const payments = await this.getPaymentTransactions(invoiceId);
+      const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
+      
+      const invoice = await this.getInvoice(invoiceId);
+      if (invoice) {
+        const remaining = Number(invoice.total) - totalPaid;
+        const paymentStatus = remaining <= 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'pending';
+        
+        await db
+          .update(invoices)
+          .set({ 
+            paidAmount: totalPaid.toString(),
+            remainingAmount: remaining.toString(),
+            paymentStatus: paymentStatus,
+            paymentDate: paymentStatus === 'paid' ? new Date() : null
+          })
+          .where(eq(invoices.id, invoiceId));
+      }
+    }
   }
 }
 

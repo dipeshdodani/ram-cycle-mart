@@ -53,6 +53,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
       price: "0",
       brand: "",
       location: "",
+      warrantyPeriodYears: 0,
     },
   });
 
@@ -71,6 +72,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
         price: editingItem.price?.toString() || "",
         brand: editingItem.brand || "",
         location: editingItem.location || "",
+        warrantyPeriodYears: editingItem.warrantyPeriodYears || 0,
       });
     } else {
       form.reset({
@@ -85,6 +87,7 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
         price: "",
         brand: "",
         location: "",
+        warrantyPeriodYears: 0,
       });
     }
   }, [editingItem, form]);
@@ -370,19 +373,50 @@ export default function InventoryModal({ isOpen, onClose, editingItem }: Invento
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name="location"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Storage Location</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter storage location" {...field} value={field.value || ""} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Storage Location</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Enter storage location" {...field} value={field.value || ""} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="warrantyPeriodYears"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Warranty Period (Years)</FormLabel>
+                    <Select 
+                      value={field.value?.toString() || "0"} 
+                      onValueChange={(value) => field.onChange(parseInt(value))}
+                    >
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select warranty period" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="0">No Warranty</SelectItem>
+                        <SelectItem value="1">1 Year</SelectItem>
+                        <SelectItem value="2">2 Years</SelectItem>
+                        <SelectItem value="3">3 Years</SelectItem>
+                        <SelectItem value="4">4 Years</SelectItem>
+                        <SelectItem value="5">5 Years</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <div className="flex justify-end space-x-2 pt-4">
               <Button 

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle, Trash2, Edit, Wrench, AlertCircle } from "lucide-react";
+import { Search, Plus, FileText, Download, DollarSign, Clock, CheckCircle, Trash2, Edit, Wrench, AlertCircle, CreditCard } from "lucide-react";
 import * as XLSX from 'xlsx';
 import Pagination from "@/components/ui/pagination";
 
@@ -13,6 +13,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
 import InvoiceModal from "@/components/modals/invoice-modal";
+import PaymentModal from "@/components/modals/payment-modal";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,6 +31,8 @@ export default function ServiceBilling() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingInvoice, setEditingInvoice] = useState<any>(null);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
@@ -586,6 +589,17 @@ export default function ServiceBilling() {
                     <Download className="h-4 w-4" />
                   </Button>
                   
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      setSelectedInvoice(invoice);
+                      setIsPaymentModalOpen(true);
+                    }}
+                  >
+                    <CreditCard className="h-4 w-4" />
+                  </Button>
+                  
                   {invoice.paymentStatus !== 'paid' && (
                     <Select
                       value={invoice.paymentStatus}
@@ -670,6 +684,16 @@ export default function ServiceBilling() {
           setEditingInvoice(null);
         }} 
         invoice={editingInvoice}
+      />
+
+      {/* Payment Modal */}
+      <PaymentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => {
+          setIsPaymentModalOpen(false);
+          setSelectedInvoice(null);
+        }}
+        invoice={selectedInvoice}
       />
     </div>
   );

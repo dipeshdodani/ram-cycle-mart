@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { 
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
   insertInventoryItemSchema, insertInvoiceSchema, updateInvoiceSchema, insertUserSchema,
-  insertCompanySettingsSchema
+  insertCompanySettingsSchema, insertPaymentTransactionSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes } from "crypto";
@@ -680,6 +680,47 @@ export function registerRoutes(app: Express): Server {
       res.status(201).json(invoice);
     } catch (error) {
       res.status(400).json({ message: "Failed to generate invoice" });
+    }
+  });
+
+  // Payment transaction routes
+  app.get("/api/invoices/:id/payments", requireAuth, async (req, res) => {
+    try {
+      const transactions = await storage.getPaymentTransactions(req.params.id);
+      res.json(transactions);
+    } catch (error) {
+      res.status(500).json({ message: "Failed to fetch payment transactions" });
+    }
+  });
+
+  app.post("/api/invoices/:id/payments", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertPaymentTransactionSchema.parse({
+        ...req.body,
+        invoiceId: req.params.id
+      });
+      const transaction = await storage.createPaymentTransaction(validatedData);
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Payment transaction creation error:", error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid payment data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to create payment transaction" });
+      }
+    }
+  });
+
+  app.delete("/api/payments/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deletePaymentTransaction(req.params.id);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Payment transaction deletion error:", error);
+      res.status(500).json({ message: "Failed to delete payment transaction" });
     }
   });
 

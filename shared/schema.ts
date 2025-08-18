@@ -14,7 +14,7 @@ export const workOrderStatusEnum = pgEnum("work_order_status", ["pending", "in_p
 export const workOrderPriorityEnum = pgEnum("work_order_priority", ["low", "normal", "high", "urgent"]);
 
 // Payment status enum
-export const paymentStatusEnum = pgEnum("payment_status", ["pending", "paid", "overdue", "cancelled"]);
+export const paymentStatusEnum = pgEnum("payment_status", ["pending", "partial", "paid", "overdue", "cancelled"]);
 
 // Inventory type enum
 export const inventoryTypeEnum = pgEnum("inventory_type", ["machine", "repairs", "parts"]);
@@ -100,6 +100,7 @@ export const inventoryItems = pgTable("inventory_items", {
   quantity: integer("quantity").notNull().default(0),
   minimumStock: integer("minimum_stock").notNull().default(0),
   location: text("location"),
+  warrantyPeriodYears: integer("warranty_period_years").default(0), // Warranty period in years
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
@@ -130,6 +131,8 @@ export const invoices = pgTable("invoices", {
   taxRate: decimal("tax_rate", { precision: 5, scale: 4 }).notNull().default("0.18"),
   taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull(),
   total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  paidAmount: decimal("paid_amount", { precision: 10, scale: 2 }).notNull().default("0.00"), // Amount paid so far
+  remainingAmount: decimal("remaining_amount", { precision: 10, scale: 2 }).notNull().default("0.00"), // Amount remaining
   paymentStatus: paymentStatusEnum("payment_status").notNull().default("pending"),
   paymentDate: timestamp("payment_date"),
   dueDate: timestamp("due_date").notNull(),
@@ -148,6 +151,17 @@ export const companySettings = pgTable("company_settings", {
   email: text("email"),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
+// Payment transactions table for tracking individual payments
+export const paymentTransactions = pgTable("payment_transactions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  invoiceId: varchar("invoice_id").notNull().references(() => invoices.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull().default("cash"), // cash, card, upi, bank_transfer
+  transactionReference: text("transaction_reference"), // for digital payments
+  notes: text("notes"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
 });
 
 // Define relations
@@ -201,7 +215,7 @@ export const workOrderPartsRelations = relations(workOrderParts, ({ one }) => ({
   }),
 }));
 
-export const invoicesRelations = relations(invoices, ({ one }) => ({
+export const invoicesRelations = relations(invoices, ({ one, many }) => ({
   customer: one(customers, {
     fields: [invoices.customerId],
     references: [customers.id],
@@ -209,6 +223,14 @@ export const invoicesRelations = relations(invoices, ({ one }) => ({
   workOrder: one(workOrders, {
     fields: [invoices.workOrderId],
     references: [workOrders.id],
+  }),
+  paymentTransactions: many(paymentTransactions),
+}));
+
+export const paymentTransactionsRelations = relations(paymentTransactions, ({ one }) => ({
+  invoice: one(invoices, {
+    fields: [paymentTransactions.invoiceId],
+    references: [invoices.id],
   }),
 }));
 
@@ -269,6 +291,8 @@ export const updateInvoiceSchema = z.object({
   taxRate: z.union([z.string(), z.number()]).optional(),
   taxAmount: z.union([z.string(), z.number()]).optional(),
   total: z.union([z.string(), z.number()]).optional(),
+  paidAmount: z.union([z.string(), z.number()]).optional(),
+  remainingAmount: z.union([z.string(), z.number()]).optional(),
   notes: z.string().optional().nullable(),
   items: z.string().optional(),
 }).partial();
@@ -277,6 +301,13 @@ export const insertCompanySettingsSchema = createInsertSchema(companySettings).o
   id: true,
   createdAt: true,
   updatedAt: true,
+});
+
+export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({
+  id: true,
+  createdAt: true,
+}).extend({
+  amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
 });
 
 // Types
@@ -294,3 +325,5 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type CompanySettings = typeof companySettings.$inferSelect;
 export type InsertCompanySettings = z.infer<typeof insertCompanySettingsSchema>;
+export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
+export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
