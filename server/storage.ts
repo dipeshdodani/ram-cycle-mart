@@ -617,12 +617,11 @@ export class DatabaseStorage implements IStorage {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
-    // Today's sales
+    // Today's sales - include all invoices created today
     const [todaySales] = await db
       .select({ total: sum(invoices.total) })
       .from(invoices)
       .where(and(
-        eq(invoices.paymentStatus, 'paid'),
         sql`${invoices.createdAt} >= ${today}`,
         sql`${invoices.createdAt} < ${tomorrow}`
       ));

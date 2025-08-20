@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Search, Plus, ShoppingCart, Download, Settings, Trash2, Edit, DollarSign, Clock, CheckCircle, AlertCircle, Package } from "lucide-react";
 import * as XLSX from 'xlsx';
 import Pagination from "@/components/ui/pagination";
-import NewSaleInvoiceModal from "@/components/modals/new-sale-invoice-modal";
+import EnhancedInvoiceModal from "@/components/modals/enhanced-invoice-modal";
 import CompanySettingsModal from "@/components/modals/company-settings-modal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -732,22 +732,20 @@ export default function NewSaleBilling() {
         </div>
       )}
 
-      <NewSaleInvoiceModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+      {/* Enhanced Invoice Modal for creating and editing */}
+      <EnhancedInvoiceModal 
+        isOpen={isModalOpen} 
+        onClose={() => {
+          setIsModalOpen(false);
+          setEditingInvoice(null);
+        }} 
+        invoice={editingInvoice}
       />
 
       <CompanySettingsModal
         isOpen={isSettingsModalOpen}
         onClose={() => setIsSettingsModalOpen(false)}
       />
-
-      {editingInvoice && (
-        <NewSaleInvoiceModal
-          isOpen={!!editingInvoice}
-          onClose={() => setEditingInvoice(null)}
-        />
-      )}
     </div>
   );
 }

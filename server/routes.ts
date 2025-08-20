@@ -284,7 +284,7 @@ export function registerRoutes(app: Express): Server {
           message: "Validation error",
           errors: error.errors
         });
-      } else if (error.code === '23505' && error.constraint === 'inventory_items_sku_unique') {
+      } else if ((error as any).code === '23505' && (error as any).constraint === 'inventory_items_sku_unique') {
         res.status(400).json({ 
           message: "An item with this SKU already exists. Please use a different SKU." 
         });
@@ -397,12 +397,25 @@ export function registerRoutes(app: Express): Server {
 
   app.put("/api/invoices/:id", requireAuth, async (req, res) => {
     try {
-      const validatedData = insertInvoiceSchema.partial().parse(req.body);
+      // Handle date conversion properly
+      let updateData = { ...req.body };
+      if (updateData.dueDate && typeof updateData.dueDate === 'string') {
+        updateData.dueDate = new Date(updateData.dueDate);
+      }
+      
+      const validatedData = updateInvoiceSchema.parse(updateData);
       const invoice = await storage.updateInvoice(req.params.id, validatedData);
       res.json(invoice);
     } catch (error) {
       console.error("Invoice update error:", error);
-      res.status(400).json({ message: "Failed to update invoice" });
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ 
+          message: "Invalid invoice data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Failed to update invoice" });
+      }
     }
   });
 
@@ -652,7 +665,7 @@ export function registerRoutes(app: Express): Server {
   app.delete("/api/users/:id", requireOwner, async (req, res) => {
     try {
       // Prevent owner from deleting themselves
-      if (req.user.id === req.params.id) {
+      if (req.user?.id === req.params.id) {
         return res.status(400).json({ message: "Cannot delete your own account" });
       }
       
@@ -690,6 +703,17 @@ export function registerRoutes(app: Express): Server {
       res.json(transactions);
     } catch (error) {
       res.status(500).json({ message: "Failed to fetch payment transactions" });
+    }
+  });
+
+  app.post("/api/payment-transactions", requireAuth, async (req, res) => {
+    try {
+      const validatedData = insertPaymentTransactionSchema.parse(req.body);
+      const transaction = await storage.createPaymentTransaction(validatedData);
+      res.status(201).json(transaction);
+    } catch (error) {
+      console.error("Payment transaction creation error:", error);
+      res.status(400).json({ message: "Failed to create payment transaction" });
     }
   });
 

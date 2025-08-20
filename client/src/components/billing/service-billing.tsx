@@ -12,7 +12,7 @@ import Pagination from "@/components/ui/pagination";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency } from "@/lib/currency";
-import InvoiceModal from "@/components/modals/invoice-modal";
+import EnhancedInvoiceModal from "@/components/modals/enhanced-invoice-modal";
 import PaymentModal from "@/components/modals/payment-modal";
 import {
   AlertDialog,
@@ -676,8 +676,8 @@ export default function ServiceBilling() {
         </div>
       )}
 
-      {/* Invoice Modal for editing */}
-      <InvoiceModal 
+      {/* Enhanced Invoice Modal for editing */}
+      <EnhancedInvoiceModal 
         isOpen={isModalOpen} 
         onClose={() => {
           setIsModalOpen(false);
