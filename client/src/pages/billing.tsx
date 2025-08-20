@@ -284,7 +284,7 @@ export default function Billing() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold dark:text-white">Cycle Shop Billing</h1>
+        <h1 className="text-3xl font-bold dark:text-white">Sewing Machine Shop Billing</h1>
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-green-600" />
           <span className="text-sm text-gray-600 dark:text-gray-400">Warranty Tracking & Customer Memory</span>
@@ -295,11 +295,11 @@ export default function Billing() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="new-sale" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
-            New Cycle Sale
+            New Sewing Machine Sale
           </TabsTrigger>
           <TabsTrigger value="service-repair" className="flex items-center gap-2">
             <Wrench className="h-4 w-4" />
-            Cycle Service / Repairs
+            Sewing Machine Service / Repairs
           </TabsTrigger>
         </TabsList>
 
@@ -412,7 +412,7 @@ export default function Billing() {
             <TabsContent value="new-sale">
               <Card>
                 <CardHeader>
-                  <CardTitle>Add Cycle/Product</CardTitle>
+                  <CardTitle>Add Sewing Machine/Product</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -422,7 +422,7 @@ export default function Billing() {
                       if (item) selectInventoryItem(item);
                     }}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a cycle/product" />
+                        <SelectValue placeholder="Choose a sewing machine/product" />
                       </SelectTrigger>
                       <SelectContent>
                         {inventory.filter((item: any) => item.type === 'machine' || item.type === 'cycle').map((item: any) => (
@@ -436,12 +436,12 @@ export default function Billing() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="item-name">Cycle/Product Name</Label>
+                      <Label htmlFor="item-name">Sewing Machine/Product Name</Label>
                       <Input
                         id="item-name"
                         value={currentItem.name || ''}
                         onChange={(e) => setCurrentItem(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Cycle brand and model"
+                        placeholder="Singer, Brother, Janome brand and model"
                       />
                     </div>
                     <div>
@@ -494,7 +494,7 @@ export default function Billing() {
                       id="description"
                       value={currentItem.description || ''}
                       onChange={(e) => setCurrentItem(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Cycle model, serial number, additional details"
+                      placeholder="Sewing machine model, serial number, additional details"
                     />
                   </div>
 
@@ -509,7 +509,7 @@ export default function Billing() {
             <TabsContent value="service-repair">
               <Card>
                 <CardHeader>
-                  <CardTitle>Add Cycle Service/Repair</CardTitle>
+                  <CardTitle>Add Sewing Machine Service/Repair</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -522,8 +522,8 @@ export default function Billing() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="service">Service Only (Cleaning, Tuning)</SelectItem>
-                        <SelectItem value="part">Repair Parts (Chain, Brake, Tire, etc.)</SelectItem>
+                        <SelectItem value="service">Service Only (Cleaning, Oiling, Tuning)</SelectItem>
+                        <SelectItem value="part">Repair Parts (Motor, Pedal, Belt, etc.)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -534,7 +534,7 @@ export default function Billing() {
                       id="service-name"
                       value={currentItem.name}
                       onChange={(e) => setCurrentItem(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Chain repair, Brake adjustment, Tire replacement"
+                      placeholder="e.g., Motor repair, Pedal replacement, Belt adjustment"
                     />
                   </div>
 
@@ -598,8 +598,8 @@ export default function Billing() {
                 <div className="text-center border-b pb-4">
                   <h3 className="font-bold text-lg">Ram Cycle Mart</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Complete Cycle Shop Management Solution<br />
-                    Streamline your cycle service and repair shop operations<br />
+                    Complete Sewing Machine Shop Management Solution<br />
+                    Expert sewing machine service and repair center<br />
                     Phone: +91 XXXXXXXXXX
                     {bill.billType === 'gst' && <><br />GSTIN: 24XXXXXXXXXXXXX</>}
                   </p>

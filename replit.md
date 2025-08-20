@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ram Cycle Mart is a Complete Cycle Shop Management Solution designed to streamline your cycle service and repair shop operations with comprehensive management capabilities. The application provides customer management, cycle repair tracking, billing & invoicing with warranty tracking, inventory control, and professional reporting - all built with a modern full-stack architecture to help cycle shops deliver efficient service and improve customer satisfaction.
+Ram Cycle Mart is a comprehensive sewing machine service and repair shop management system built with a modern full-stack architecture. The application provides complete business management functionality including customer management, sewing machine repair tracking, inventory control, billing/invoicing with warranty tracking, advanced billing with PDF generation, and reporting capabilities. It's designed specifically for sewing machine repair shops to streamline their operations and improve customer service.
 
 ## Recent Changes
 
@@ -20,7 +20,7 @@ Ram Cycle Mart is a Complete Cycle Shop Management Solution designed to streamli
 - **Simplified Architecture**: Removed invoice and payment modules to focus on core cycle service operations
 - **Removed Warranty Dashboard**: Simplified navigation by removing standalone warranty page
 - **Streamlined Navigation**: Focused on essential modules - customers, work orders, technicians, inventory, reports, and advanced billing
-- **New Comprehensive Billing System**: Created dedicated billing page with warranty tracking, GST/Non-GST options, customer memory, and inventory integration for new product sales and service/repair billing
+- **New Comprehensive Billing System**: Created dedicated billing page with warranty tracking, GST/Non-GST options, customer memory, and inventory integration for new sewing machine sales and service/repair billing
 
 ## User Preferences
 
