@@ -17,7 +17,6 @@ import Reports from "@/pages/reports";
 import Technicians from "@/pages/technicians";
 import UserManagement from "@/pages/users";
 import AdvancedBilling from "@/pages/advanced-billing";
-import WarrantyDashboard from "@/pages/warranty-dashboard";
 
 function Router() {
   return (
@@ -28,7 +27,6 @@ function Router() {
       <ProtectedRoute path="/technicians" component={Technicians} />
       <ProtectedRoute path="/invoices" component={Invoices} />
       <ProtectedRoute path="/inventory" component={Inventory} />
-      <ProtectedRoute path="/warranty" component={WarrantyDashboard} />
       <ProtectedRoute path="/reports" component={Reports} />
       <ProtectedRoute path="/users" component={UserManagement} />
       <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />
