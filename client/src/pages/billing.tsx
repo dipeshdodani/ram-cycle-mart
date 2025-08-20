@@ -63,9 +63,11 @@ export default function Billing() {
   const [currentItem, setCurrentItem] = useState<Partial<BillItem>>({
     type: 'product',
     name: '',
+    description: '',
     quantity: 1,
     price: 0,
-    warrantyMonths: 12
+    warrantyMonths: 12,
+    hsnCode: ''
   });
 
   const [customerSearch, setCustomerSearch] = useState("");
@@ -131,7 +133,7 @@ export default function Billing() {
       name: item.name,
       price: parseFloat(item.sellingPrice || item.price || 0),
       hsnCode: item.hsnCode,
-      type: item.type === 'machine' ? 'product' : 'part'
+      type: (item.type === 'machine' || item.type === 'cycle') ? 'product' : 'part'
     }));
   };
 
@@ -168,9 +170,11 @@ export default function Billing() {
     setCurrentItem({
       type: 'product',
       name: '',
+      description: '',
       quantity: 1,
       price: 0,
-      warrantyMonths: 12
+      warrantyMonths: 12,
+      hsnCode: ''
     });
 
     toast({
@@ -280,10 +284,10 @@ export default function Billing() {
   return (
     <div className="container mx-auto p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold dark:text-white">Billing System</h1>
+        <h1 className="text-3xl font-bold dark:text-white">Cycle Shop Billing</h1>
         <div className="flex items-center gap-2">
           <Shield className="h-5 w-5 text-green-600" />
-          <span className="text-sm text-gray-600 dark:text-gray-400">Warranty Tracking Enabled</span>
+          <span className="text-sm text-gray-600 dark:text-gray-400">Warranty Tracking & Customer Memory</span>
         </div>
       </div>
 
@@ -291,11 +295,11 @@ export default function Billing() {
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="new-sale" className="flex items-center gap-2">
             <ShoppingCart className="h-4 w-4" />
-            New Product Sale
+            New Cycle Sale
           </TabsTrigger>
           <TabsTrigger value="service-repair" className="flex items-center gap-2">
             <Wrench className="h-4 w-4" />
-            Service / Repairs
+            Cycle Service / Repairs
           </TabsTrigger>
         </TabsList>
 
@@ -408,7 +412,7 @@ export default function Billing() {
             <TabsContent value="new-sale">
               <Card>
                 <CardHeader>
-                  <CardTitle>Add Product</CardTitle>
+                  <CardTitle>Add Cycle/Product</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -418,10 +422,10 @@ export default function Billing() {
                       if (item) selectInventoryItem(item);
                     }}>
                       <SelectTrigger>
-                        <SelectValue placeholder="Choose a product" />
+                        <SelectValue placeholder="Choose a cycle/product" />
                       </SelectTrigger>
                       <SelectContent>
-                        {inventory.filter((item: any) => item.type === 'machine').map((item: any) => (
+                        {inventory.filter((item: any) => item.type === 'machine' || item.type === 'cycle').map((item: any) => (
                           <SelectItem key={item.id} value={item.id}>
                             {item.name} - {formatCurrency(item.sellingPrice || item.price)}
                           </SelectItem>
@@ -432,12 +436,12 @@ export default function Billing() {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="item-name">Product Name</Label>
+                      <Label htmlFor="item-name">Cycle/Product Name</Label>
                       <Input
                         id="item-name"
-                        value={currentItem.name}
+                        value={currentItem.name || ''}
                         onChange={(e) => setCurrentItem(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Product name"
+                        placeholder="Cycle brand and model"
                       />
                     </div>
                     <div>
@@ -445,7 +449,7 @@ export default function Billing() {
                       <Input
                         id="item-price"
                         type="number"
-                        value={currentItem.price}
+                        value={currentItem.price || 0}
                         onChange={(e) => setCurrentItem(prev => ({ ...prev, price: parseFloat(e.target.value) || 0 }))}
                         placeholder="0"
                       />
@@ -459,7 +463,7 @@ export default function Billing() {
                         id="quantity"
                         type="number"
                         min="1"
-                        value={currentItem.quantity}
+                        value={currentItem.quantity || 1}
                         onChange={(e) => setCurrentItem(prev => ({ ...prev, quantity: parseInt(e.target.value) || 1 }))}
                       />
                     </div>
@@ -469,7 +473,7 @@ export default function Billing() {
                         id="warranty"
                         type="number"
                         min="0"
-                        value={currentItem.warrantyMonths}
+                        value={currentItem.warrantyMonths || 0}
                         onChange={(e) => setCurrentItem(prev => ({ ...prev, warrantyMonths: parseInt(e.target.value) || 0 }))}
                       />
                     </div>
@@ -479,7 +483,7 @@ export default function Billing() {
                         id="hsn"
                         value={currentItem.hsnCode || ''}
                         onChange={(e) => setCurrentItem(prev => ({ ...prev, hsnCode: e.target.value }))}
-                        placeholder="HSN"
+                        placeholder="HSN Code"
                       />
                     </div>
                   </div>
@@ -490,7 +494,7 @@ export default function Billing() {
                       id="description"
                       value={currentItem.description || ''}
                       onChange={(e) => setCurrentItem(prev => ({ ...prev, description: e.target.value }))}
-                      placeholder="Model/Serial number, additional details"
+                      placeholder="Cycle model, serial number, additional details"
                     />
                   </div>
 
@@ -505,7 +509,7 @@ export default function Billing() {
             <TabsContent value="service-repair">
               <Card>
                 <CardHeader>
-                  <CardTitle>Add Service/Repair</CardTitle>
+                  <CardTitle>Add Cycle Service/Repair</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
@@ -518,8 +522,8 @@ export default function Billing() {
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="service">Service Only</SelectItem>
-                        <SelectItem value="part">Repair Parts</SelectItem>
+                        <SelectItem value="service">Service Only (Cleaning, Tuning)</SelectItem>
+                        <SelectItem value="part">Repair Parts (Chain, Brake, Tire, etc.)</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -530,7 +534,7 @@ export default function Billing() {
                       id="service-name"
                       value={currentItem.name}
                       onChange={(e) => setCurrentItem(prev => ({ ...prev, name: e.target.value }))}
-                      placeholder="e.g., Motor repair, Pedal replacement"
+                      placeholder="e.g., Chain repair, Brake adjustment, Tire replacement"
                     />
                   </div>
 
@@ -594,7 +598,8 @@ export default function Billing() {
                 <div className="text-center border-b pb-4">
                   <h3 className="font-bold text-lg">Ram Cycle Mart</h3>
                   <p className="text-sm text-gray-600 dark:text-gray-400">
-                    Address Line 1, City, State - PIN<br />
+                    Complete Cycle Shop Management Solution<br />
+                    Streamline your cycle service and repair shop operations<br />
                     Phone: +91 XXXXXXXXXX
                     {bill.billType === 'gst' && <><br />GSTIN: 24XXXXXXXXXXXXX</>}
                   </p>

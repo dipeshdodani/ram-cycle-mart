@@ -2,7 +2,7 @@
 
 ## Overview
 
-Ram Cycle Mart is a comprehensive cycle service and repair shop management system built with a modern full-stack architecture. The application provides complete business management functionality including customer management, work order tracking, inventory control, billing/invoicing, advanced billing with PDF generation, and reporting capabilities. It's designed specifically for cycle repair shops to streamline their operations and improve customer service.
+Ram Cycle Mart is a Complete Cycle Shop Management Solution designed to streamline your cycle service and repair shop operations with comprehensive management capabilities. The application provides customer management, cycle repair tracking, billing & invoicing with warranty tracking, inventory control, and professional reporting - all built with a modern full-stack architecture to help cycle shops deliver efficient service and improve customer satisfaction.
 
 ## Recent Changes
 
