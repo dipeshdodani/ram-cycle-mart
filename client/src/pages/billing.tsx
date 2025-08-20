@@ -133,7 +133,7 @@ export default function Billing() {
       name: item.name,
       price: parseFloat(item.sellingPrice || item.price || 0),
       hsnCode: item.hsnCode,
-      type: (item.type === 'machine' || item.type === 'cycle') ? 'product' : 'part'
+      type: (item.type === 'machine' || item.type === 'cycle' || item.type === 'machines' || item.category === 'machine' || item.category === 'machines') ? 'product' : 'part'
     }));
   };
 
@@ -282,7 +282,7 @@ export default function Billing() {
   };
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-6 space-y-6 mt-16">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold dark:text-white">Sewing Machine Shop Billing</h1>
         <div className="flex items-center gap-2">
@@ -416,7 +416,7 @@ export default function Billing() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="product-select">Select from Inventory</Label>
+                    <Label htmlFor="product-select">Select from Inventory ({inventory.length} items available)</Label>
                     <Select onValueChange={(value) => {
                       const item = inventory.find((i: any) => i.id === value);
                       if (item) selectInventoryItem(item);
@@ -425,7 +425,29 @@ export default function Billing() {
                         <SelectValue placeholder="Choose a sewing machine/product" />
                       </SelectTrigger>
                       <SelectContent>
-                        {inventory.filter((item: any) => item.type === 'machine' || item.type === 'cycle').map((item: any) => (
+                        {inventory.length === 0 ? (
+                          <SelectItem value="no-items" disabled>
+                            No inventory items found
+                          </SelectItem>
+                        ) : inventory.filter((item: any) => 
+                          item.type === 'machine' || 
+                          item.type === 'cycle' || 
+                          item.category === 'machine' || 
+                          item.category === 'cycle' ||
+                          item.type === 'machines' ||
+                          item.category === 'machines'
+                        ).length === 0 ? (
+                          <SelectItem value="no-machines" disabled>
+                            No sewing machines in inventory
+                          </SelectItem>
+                        ) : inventory.filter((item: any) => 
+                          item.type === 'machine' || 
+                          item.type === 'cycle' || 
+                          item.category === 'machine' || 
+                          item.category === 'cycle' ||
+                          item.type === 'machines' ||
+                          item.category === 'machines'
+                        ).map((item: any) => (
                           <SelectItem key={item.id} value={item.id}>
                             {item.name} - {formatCurrency(item.sellingPrice || item.price)}
                           </SelectItem>
