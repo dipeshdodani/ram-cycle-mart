@@ -1,6 +1,7 @@
 import { useAuth } from "@/hooks/use-auth";
 import { Loader2 } from "lucide-react";
 import { Redirect, Route } from "wouter";
+import Navbar from "@/components/layout/navbar";
 
 export function ProtectedRoute({
   path,
@@ -29,5 +30,10 @@ export function ProtectedRoute({
     );
   }
 
-  return <Component />
+  return (
+    <Route path={path}>
+      <Navbar />
+      <Component />
+    </Route>
+  );
 }
