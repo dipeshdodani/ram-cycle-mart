@@ -620,6 +620,59 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Advanced Billing routes
+  app.get("/api/advanced-bills", requireAuth, async (req, res) => {
+    try {
+      const bills = await storage.getAdvancedBills();
+      res.json(bills);
+    } catch (error) {
+      console.error("Advanced bills fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch advanced bills" });
+    }
+  });
+
+  app.post("/api/advanced-billing", requireAuth, async (req, res) => {
+    try {
+      console.log("Advanced billing POST request body:", req.body);
+      
+      // Generate bill number
+      const timestamp = Date.now();
+      const billNumber = `RCM-${timestamp.toString().slice(-8)}`;
+      
+      const billData = {
+        customerName: req.body.customerName,
+        customerPhone: req.body.customerPhone,
+        customerAddress: req.body.customerAddress || '',
+        customerGstNumber: req.body.gstNumber || '',
+        items: req.body.items, // Already stringified from frontend
+        subtotal: req.body.subtotal || '0',
+        taxRate: req.body.taxRate || '0',
+        taxAmount: req.body.taxAmount || '0',
+        total: req.body.total || '0',
+        paymentMode: req.body.paymentMode || 'cash',
+        billType: req.body.billType || 'gst',
+        warrantyNote: req.body.warrantyNote || '',
+        customerId: null // Will be set if customer exists
+      };
+
+      console.log("Processed bill data:", billData);
+      
+      const bill = await storage.createAdvancedBill(billData);
+      console.log("Created bill:", bill);
+      
+      res.status(201).json({
+        ...bill,
+        message: "Bill generated successfully"
+      });
+    } catch (error) {
+      console.error("Advanced billing creation error:", error);
+      res.status(500).json({ 
+        message: "Failed to generate bill",
+        error: (error as Error).message
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
