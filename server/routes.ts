@@ -564,6 +564,62 @@ export function registerRoutes(app: Express): Server {
 
 
 
+  // Warranty status check for customers
+  app.get("/api/customers/:id/warranty-status", requireAuth, async (req, res) => {
+    try {
+      const customerId = req.params.id;
+      
+      // Get all advanced bills for this customer
+      const customerBills = await storage.getAdvancedBills();
+      const customerSpecificBills = customerBills.filter((bill: any) => bill.customerId === customerId);
+
+      const activeWarranties: any[] = [];
+      const expiredWarranties: any[] = [];
+
+      for (const bill of customerSpecificBills) {
+        if (bill.warrantyNote) {
+          // Parse warranty information from the bill
+          try {
+            const items = JSON.parse(bill.items);
+            const warrantyItems = items.filter((item: any) => item.warrantyMonths);
+            
+            for (const item of warrantyItems) {
+              const warrantyEndDate = new Date(bill.createdAt);
+              warrantyEndDate.setMonth(warrantyEndDate.getMonth() + item.warrantyMonths);
+              
+              const warrantyInfo = {
+                itemName: item.name,
+                billNumber: bill.billNumber,
+                purchaseDate: bill.createdAt,
+                warrantyEndDate,
+                warrantyMonths: item.warrantyMonths,
+                isActive: warrantyEndDate > new Date()
+              };
+
+              if (warrantyInfo.isActive) {
+                activeWarranties.push(warrantyInfo);
+              } else {
+                expiredWarranties.push(warrantyInfo);
+              }
+            }
+          } catch (parseError) {
+            // Skip bills with invalid items format
+            continue;
+          }
+        }
+      }
+
+      res.json({
+        activeWarranties,
+        expiredWarranties,
+        totalPurchases: customerSpecificBills.length
+      });
+    } catch (error) {
+      console.error("Warranty status check error:", error);
+      res.status(500).json({ message: "Failed to check warranty status" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

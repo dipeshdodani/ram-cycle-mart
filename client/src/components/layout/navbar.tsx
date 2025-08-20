@@ -19,6 +19,7 @@ export default function Navbar() {
       { path: "/work-orders", label: "Work Orders" },
       { path: "/technicians", label: "Technicians" },
       { path: "/inventory", label: "Inventory" },
+      { path: "/billing", label: "Billing" },
       { path: "/reports", label: "Reports" },
       { path: "/advanced-billing", label: "Advanced Billing" },
     ];

@@ -16,6 +16,7 @@ import Reports from "@/pages/reports";
 import Technicians from "@/pages/technicians";
 import UserManagement from "@/pages/users";
 import AdvancedBilling from "@/pages/advanced-billing";
+import Billing from "@/pages/billing";
 
 function Router() {
   return (
@@ -25,6 +26,7 @@ function Router() {
       <ProtectedRoute path="/work-orders" component={WorkOrders} />
       <ProtectedRoute path="/technicians" component={Technicians} />
       <ProtectedRoute path="/inventory" component={Inventory} />
+      <ProtectedRoute path="/billing" component={Billing} />
       <ProtectedRoute path="/reports" component={Reports} />
       <ProtectedRoute path="/users" component={UserManagement} />
       <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />

@@ -1,0 +1,116 @@
+2. Main Functions
+A. New Product Sale
+
+Select product (Machine / Spare Part).
+
+Capture details:
+
+Model Name / Serial No.
+
+Warranty Period (in months/years)
+
+Warranty Start Date (bill date)
+
+Warranty End Date (auto calculated)
+
+Add to bill.
+
+Stock auto updates.
+
+System remembers warranty for future reference.
+
+B. Service / Repairs
+
+Service Only (cleaning, tuning).
+
+Check warranty: If still valid, system can show “Service under warranty – No charges / Reduced charges.”
+
+Service + Repairs
+
+Add parts used (motor, pedal, etc.).
+
+Add labor charge separately.
+
+Warranty check:
+
+If part/service is covered → free/discount.
+
+If not covered → normal billing.
+
+C. Billing Options
+
+GST Bill (with GSTIN, HSN, Tax).
+
+Non-GST Bill (plain invoice for cash/local sales).
+
+D. Customer Memory
+
+Save customer details: Name, Phone, Address, GSTIN (if any).
+
+Store history: Machines purchased, repairs done, warranty validity.
+
+Quick search by customer name, phone, or bill number.
+
+When opening a customer record:
+
+“Bought Singer Model A on 15-Jun-2024, Warranty till 15-Jun-2026.”
+
+“Last serviced on 12-Feb-2025 – Motor replaced.”
+
+3. Bill Format Must Show
+
+Shop Details (Name, Address, GSTIN, Phone)
+
+Bill No. & Date
+
+Customer Name & Phone
+
+Product/Service Details (with warranty info for machines)
+
+Quantity, Price, Tax, Total
+
+Payment Mode (Cash / UPI / Card)
+
+Warranty Note:
+
+“Warranty: 2 Years (till 15-Jun-2026)”
+
+4. Extra Features (Simple but Practical)
+
+Warranty Alerts: When opening service entry, system shows: “This machine is still under warranty.”
+
+Inventory: Track new machines and spare parts.
+
+Reports: Sales, Service, Repairs, Warranty expiries.
+
+Backup: Bills and data saved locally or on cloud drive.
+
+5. Example Scenarios
+
+Scenario 1 – New Sale (with Warranty)
+
+Customer buys Singer Heavy Duty 4423.
+
+Bill shows:
+
+Machine Price + GST
+
+Warranty: 2 Years (till 20-Aug-2027).
+
+Customer history updated.
+
+Scenario 2 – Service Within Warranty
+
+Machine comes for repair within warranty.
+
+System shows: “Under warranty.”
+
+Service charge = ₹0 (or discounted).
+
+Scenario 3 – Repair After Warranty
+
+Machine motor failed after warranty expired.
+
+System shows: “Warranty expired on 20-Aug-2027.”
+
+Bill = Service charge + Motor price + GST.
