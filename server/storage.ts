@@ -1,9 +1,10 @@
 import { 
-  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, companySettings,
+  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, companySettings, advancedBills,
   type User, type InsertUser, type Customer, type InsertCustomer, 
   type SewingMachine, type InsertSewingMachine, type WorkOrder, type InsertWorkOrder,
   type InventoryItem, type InsertInventoryItem,
-  type CompanySettings, type InsertCompanySettings
+  type CompanySettings, type InsertCompanySettings,
+  type AdvancedBill, type InsertAdvancedBill
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, sql, count, sum, ilike, or } from "drizzle-orm";
@@ -63,6 +64,9 @@ export interface IStorage {
   createCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings>;
   updateCompanySettings(id: string, settings: Partial<InsertCompanySettings>): Promise<CompanySettings>;
 
+  // Advanced billing
+  getAdvancedBills(): Promise<any[]>;
+  createAdvancedBill(bill: any): Promise<any>;
   
   // Dashboard metrics
   getDashboardMetrics(): Promise<any>;
@@ -470,6 +474,26 @@ export class DatabaseStorage implements IStorage {
       newCustomers: newCustomers.count || 0,
       lowStockItems: lowStockCount.count || 0,
     };
+  }
+
+  // Advanced Bills methods
+  async getAdvancedBills(): Promise<AdvancedBill[]> {
+    return await db.select().from(advancedBills).orderBy(desc(advancedBills.createdAt));
+  }
+
+  async createAdvancedBill(bill: InsertAdvancedBill): Promise<AdvancedBill> {
+    // Generate bill number
+    const billCount = await db.select({ count: count() }).from(advancedBills);
+    const billNumber = `BILL-${String(billCount[0].count + 1).padStart(6, '0')}`;
+
+    const [newBill] = await db
+      .insert(advancedBills)
+      .values({
+        ...bill,
+        billNumber
+      })
+      .returning();
+    return newBill;
   }
 
   async getRecentActivity(): Promise<any> {

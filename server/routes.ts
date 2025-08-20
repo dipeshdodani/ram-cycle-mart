@@ -5,7 +5,7 @@ import { setupAuth } from "./auth";
 import { 
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
   insertInventoryItemSchema, insertUserSchema,
-  insertCompanySettingsSchema
+  insertCompanySettingsSchema, insertAdvancedBillSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes } from "crypto";

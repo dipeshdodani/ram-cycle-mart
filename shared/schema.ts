@@ -153,6 +153,27 @@ export const companySettings = pgTable("company_settings", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Advanced Bills table for billing system
+export const advancedBills = pgTable("advanced_bills", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  billNumber: text("bill_number").notNull().unique(),
+  customerId: varchar("customer_id").references(() => customers.id),
+  customerName: text("customer_name").notNull(),
+  customerPhone: text("customer_phone").notNull(),
+  customerAddress: text("customer_address"),
+  customerGstNumber: text("customer_gst_number"),
+  items: text("items").notNull(), // JSON string of items
+  subtotal: decimal("subtotal", { precision: 10, scale: 2 }).notNull(),
+  taxRate: decimal("tax_rate", { precision: 5, scale: 2 }).notNull().default('18.00'),
+  taxAmount: decimal("tax_amount", { precision: 10, scale: 2 }).notNull().default('0.00'),
+  total: decimal("total", { precision: 10, scale: 2 }).notNull(),
+  paymentMode: text("payment_mode").notNull().default('cash'),
+  billType: text("bill_type").notNull().default('gst'), // 'gst' or 'non-gst'
+  warrantyNote: text("warranty_note"),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Payment transactions table for tracking individual payments
 export const paymentTransactions = pgTable("payment_transactions", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -303,6 +324,13 @@ export const insertCompanySettingsSchema = createInsertSchema(companySettings).o
   updatedAt: true,
 });
 
+export const insertAdvancedBillSchema = createInsertSchema(advancedBills).omit({
+  id: true,
+  billNumber: true, // Auto-generated
+  createdAt: true,
+  updatedAt: true,
+});
+
 export const insertPaymentTransactionSchema = createInsertSchema(paymentTransactions).omit({
   id: true,
   createdAt: true,
@@ -325,5 +353,8 @@ export type Invoice = typeof invoices.$inferSelect;
 export type InsertInvoice = z.infer<typeof insertInvoiceSchema>;
 export type CompanySettings = typeof companySettings.$inferSelect;
 export type InsertCompanySettings = z.infer<typeof insertCompanySettingsSchema>;
+
+export type AdvancedBill = typeof advancedBills.$inferSelect;
+export type InsertAdvancedBill = z.infer<typeof insertAdvancedBillSchema>;
 export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
 export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
