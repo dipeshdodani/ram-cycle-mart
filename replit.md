@@ -17,10 +17,9 @@ Ram Cycle Mart is a comprehensive cycle service and repair shop management syste
 - **Desktop Application**: Electron-based desktop conversion for offline .exe file creation
 
 **August 2025 Updates:**
-- **Enhanced Invoice System**: Added warranty selection (1-5 years) and partial payment options during new sale invoice creation
-- **Fixed Dashboard Metrics**: Corrected today's sales calculation to include all invoices, not just paid ones
-- **Payment Transaction System**: Implemented advance/partial payment tracking with multiple payment methods
-- **Removed Warranty Dashboard**: Simplified navigation by removing standalone warranty page while keeping warranty functionality in invoices
+- **Simplified Architecture**: Removed invoice and payment modules to focus on core cycle service operations
+- **Removed Warranty Dashboard**: Simplified navigation by removing standalone warranty page
+- **Streamlined Navigation**: Focused on essential modules - customers, work orders, technicians, inventory, reports, and advanced billing
 
 ## User Preferences
 

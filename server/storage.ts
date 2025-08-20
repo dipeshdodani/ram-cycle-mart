@@ -1,9 +1,9 @@
 import { 
-  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, invoices, companySettings, paymentTransactions,
+  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, companySettings,
   type User, type InsertUser, type Customer, type InsertCustomer, 
   type SewingMachine, type InsertSewingMachine, type WorkOrder, type InsertWorkOrder,
-  type InventoryItem, type InsertInventoryItem, type Invoice, type InsertInvoice,
-  type CompanySettings, type InsertCompanySettings, type PaymentTransaction, type InsertPaymentTransaction
+  type InventoryItem, type InsertInventoryItem,
+  type CompanySettings, type InsertCompanySettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, sql, count, sum, ilike, or } from "drizzle-orm";
@@ -56,23 +56,13 @@ export interface IStorage {
   deleteInventoryItem(id: string): Promise<void>;
   getLowStockItems(): Promise<InventoryItem[]>;
   
-  // Invoice management  
-  getInvoices(filters?: { customerId?: string; type?: string; status?: string }): Promise<any[]>;
-  getInvoice(id: string): Promise<any>;
-  createInvoice(invoice: InsertInvoice): Promise<Invoice>;
-  updateInvoice(id: string, invoice: Partial<InsertInvoice>): Promise<Invoice>;
-  deleteInvoice(id: string): Promise<void>;
-  createInvoiceFromWorkOrder(workOrderId: string): Promise<Invoice>;
+
   
   // Company settings
   getCompanySettings(): Promise<CompanySettings | undefined>;
   createCompanySettings(settings: InsertCompanySettings): Promise<CompanySettings>;
   updateCompanySettings(id: string, settings: Partial<InsertCompanySettings>): Promise<CompanySettings>;
-  
-  // Payment transactions
-  getPaymentTransactions(invoiceId: string): Promise<PaymentTransaction[]>;
-  createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction>;
-  deletePaymentTransaction(id: string): Promise<void>;
+
   
   // Dashboard metrics
   getDashboardMetrics(): Promise<any>;
@@ -436,195 +426,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(inventoryItems.quantity);
   }
 
-  // Invoice methods
-  async getInvoices(filters?: { customerId?: string; type?: string; status?: string }): Promise<any[]> {
-    let query = db
-      .select({
-        id: invoices.id,
-        invoiceNumber: invoices.invoiceNumber,
-        customerId: invoices.customerId,
-        workOrderId: invoices.workOrderId,
-        type: invoices.type,
-        items: invoices.items,
-        subtotal: invoices.subtotal,
-        taxRate: invoices.taxRate,
-        taxAmount: invoices.taxAmount,
-        total: invoices.total,
-        paymentStatus: invoices.paymentStatus,
-        paymentDate: invoices.paymentDate,
-        dueDate: invoices.dueDate,
-        notes: invoices.notes,
-        createdAt: invoices.createdAt,
-        updatedAt: invoices.updatedAt,
-        customer: {
-          id: customers.id,
-          firstName: customers.firstName,
-          lastName: customers.lastName,
-          email: customers.email,
-          phone: customers.phone,
-        },
-        workOrder: workOrders ? {
-          id: workOrders.id,
-          orderNumber: workOrders.orderNumber,
-          problemDescription: workOrders.problemDescription,
-        } : null,
-      })
-      .from(invoices)
-      .leftJoin(customers, eq(invoices.customerId, customers.id))
-      .leftJoin(workOrders, eq(invoices.workOrderId, workOrders.id));
 
-    // Build where conditions array
-    const whereConditions = [];
-    
-    if (filters?.customerId) {
-      whereConditions.push(eq(invoices.customerId, filters.customerId));
-    }
-    
-    if (filters?.type) {
-      whereConditions.push(eq(invoices.type, filters.type as any));
-    }
-    
-    if (filters?.status) {
-      whereConditions.push(eq(invoices.paymentStatus, filters.status as any));
-    }
-    
-    // Apply combined where conditions
-    if (whereConditions.length > 0) {
-      if (whereConditions.length === 1) {
-        query = query.where(whereConditions[0]);
-      } else {
-        query = query.where(and(...whereConditions));
-      }
-    }
 
-    return await query.orderBy(desc(invoices.createdAt));
-  }
 
-  async getInvoice(id: string): Promise<any> {
-    const [invoice] = await db
-      .select({
-        id: invoices.id,
-        invoiceNumber: invoices.invoiceNumber,
-        customerId: invoices.customerId,
-        workOrderId: invoices.workOrderId,
-        type: invoices.type,
-        items: invoices.items,
-        subtotal: invoices.subtotal,
-        taxRate: invoices.taxRate,
-        taxAmount: invoices.taxAmount,
-        total: invoices.total,
-        paymentStatus: invoices.paymentStatus,
-        paymentDate: invoices.paymentDate,
-        dueDate: invoices.dueDate,
-        notes: invoices.notes,
-        createdAt: invoices.createdAt,
-        updatedAt: invoices.updatedAt,
-        customer: {
-          id: customers.id,
-          firstName: customers.firstName,
-          lastName: customers.lastName,
-          phone: customers.phone,
-          email: customers.email,
-          address: customers.address,
-        },
-        workOrder: workOrders ? {
-          id: workOrders.id,
-          orderNumber: workOrders.orderNumber,
-          problemDescription: workOrders.problemDescription,
-        } : null,
-      })
-      .from(invoices)
-      .leftJoin(customers, eq(invoices.customerId, customers.id))
-      .leftJoin(workOrders, eq(invoices.workOrderId, workOrders.id))
-      .where(eq(invoices.id, id));
-
-    return invoice || undefined;
-  }
-
-  async createInvoice(invoice: InsertInvoice): Promise<Invoice> {
-    const invoiceNumber = `INV-${new Date().getFullYear()}-${String(Date.now()).slice(-6)}`;
-    
-    const [newInvoice] = await db
-      .insert(invoices)
-      .values({ ...invoice, invoiceNumber })
-      .returning();
-    return newInvoice;
-  }
-
-  async updateInvoice(id: string, invoice: any): Promise<Invoice> {
-    // Handle date transformations for update
-    const transformedInvoice: any = { ...invoice };
-    
-    if (invoice.paymentDate) {
-      transformedInvoice.paymentDate = new Date(invoice.paymentDate);
-    }
-    
-    if (invoice.dueDate) {
-      transformedInvoice.dueDate = new Date(invoice.dueDate);
-    }
-    
-    const [updatedInvoice] = await db
-      .update(invoices)
-      .set({ ...transformedInvoice, updatedAt: sql`now()` })
-      .where(eq(invoices.id, id))
-      .returning();
-    return updatedInvoice;
-  }
-
-  async deleteInvoice(id: string): Promise<void> {
-    await db.delete(invoices).where(eq(invoices.id, id));
-  }
-
-  async createInvoiceFromWorkOrder(workOrderId: string): Promise<Invoice> {
-    // Get the work order with customer info
-    const workOrder = await this.getWorkOrder(workOrderId);
-    if (!workOrder) {
-      throw new Error("Work order not found");
-    }
-
-    if (workOrder.status !== "completed") {
-      throw new Error("Work order must be completed to generate invoice");
-    }
-
-    if (!workOrder.actualCost) {
-      throw new Error("Work order must have actual cost to generate invoice");
-    }
-
-    const subtotal = Number(workOrder.actualCost);
-    const taxRate = 0.08; // 8% tax rate
-    const taxAmount = subtotal * taxRate;
-    const total = subtotal + taxAmount;
-
-    const invoiceData: InsertInvoice = {
-      customerId: workOrder.customerId,
-      workOrderId: workOrderId,
-      subtotal: subtotal.toString(),
-      taxRate: taxRate.toString(),
-      taxAmount: taxAmount.toString(),
-      total: total.toString(),
-      paymentStatus: "pending",
-      dueDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      notes: `Invoice for work order ${workOrder.orderNumber}: ${workOrder.problemDescription}`,
-    };
-
-    return await this.createInvoice(invoiceData);
-  }
 
   // Dashboard metrics
   async getDashboardMetrics(): Promise<any> {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Today's sales - include all invoices created today
-    const [todaySales] = await db
-      .select({ total: sum(invoices.total) })
-      .from(invoices)
-      .where(and(
-        sql`${invoices.createdAt} >= ${today}`,
-        sql`${invoices.createdAt} < ${tomorrow}`
-      ));
 
     // Active repairs (pending and in_progress)
     const [activeRepairs] = await db
@@ -656,7 +465,6 @@ export class DatabaseStorage implements IStorage {
       .where(sql`${inventoryItems.quantity} <= ${inventoryItems.minimumStock}`);
 
     return {
-      todaySales: todaySales.total || '0',
       activeRepairs: activeRepairs.count || 0,
       dueToday: dueToday.count || 0,
       newCustomers: newCustomers.count || 0,
@@ -727,78 +535,9 @@ export class DatabaseStorage implements IStorage {
     return updatedSettings;
   }
 
-  // Payment transaction methods
-  async getPaymentTransactions(invoiceId: string): Promise<PaymentTransaction[]> {
-    return await db
-      .select()
-      .from(paymentTransactions)
-      .where(eq(paymentTransactions.invoiceId, invoiceId))
-      .orderBy(desc(paymentTransactions.createdAt));
-  }
 
-  async createPaymentTransaction(transaction: InsertPaymentTransaction): Promise<PaymentTransaction> {
-    const [newTransaction] = await db
-      .insert(paymentTransactions)
-      .values(transaction)
-      .returning();
 
-    // Update invoice payment status and amounts
-    const payments = await this.getPaymentTransactions(transaction.invoiceId);
-    const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
-    
-    const invoice = await this.getInvoice(transaction.invoiceId);
-    if (invoice) {
-      const remaining = Number(invoice.total) - totalPaid;
-      const paymentStatus = remaining <= 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'pending';
-      
-      await db
-        .update(invoices)
-        .set({ 
-          paidAmount: totalPaid.toString(),
-          remainingAmount: remaining.toString(),
-          paymentStatus: paymentStatus,
-          paymentDate: paymentStatus === 'paid' ? new Date() : null
-        })
-        .where(eq(invoices.id, transaction.invoiceId));
-    }
 
-    return newTransaction;
-  }
-
-  async deletePaymentTransaction(id: string): Promise<void> {
-    const transaction = await db
-      .select()
-      .from(paymentTransactions)
-      .where(eq(paymentTransactions.id, id))
-      .limit(1);
-
-    if (transaction.length > 0) {
-      const invoiceId = transaction[0].invoiceId;
-      
-      // Delete the transaction
-      await db.delete(paymentTransactions).where(eq(paymentTransactions.id, id));
-      
-      // Recalculate invoice payment status
-      const payments = await this.getPaymentTransactions(invoiceId);
-      const totalPaid = payments.reduce((sum, payment) => sum + Number(payment.amount), 0);
-      
-      const invoice = await this.getInvoice(invoiceId);
-      if (invoice) {
-        const remaining = Number(invoice.total) - totalPaid;
-        const paymentStatus = remaining <= 0 ? 'paid' : totalPaid > 0 ? 'partial' : 'pending';
-        
-        await db
-          .update(invoices)
-          .set({ 
-            paidAmount: totalPaid.toString(),
-            remainingAmount: remaining.toString(),
-            paymentStatus: paymentStatus,
-            paymentDate: paymentStatus === 'paid' ? new Date() : null
-          })
-          .where(eq(invoices.id, invoiceId));
-      }
-    }
-  }
 }
 
 export const storage = new DatabaseStorage();

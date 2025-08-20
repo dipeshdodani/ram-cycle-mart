@@ -1,8 +1,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { DollarSign, Wrench, Users, Package } from "lucide-react";
+import { Wrench, Users, Package } from "lucide-react";
 import { useLocation } from "wouter";
-import { formatCurrency } from "@/lib/currency";
+
 import type { DashboardMetrics } from "@/types";
 
 interface MetricsCardsProps {
@@ -15,30 +15,21 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
 
   const metricItems = [
     {
-      title: "Today's Sales",
-      value: metrics?.todaySales ? formatCurrency(metrics.todaySales) : formatCurrency(0),
-      icon: DollarSign,
-      color: "bg-primary-100 text-primary-600",
-      change: "+12.5% from yesterday",
-      changeColor: "text-green-600",
-      clickPath: "/invoices",
-    },
-    {
       title: "Active Repairs",
       value: metrics?.activeRepairs?.toString() || "0",
       icon: Wrench,
-      color: "bg-green-100 text-green-600",
+      color: "bg-blue-100 text-blue-600",
       change: `${metrics?.dueToday || 0} due today`,
-      changeColor: "text-yellow-600",
+      changeColor: "text-blue-600",
       clickPath: "/work-orders",
     },
     {
       title: "New Customers",
       value: metrics?.newCustomers?.toString() || "0",
       icon: Users,
-      color: "bg-blue-100 text-blue-600",
+      color: "bg-green-100 text-green-600",
       change: "This week",
-      changeColor: "text-blue-600",
+      changeColor: "text-green-600",
       clickPath: "/customers",
     },
     {
@@ -54,8 +45,8 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {Array.from({ length: 4 }).map((_, i) => (
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {Array.from({ length: 3 }).map((_, i) => (
           <Card key={i}>
             <CardContent className="p-6">
               <div className="flex items-center">
@@ -74,7 +65,7 @@ export default function MetricsCards({ metrics, isLoading }: MetricsCardsProps) 
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {metricItems.map((item, index) => (
         <Card 
           key={index} 

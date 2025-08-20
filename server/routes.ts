@@ -4,8 +4,8 @@ import { storage } from "./storage";
 import { setupAuth } from "./auth";
 import { 
   insertCustomerSchema, insertSewingMachineSchema, insertWorkOrderSchema, 
-  insertInventoryItemSchema, insertInvoiceSchema, updateInvoiceSchema, insertUserSchema,
-  insertCompanySettingsSchema, insertPaymentTransactionSchema
+  insertInventoryItemSchema, insertUserSchema,
+  insertCompanySettingsSchema
 } from "@shared/schema";
 import { z } from "zod";
 import { scrypt, randomBytes } from "crypto";
@@ -316,122 +316,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Invoice routes
-  app.get("/api/invoices", requireAuth, async (req, res) => {
-    try {
-      const customerId = req.query.customerId as string;
-      const type = req.query.type as string;
-      const status = req.query.status as string;
-      
-      const invoices = await storage.getInvoices({ 
-        customerId,
-        type, 
-        status 
-      });
-      res.json(invoices);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch invoices" });
-    }
-  });
 
-  app.get("/api/invoices/:id", requireAuth, async (req, res) => {
-    try {
-      const invoice = await storage.getInvoice(req.params.id);
-      if (!invoice) {
-        return res.status(404).json({ message: "Invoice not found" });
-      }
-      res.json(invoice);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch invoice" });
-    }
-  });
-
-  app.post("/api/invoices", requireAuth, async (req, res) => {
-    try {
-      const validatedData = insertInvoiceSchema.parse(req.body);
-      
-      // Generate invoice number
-      const invoiceNumber = `INV-${Date.now()}`;
-      
-      // For new sale invoices, update inventory
-      if (validatedData.type === 'new_sale' && validatedData.items) {
-        const items = JSON.parse(validatedData.items);
-        
-        // Validate and update inventory for each item
-        for (const item of items) {
-          const inventoryItem = await storage.getInventoryItem(item.inventoryItemId);
-          if (!inventoryItem) {
-            return res.status(400).json({ 
-              message: `Inventory item not found: ${item.name}` 
-            });
-          }
-          
-          if (inventoryItem.quantity < item.quantity) {
-            return res.status(400).json({ 
-              message: `Insufficient stock for ${inventoryItem.name}. Available: ${inventoryItem.quantity}, Required: ${item.quantity}` 
-            });
-          }
-          
-          // Reduce inventory quantity
-          const newQuantity = inventoryItem.quantity - item.quantity;
-          await storage.updateInventoryItem(item.inventoryItemId, {
-            quantity: newQuantity
-          });
-        }
-      }
-      
-      const invoice = await storage.createInvoice(validatedData);
-      res.status(201).json(invoice);
-    } catch (error) {
-      console.error("Invoice creation error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid invoice data",
-          errors: error.errors
-        });
-      } else {
-        res.status(400).json({ message: "Failed to create invoice" });
-      }
-    }
-  });
-
-  app.put("/api/invoices/:id", requireAuth, async (req, res) => {
-    try {
-      // Handle date conversion properly
-      let updateData = { ...req.body };
-      if (updateData.dueDate && typeof updateData.dueDate === 'string') {
-        updateData.dueDate = new Date(updateData.dueDate);
-      }
-      
-      const validatedData = updateInvoiceSchema.parse(updateData);
-      const invoice = await storage.updateInvoice(req.params.id, validatedData);
-      res.json(invoice);
-    } catch (error) {
-      console.error("Invoice update error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid invoice data",
-          errors: error.errors
-        });
-      } else {
-        res.status(400).json({ message: "Failed to update invoice" });
-      }
-    }
-  });
-
-  app.delete("/api/invoices/:id", async (req, res) => {
-    try {
-      await storage.deleteInvoice(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Invoice deletion error:", error);
-      if (error instanceof Error) {
-        res.status(400).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: "Failed to delete invoice" });
-      }
-    }
-  });
 
   // Dashboard metrics
   app.get("/api/dashboard/metrics", requireAuth, async (req, res) => {
@@ -677,76 +562,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Legacy invoice generation from work order
-  app.post("/api/work-orders/:id/invoice", async (req, res) => {
-    try {
-      const workOrder = await storage.getWorkOrder(req.params.id);
-      if (!workOrder) {
-        return res.status(404).json({ message: "Work order not found" });
-      }
-      
-      if (workOrder.status !== "completed") {
-        return res.status(400).json({ message: "Work order must be completed to generate invoice" });
-      }
 
-      const invoice = await storage.createInvoiceFromWorkOrder(req.params.id);
-      res.status(201).json(invoice);
-    } catch (error) {
-      res.status(400).json({ message: "Failed to generate invoice" });
-    }
-  });
-
-  // Payment transaction routes
-  app.get("/api/invoices/:id/payments", requireAuth, async (req, res) => {
-    try {
-      const transactions = await storage.getPaymentTransactions(req.params.id);
-      res.json(transactions);
-    } catch (error) {
-      res.status(500).json({ message: "Failed to fetch payment transactions" });
-    }
-  });
-
-  app.post("/api/payment-transactions", requireAuth, async (req, res) => {
-    try {
-      const validatedData = insertPaymentTransactionSchema.parse(req.body);
-      const transaction = await storage.createPaymentTransaction(validatedData);
-      res.status(201).json(transaction);
-    } catch (error) {
-      console.error("Payment transaction creation error:", error);
-      res.status(400).json({ message: "Failed to create payment transaction" });
-    }
-  });
-
-  app.post("/api/invoices/:id/payments", requireAuth, async (req, res) => {
-    try {
-      const validatedData = insertPaymentTransactionSchema.parse({
-        ...req.body,
-        invoiceId: req.params.id
-      });
-      const transaction = await storage.createPaymentTransaction(validatedData);
-      res.status(201).json(transaction);
-    } catch (error) {
-      console.error("Payment transaction creation error:", error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ 
-          message: "Invalid payment data",
-          errors: error.errors
-        });
-      } else {
-        res.status(400).json({ message: "Failed to create payment transaction" });
-      }
-    }
-  });
-
-  app.delete("/api/payments/:id", requireAuth, async (req, res) => {
-    try {
-      await storage.deletePaymentTransaction(req.params.id);
-      res.status(204).send();
-    } catch (error) {
-      console.error("Payment transaction deletion error:", error);
-      res.status(500).json({ message: "Failed to delete payment transaction" });
-    }
-  });
 
   const httpServer = createServer(app);
   return httpServer;
