@@ -83,10 +83,16 @@ export default function Billing() {
   });
 
   // Fetch inventory items
-  const { data: inventory = [] } = useQuery({
+  const { data: inventory = [], isLoading: inventoryLoading } = useQuery({
     queryKey: ["/api/inventory"],
     queryFn: () => apiRequest("GET", "/api/inventory").then(res => res.json()),
+    retry: 3,
+    staleTime: 1000 * 60 * 5, // 5 minutes
   });
+
+  // Debug inventory data
+  console.log("Inventory data:", inventory);
+  console.log("Inventory loading:", inventoryLoading);
 
   // Search customers
   useEffect(() => {
@@ -425,33 +431,29 @@ export default function Billing() {
                         <SelectValue placeholder="Choose a sewing machine/product" />
                       </SelectTrigger>
                       <SelectContent>
-                        {inventory.length === 0 ? (
+                        {inventoryLoading ? (
+                          <SelectItem value="loading" disabled>
+                            Loading inventory...
+                          </SelectItem>
+                        ) : inventory.length === 0 ? (
                           <SelectItem value="no-items" disabled>
                             No inventory items found
                           </SelectItem>
-                        ) : inventory.filter((item: any) => 
-                          item.type === 'machine' || 
-                          item.type === 'cycle' || 
-                          item.category === 'machine' || 
-                          item.category === 'cycle' ||
-                          item.type === 'machines' ||
-                          item.category === 'machines'
-                        ).length === 0 ? (
-                          <SelectItem value="no-machines" disabled>
-                            No sewing machines in inventory
-                          </SelectItem>
-                        ) : inventory.filter((item: any) => 
-                          item.type === 'machine' || 
-                          item.type === 'cycle' || 
-                          item.category === 'machine' || 
-                          item.category === 'cycle' ||
-                          item.type === 'machines' ||
-                          item.category === 'machines'
-                        ).map((item: any) => (
-                          <SelectItem key={item.id} value={item.id}>
-                            {item.name} - {formatCurrency(item.sellingPrice || item.price)}
-                          </SelectItem>
-                        ))}
+                        ) : (
+                          <>
+                            {/* Show all inventory items for now */}
+                            {inventory.map((item: any) => (
+                              <SelectItem key={item.id} value={item.id}>
+                                {item.name} - {item.type || item.category || 'Unknown'} - {formatCurrency(item.sellingPrice || item.price)}
+                              </SelectItem>
+                            ))}
+                            {inventory.length === 0 && (
+                              <SelectItem value="no-items" disabled>
+                                No items available
+                              </SelectItem>
+                            )}
+                          </>
+                        )}
                       </SelectContent>
                     </Select>
                   </div>

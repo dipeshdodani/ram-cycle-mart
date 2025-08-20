@@ -3,14 +3,17 @@ import { useAuth } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Bell, Moon, Sun } from "lucide-react";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Bell, Moon, Sun, Menu } from "lucide-react";
 import { LogoWithText } from "@/components/ui/logo";
 import { useTheme } from "@/hooks/use-theme";
+import { useState } from "react";
 
 export default function Navbar() {
   const { user, logoutMutation } = useAuth();
   const [location] = useLocation();
   const { theme, toggleTheme } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
 
   const getNavItems = () => {
     const baseItems = [
@@ -46,22 +49,35 @@ export default function Navbar() {
             <div className="flex-shrink-0">
               <LogoWithText size="sm" />
             </div>
-            <div className="hidden md:ml-8 md:flex md:space-x-8">
-              {navItems.map((item) => (
-                <Link key={item.path} href={item.path}>
-                  <span
-                    className={`px-1 pt-1 pb-4 text-sm font-medium border-b-2 transition-colors cursor-pointer ${
-                      location === item.path
-                        ? "text-primary-600 dark:text-primary-400 border-primary-600 dark:border-primary-400"
-                        : "text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 border-transparent hover:border-gray-300 dark:hover:border-gray-600"
-                    }`}
-                  >
-                    {item.label}
-                  </span>
-                </Link>
-              ))}
-            </div>
+            
+            {/* Hamburger Menu */}
+            <Sheet open={isOpen} onOpenChange={setIsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm" className="ml-4">
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="left" className="w-64">
+                <div className="flex flex-col space-y-4 mt-6">
+                  {navItems.map((item) => (
+                    <Link key={item.path} href={item.path}>
+                      <span
+                        onClick={() => setIsOpen(false)}
+                        className={`block px-4 py-2 text-sm font-medium rounded-md transition-colors cursor-pointer ${
+                          location === item.path
+                            ? "bg-primary-100 dark:bg-primary-900 text-primary-600 dark:text-primary-400"
+                            : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        }`}
+                      >
+                        {item.label}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
+          
           <div className="flex items-center space-x-2">
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
