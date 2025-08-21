@@ -496,6 +496,20 @@ export class DatabaseStorage implements IStorage {
     return newBill;
   }
 
+  async updateAdvancedBillPayment(billId: string, paymentData: { advancePayment: string; dueAmount: string }): Promise<AdvancedBill> {
+    const [updatedBill] = await db
+      .update(advancedBills)
+      .set({
+        advancePayment: paymentData.advancePayment,
+        dueAmount: paymentData.dueAmount,
+        updatedAt: new Date()
+      })
+      .where(eq(advancedBills.id, billId))
+      .returning();
+    
+    return updatedBill;
+  }
+
   async getRecentActivity(): Promise<any> {
     // Recent work orders
     const recentWorkOrders = await db

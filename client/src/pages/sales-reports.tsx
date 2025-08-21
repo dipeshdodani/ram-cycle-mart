@@ -1,15 +1,17 @@
 import { useState, useMemo } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CalendarIcon, Download, DollarSign, FileText, TrendingUp } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { CalendarIcon, Download, DollarSign, FileText, TrendingUp, Edit, CheckCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
+import { apiRequest } from "@/lib/queryClient";
 import * as XLSX from 'xlsx';
 
 interface AdvancedBill {
@@ -35,7 +37,10 @@ interface AdvancedBill {
 export default function SalesReports() {
   const [dateFrom, setDateFrom] = useState(format(new Date(Date.now() - 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'));
   const [dateTo, setDateTo] = useState(format(new Date(), 'yyyy-MM-dd'));
+  const [editingBill, setEditingBill] = useState<AdvancedBill | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const { data: billsData, isLoading, refetch } = useQuery<AdvancedBill[]>({
     queryKey: ["/api/advanced-bills", dateFrom, dateTo],
@@ -53,6 +58,11 @@ export default function SalesReports() {
         return Array.isArray(data) ? data : [];
       } catch (error) {
         console.error("Failed to fetch bills:", error);
+        toast({
+          title: "Unable to Load Sales Data",
+          description: "There was a problem loading your sales reports. Please try refreshing the page.",
+          variant: "destructive",
+        });
         return [];
       }
     },
@@ -81,6 +91,57 @@ export default function SalesReports() {
 
   const handleDateFilterChange = () => {
     refetch();
+  };
+
+  const updateBillMutation = useMutation({
+    mutationFn: async (updatedBill: { id: string; advancePayment: string; dueAmount: string }) => {
+      const response = await apiRequest("PATCH", `/api/advanced-bills/${updatedBill.id}`, updatedBill);
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/advanced-bills"] });
+      toast({
+        title: "Bill Updated Successfully",
+        description: "Payment details have been updated.",
+      });
+      setIsEditDialogOpen(false);
+      setEditingBill(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Update Failed",
+        description: "Unable to update the bill. Please check your connection and try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleMarkAsPaid = (bill: AdvancedBill) => {
+    const totalAmount = parseFloat(bill.total);
+    updateBillMutation.mutate({
+      id: bill.id,
+      advancePayment: bill.total,
+      dueAmount: "0.00"
+    });
+  };
+
+  const handleEditBill = (bill: AdvancedBill) => {
+    setEditingBill(bill);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingBill) return;
+    
+    const advance = parseFloat(editingBill.advancePayment || '0');
+    const total = parseFloat(editingBill.total || '0');
+    const due = Math.max(0, total - advance).toFixed(2);
+    
+    updateBillMutation.mutate({
+      id: editingBill.id,
+      advancePayment: advance.toFixed(2),
+      dueAmount: due
+    });
   };
 
   const exportToExcel = () => {
@@ -121,8 +182,8 @@ export default function SalesReports() {
     } catch (error) {
       console.error('Export error:', error);
       toast({
-        title: "Export Failed",
-        description: "Failed to export sales report",
+        title: "Export Failed", 
+        description: "Unable to create the Excel file. Please try again or contact support if the problem continues.",
         variant: "destructive",
       });
     }
@@ -251,6 +312,7 @@ export default function SalesReports() {
                     <TableHead className="font-semibold text-right">Due</TableHead>
                     <TableHead className="font-semibold">Payment</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -290,6 +352,29 @@ export default function SalesReports() {
                           {parseFloat(bill.dueAmount) > 0 ? "Partial Paid" : "Paid"}
                         </Badge>
                       </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          {parseFloat(bill.dueAmount) > 0 && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleMarkAsPaid(bill)}
+                              className="text-green-600 border-green-600 hover:bg-green-50"
+                            >
+                              <CheckCircle className="h-3 w-3 mr-1" />
+                              Mark Paid
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditBill(bill)}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -308,6 +393,58 @@ export default function SalesReports() {
           </CardContent>
         </Card>
       )}
+
+      {/* Edit Bill Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Payment Details</DialogTitle>
+          </DialogHeader>
+          {editingBill && (
+            <div className="space-y-4">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Bill Number</Label>
+                <p className="text-sm text-gray-900">{editingBill.billNumber}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Customer</Label>
+                <p className="text-sm text-gray-900">{editingBill.customerName}</p>
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Total Amount</Label>
+                <p className="text-sm text-gray-900">{formatCurrency(parseFloat(editingBill.total))}</p>
+              </div>
+              <div>
+                <Label htmlFor="advance-payment" className="text-sm font-medium text-gray-700">
+                  Advance Payment Received
+                </Label>
+                <Input
+                  id="advance-payment"
+                  type="number"
+                  step="0.01"
+                  value={editingBill.advancePayment}
+                  onChange={(e) => setEditingBill({ ...editingBill, advancePayment: e.target.value })}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label className="text-sm font-medium text-gray-700">Due Amount</Label>
+                <p className="text-sm text-gray-900">
+                  {formatCurrency(Math.max(0, parseFloat(editingBill.total) - parseFloat(editingBill.advancePayment || '0')))}
+                </p>
+              </div>
+              <div className="flex justify-end space-x-3 pt-4">
+                <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleSaveEdit} disabled={updateBillMutation.isPending}>
+                  {updateBillMutation.isPending ? "Saving..." : "Save Changes"}
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

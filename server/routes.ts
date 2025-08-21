@@ -642,7 +642,7 @@ export function registerRoutes(app: Express): Server {
       }
     } catch (error) {
       console.error("Advanced bills fetch error:", error);
-      res.status(500).json({ message: "Failed to fetch advanced bills" });
+      res.status(500).json({ message: "Unable to load sales reports. Please refresh the page and try again." });
     }
   });
 
@@ -667,7 +667,32 @@ export function registerRoutes(app: Express): Server {
       }
     } catch (error) {
       console.error("Advanced bills fetch error:", error);
-      res.status(500).json({ message: "Failed to fetch advanced bills" });
+      res.status(500).json({ message: "Unable to load sales reports. Please refresh the page and try again." });
+    }
+  });
+
+  // Update advanced bill payment details
+  app.patch("/api/advanced-bills/:id", requireAuth, async (req, res) => {
+    try {
+      const billId = req.params.id;
+      const { advancePayment, dueAmount } = req.body;
+      
+      const updatedBill = await storage.updateAdvancedBillPayment(billId, {
+        advancePayment: advancePayment || '0',
+        dueAmount: dueAmount || '0'
+      });
+      
+      if (!updatedBill) {
+        return res.status(404).json({ message: "Bill not found" });
+      }
+      
+      res.json(updatedBill);
+    } catch (error: any) {
+      console.error("Error updating bill payment:", error);
+      res.status(500).json({ 
+        message: "Unable to update payment details. Please try again.", 
+        error: error.message 
+      });
     }
   });
 
@@ -709,7 +734,7 @@ export function registerRoutes(app: Express): Server {
     } catch (error) {
       console.error("Advanced billing creation error:", error);
       res.status(500).json({ 
-        message: "Failed to generate bill",
+        message: "Unable to create the bill. Please check all details and try again.",
         error: (error as Error).message
       });
     }
