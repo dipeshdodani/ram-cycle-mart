@@ -623,8 +623,48 @@ export function registerRoutes(app: Express): Server {
   // Advanced Billing routes
   app.get("/api/advanced-bills", requireAuth, async (req, res) => {
     try {
+      const { from, to } = req.query;
       const bills = await storage.getAdvancedBills();
-      res.json(bills);
+      
+      if (from && to) {
+        const fromDate = new Date(from as string);
+        const toDate = new Date(to as string);
+        toDate.setHours(23, 59, 59, 999);
+        
+        const filteredBills = bills.filter(bill => {
+          const billDate = new Date(bill.createdAt);
+          return billDate >= fromDate && billDate <= toDate;
+        });
+        
+        res.json(filteredBills);
+      } else {
+        res.json(bills);
+      }
+    } catch (error) {
+      console.error("Advanced bills fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch advanced bills" });
+    }
+  });
+
+  app.get("/api/advanced-billing", requireAuth, async (req, res) => {
+    try {
+      const { from, to } = req.query;
+      const bills = await storage.getAdvancedBills();
+      
+      if (from && to) {
+        const fromDate = new Date(from as string);
+        const toDate = new Date(to as string);
+        toDate.setHours(23, 59, 59, 999);
+        
+        const filteredBills = bills.filter(bill => {
+          const billDate = new Date(bill.createdAt);
+          return billDate >= fromDate && billDate <= toDate;
+        });
+        
+        res.json(filteredBills);
+      } else {
+        res.json(bills);
+      }
     } catch (error) {
       console.error("Advanced bills fetch error:", error);
       res.status(500).json({ message: "Failed to fetch advanced bills" });

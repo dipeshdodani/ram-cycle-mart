@@ -38,14 +38,14 @@ export default function SalesReports() {
   const { toast } = useToast();
 
   const { data: billsData, isLoading, refetch } = useQuery<AdvancedBill[]>({
-    queryKey: ["/api/advanced-billing", dateFrom, dateTo],
+    queryKey: ["/api/advanced-bills", dateFrom, dateTo],
     queryFn: async () => {
       try {
         const params = new URLSearchParams();
         params.append('from', dateFrom);
         params.append('to', dateTo);
         
-        const res = await fetch(`/api/advanced-billing?${params.toString()}`);
+        const res = await fetch(`/api/advanced-bills?${params.toString()}`);
         if (!res.ok) {
           throw new Error(`HTTP error! status: ${res.status}`);
         }
