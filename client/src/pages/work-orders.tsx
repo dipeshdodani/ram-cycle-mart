@@ -4,16 +4,22 @@ import Navbar from "@/components/layout/navbar";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Plus, Clock, CheckCircle, AlertCircle, Trash2, Eye, Edit, Download } from "lucide-react";
+import { Plus, Clock, CheckCircle, AlertCircle, Trash2, Eye, Edit, Download, Search } from "lucide-react";
 import WorkOrderModal from "@/components/modals/work-order-modal";
 import WorkOrderDetailsModal from "@/components/modals/work-order-details-modal";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { exportToExcel, formatDateForExcel, formatCurrencyForExcel, formatStatusForExcel } from "@/lib/excel-export";
 import Pagination from "@/components/ui/pagination";
-import type { WorkOrderFilters } from "@/types";
+
+interface WorkOrderFilters {
+  status?: string;
+  customerId?: string;
+  technicianId?: string;
+}
 
 export default function WorkOrders() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -22,6 +28,7 @@ export default function WorkOrders() {
   const [filters, setFilters] = useState<WorkOrderFilters>({});
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
