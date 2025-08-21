@@ -27,6 +27,7 @@ export default function Navbar() {
       { path: "/reports", label: "Reports" },
       { path: "/sales-reports", label: "Sales Reports" },
       { path: "/advanced-billing", label: "Advanced Billing" },
+      { path: "/shop-management", label: "Shop Management" },
     ];
     
     // Add Users page for owners only

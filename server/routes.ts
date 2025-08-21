@@ -740,6 +740,80 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
+  // Shop management routes
+  app.get("/api/shops", requireAuth, async (req, res) => {
+    try {
+      const shops = await storage.getShops();
+      res.json(shops);
+    } catch (error: any) {
+      console.error('Error getting shops:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/shops/default", requireAuth, async (req, res) => {
+    try {
+      const defaultShop = await storage.getDefaultShop();
+      res.json(defaultShop || null);
+    } catch (error: any) {
+      console.error('Error getting default shop:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.get("/api/shops/:id", requireAuth, async (req, res) => {
+    try {
+      const shop = await storage.getShop(req.params.id);
+      if (!shop) {
+        return res.status(404).json({ error: 'Shop not found' });
+      }
+      res.json(shop);
+    } catch (error: any) {
+      console.error('Error getting shop:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.post("/api/shops", requireAuth, async (req, res) => {
+    try {
+      const newShop = await storage.createShop(req.body);
+      res.json(newShop);
+    } catch (error: any) {
+      console.error('Error creating shop:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/shops/:id", requireAuth, async (req, res) => {
+    try {
+      const updatedShop = await storage.updateShop(req.params.id, req.body);
+      res.json(updatedShop);
+    } catch (error: any) {
+      console.error('Error updating shop:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.patch("/api/shops/:id/set-default", requireAuth, async (req, res) => {
+    try {
+      await storage.setDefaultShop(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error setting default shop:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
+  app.delete("/api/shops/:id", requireAuth, async (req, res) => {
+    try {
+      await storage.deleteShop(req.params.id);
+      res.json({ success: true });
+    } catch (error: any) {
+      console.error('Error deleting shop:', error);
+      res.status(500).json({ error: error.message });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

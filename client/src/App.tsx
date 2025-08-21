@@ -17,6 +17,7 @@ import SalesReports from "@/pages/sales-reports";
 import Technicians from "@/pages/technicians";
 import UserManagement from "@/pages/users";
 import AdvancedBilling from "@/pages/advanced-billing";
+import ShopManagement from "@/pages/shop-management";
 import Billing from "@/pages/billing";
 
 function Router() {
@@ -32,6 +33,7 @@ function Router() {
       <ProtectedRoute path="/sales-reports" component={SalesReports} />
       <ProtectedRoute path="/users" component={UserManagement} />
       <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />
+      <ProtectedRoute path="/shop-management" component={ShopManagement} />
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

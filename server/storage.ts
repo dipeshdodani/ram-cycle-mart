@@ -1,10 +1,11 @@
 import { 
-  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, companySettings, advancedBills,
+  users, customers, sewingMachines, workOrders, inventoryItems, workOrderParts, companySettings, advancedBills, shops,
   type User, type InsertUser, type Customer, type InsertCustomer, 
   type SewingMachine, type InsertSewingMachine, type WorkOrder, type InsertWorkOrder,
   type InventoryItem, type InsertInventoryItem,
   type CompanySettings, type InsertCompanySettings,
-  type AdvancedBill, type InsertAdvancedBill
+  type AdvancedBill, type InsertAdvancedBill,
+  type Shop, type InsertShop
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, asc, and, sql, count, sum, ilike, or } from "drizzle-orm";
@@ -67,6 +68,15 @@ export interface IStorage {
   // Advanced billing
   getAdvancedBills(): Promise<any[]>;
   createAdvancedBill(bill: any): Promise<any>;
+  
+  // Shop management
+  getShops(): Promise<Shop[]>;
+  getShop(id: string): Promise<Shop | undefined>;
+  getDefaultShop(): Promise<Shop | undefined>;
+  createShop(shop: InsertShop): Promise<Shop>;
+  updateShop(id: string, shop: Partial<InsertShop>): Promise<Shop>;
+  deleteShop(id: string): Promise<void>;
+  setDefaultShop(id: string): Promise<void>;
   
   // Dashboard metrics
   getDashboardMetrics(): Promise<any>;
@@ -573,8 +583,68 @@ export class DatabaseStorage implements IStorage {
     return updatedSettings;
   }
 
+  // Shop management
+  async getShops(): Promise<Shop[]> {
+    return await db.select().from(shops).where(eq(shops.isActive, true)).orderBy(asc(shops.name));
+  }
 
+  async getShop(id: string): Promise<Shop | undefined> {
+    const [result] = await db.select().from(shops).where(eq(shops.id, id));
+    return result;
+  }
 
+  async getDefaultShop(): Promise<Shop | undefined> {
+    const [result] = await db.select().from(shops).where(and(
+      eq(shops.isDefault, true),
+      eq(shops.isActive, true)
+    ));
+    return result;
+  }
+
+  async createShop(shop: InsertShop): Promise<Shop> {
+    // If this is being set as default, unset all other defaults
+    if (shop.isDefault) {
+      await db.update(shops).set({ isDefault: false }).where(eq(shops.isDefault, true));
+    }
+    
+    const [result] = await db.insert(shops).values(shop).returning();
+    return result;
+  }
+
+  async updateShop(id: string, shop: Partial<InsertShop>): Promise<Shop> {
+    // If this is being set as default, unset all other defaults
+    if (shop.isDefault) {
+      await db.update(shops).set({ isDefault: false }).where(eq(shops.isDefault, true));
+    }
+    
+    const [result] = await db.update(shops)
+      .set({ ...shop, updatedAt: sql`now()` })
+      .where(eq(shops.id, id))
+      .returning();
+    
+    if (!result) {
+      throw new Error("Shop not found");
+    }
+    
+    return result;
+  }
+
+  async deleteShop(id: string): Promise<void> {
+    // Soft delete by setting isActive to false
+    await db.update(shops)
+      .set({ isActive: false, updatedAt: sql`now()` })
+      .where(eq(shops.id, id));
+  }
+
+  async setDefaultShop(id: string): Promise<void> {
+    // First unset all defaults
+    await db.update(shops).set({ isDefault: false }).where(eq(shops.isDefault, true));
+    
+    // Set the specified shop as default
+    await db.update(shops)
+      .set({ isDefault: true, updatedAt: sql`now()` })
+      .where(eq(shops.id, id));
+  }
 
 }
 

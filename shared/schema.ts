@@ -153,10 +153,33 @@ export const companySettings = pgTable("company_settings", {
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });
 
+// Shops table for multi-shop billing system
+export const shops = pgTable("shops", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: text("name").notNull(),
+  tagline: text("tagline"),
+  description: text("description"),
+  phone: text("phone"),
+  email: text("email"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  pincode: text("pincode"),
+  gstin: text("gstin"),
+  panNumber: text("pan_number"),
+  website: text("website"),
+  logoUrl: text("logo_url"),
+  isActive: boolean("is_active").default(true),
+  isDefault: boolean("is_default").default(false),
+  createdAt: timestamp("created_at").notNull().default(sql`now()`),
+  updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
+});
+
 // Advanced Bills table for billing system
 export const advancedBills = pgTable("advanced_bills", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   billNumber: text("bill_number").notNull().unique(),
+  shopId: varchar("shop_id").references(() => shops.id),
   customerId: varchar("customer_id").references(() => customers.id),
   customerName: text("customer_name").notNull(),
   customerPhone: text("customer_phone").notNull(),
@@ -340,6 +363,12 @@ export const insertPaymentTransactionSchema = createInsertSchema(paymentTransact
   amount: z.union([z.string(), z.number()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
 });
 
+export const insertShopSchema = createInsertSchema(shops).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
@@ -360,3 +389,5 @@ export type AdvancedBill = typeof advancedBills.$inferSelect;
 export type InsertAdvancedBill = z.infer<typeof insertAdvancedBillSchema>;
 export type PaymentTransaction = typeof paymentTransactions.$inferSelect;
 export type InsertPaymentTransaction = z.infer<typeof insertPaymentTransactionSchema>;
+export type Shop = typeof shops.$inferSelect;
+export type InsertShop = z.infer<typeof insertShopSchema>;
