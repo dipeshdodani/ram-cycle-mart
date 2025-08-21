@@ -32,7 +32,11 @@ export function TransliterationTextarea({
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const inputValue = e.target.value;
     
-    if (isTransliterationEnabled && !isGujaratiText(inputValue)) {
+    // Check if Gujarati is selected as the app language
+    const appLanguage = localStorage.getItem('ram-cycle-mart-language');
+    const autoTransliterate = appLanguage === 'gu' || isTransliterationEnabled;
+    
+    if (autoTransliterate && !isGujaratiText(inputValue)) {
       // Real-time transliteration as user types
       const transliterated = transliterateToGujarati(inputValue);
       setDisplayValue(transliterated);
@@ -55,6 +59,14 @@ export function TransliterationTextarea({
     }
   };
 
+  // Auto-enable transliteration if Gujarati is selected as app language
+  useEffect(() => {
+    const appLanguage = localStorage.getItem('ram-cycle-mart-language');
+    if (appLanguage === 'gu' && !isTransliterationEnabled) {
+      setIsTransliterationEnabled(true);
+    }
+  }, []);
+
   return (
     <div className="relative">
       <Textarea
@@ -74,7 +86,7 @@ export function TransliterationTextarea({
           "absolute right-2 top-2 h-8 w-8 p-0",
           isTransliterationEnabled ? "text-blue-600 bg-blue-50" : "text-gray-400"
         )}
-        title={isTransliterationEnabled ? "Gujarati input enabled" : "Enable Gujarati input"}
+        title={isTransliterationEnabled ? "ગુજરાતી ઇનપુટ ચાલુ છે" : "ગુજરાતી ઇનપુટ ચાલુ કરો"}
       >
         {isTransliterationEnabled ? <Languages className="h-4 w-4" /> : <Type className="h-4 w-4" />}
       </Button>

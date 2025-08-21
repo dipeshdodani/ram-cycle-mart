@@ -27,8 +27,8 @@ export function LanguageSwitcher() {
       document.documentElement.classList.remove('gujarati-locale');
     }
     
-    // Refresh the page to apply language changes
-    window.location.reload();
+    // Don't refresh page - just notify that language has changed
+    // Components can react to localStorage changes or context updates
   };
 
   return (

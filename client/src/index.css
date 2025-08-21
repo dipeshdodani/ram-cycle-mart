@@ -1,9 +1,9 @@
+/* Gujarati Language Support */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@300;400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-/* Gujarati Language Support */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@300;400;500;600;700&display=swap');
 
 .gujarati-locale {
   font-family: 'Noto Sans Gujarati', 'Segoe UI', system-ui, sans-serif;
