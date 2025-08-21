@@ -43,11 +43,31 @@ export default function WorkOrders() {
   // Ensure data is always an array
   const workOrders = Array.isArray(workOrdersData) ? workOrdersData : [];
 
+  // Filter work orders based on search term and status
+  const filteredWorkOrders = useMemo(() => {
+    return workOrders.filter(order => {
+      if (!searchTerm) return true;
+      
+      const searchLower = searchTerm.toLowerCase();
+      return (
+        order.orderNumber?.toLowerCase().includes(searchLower) ||
+        `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`.toLowerCase().includes(searchLower) ||
+        order.customer?.phone?.toLowerCase().includes(searchLower) ||
+        order.machine?.name?.toLowerCase().includes(searchLower) ||
+        order.problemDescription?.toLowerCase().includes(searchLower) ||
+        `${order.technician?.firstName || ''} ${order.technician?.lastName || ''}`.toLowerCase().includes(searchLower)
+      );
+    }).filter(order => {
+      if (!filters.status) return true;
+      return order.status === filters.status;
+    });
+  }, [workOrders, searchTerm, filters.status]);
+
   // Paginated data
   const paginatedWorkOrders = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return workOrders.slice(startIndex, startIndex + itemsPerPage);
-  }, [workOrders, currentPage, itemsPerPage]);
+    return filteredWorkOrders.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredWorkOrders, currentPage, itemsPerPage]);
 
   const handleItemsPerPageChange = (newItemsPerPage: number) => {
     setItemsPerPage(newItemsPerPage);
@@ -196,10 +216,19 @@ export default function WorkOrders() {
             </div>
           </div>
 
-          {/* Filters */}
+          {/* Search and Filters */}
           <Card className="mb-6">
             <CardContent className="p-4">
               <div className="flex flex-wrap gap-4">
+                <div className="relative min-w-[300px] flex-1">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Search by order ID, customer name, phone, machine model, or technician..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
                 <div className="min-w-[200px]">
                   <Select 
                     value={filters.status || ""} 

@@ -24,6 +24,7 @@ export default function Navbar() {
       { path: "/inventory", label: "Inventory" },
       { path: "/billing", label: "Billing" },
       { path: "/reports", label: "Reports" },
+      { path: "/sales-reports", label: "Sales Reports" },
       { path: "/advanced-billing", label: "Advanced Billing" },
     ];
     

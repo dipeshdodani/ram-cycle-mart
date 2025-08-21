@@ -13,6 +13,7 @@ import Customers from "@/pages/customers-compact";
 import WorkOrders from "@/pages/work-orders";
 import Inventory from "@/pages/inventory-compact";
 import Reports from "@/pages/reports";
+import SalesReports from "@/pages/sales-reports";
 import Technicians from "@/pages/technicians";
 import UserManagement from "@/pages/users";
 import AdvancedBilling from "@/pages/advanced-billing";
@@ -28,6 +29,7 @@ function Router() {
       <ProtectedRoute path="/inventory" component={Inventory} />
       <ProtectedRoute path="/billing" component={Billing} />
       <ProtectedRoute path="/reports" component={Reports} />
+      <ProtectedRoute path="/sales-reports" component={SalesReports} />
       <ProtectedRoute path="/users" component={UserManagement} />
       <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />
       <Route path="/auth" component={AuthPage} />
