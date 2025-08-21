@@ -2,6 +2,24 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Gujarati Language Support */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@300;400;500;600;700&display=swap');
+
+.gujarati-locale {
+  font-family: 'Noto Sans Gujarati', 'Segoe UI', system-ui, sans-serif;
+}
+
+.gujarati-locale .gujarati-text {
+  font-family: 'Noto Sans Gujarati', serif;
+  font-weight: 400;
+  line-height: 1.6;
+}
+
+/* Gujarati number formatting */
+.gujarati-locale .gujarati-numbers {
+  font-feature-settings: "tnum" off;
+}
+
 :root {
   --background: hsl(0 0% 100%);
   --foreground: hsl(222.2 84% 4.9%);

@@ -7,6 +7,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Bell, Moon, Sun, Menu } from "lucide-react";
 import { LogoWithText } from "@/components/ui/logo";
 import { useTheme } from "@/hooks/use-theme";
+import { LanguageSwitcher } from "@/components/ui/language-switcher";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -80,6 +81,7 @@ export default function Navbar() {
           </div>
           
           <div className="flex items-center space-x-2">
+            <LanguageSwitcher />
             <Button variant="ghost" size="sm" onClick={toggleTheme}>
               {theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
             </Button>

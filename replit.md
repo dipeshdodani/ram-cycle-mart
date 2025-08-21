@@ -18,6 +18,13 @@ Ram Cycle Mart is a comprehensive sewing machine service and repair shop managem
 
 Preferred communication style: Simple, everyday language.
 
+**Language Support**: Full Gujarati language integration with:
+- Language switcher in navbar for English/Gujarati toggle
+- Gujarati text transliteration for customer names and addresses
+- Gujarati numerals and currency formatting
+- Gujarati fonts (Noto Sans Gujarati) for proper script rendering
+- Language preference persistence in localStorage
+
 ## System Features
 
 ### Core Business Operations
