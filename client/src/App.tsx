@@ -9,7 +9,7 @@ import { ProtectedRoute } from "./lib/protected-route";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
-import Customers from "@/pages/customers";
+import Customers from "@/pages/customers-compact";
 import WorkOrders from "@/pages/work-orders";
 import Inventory from "@/pages/inventory-compact";
 import Reports from "@/pages/reports";
