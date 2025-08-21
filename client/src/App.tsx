@@ -11,7 +11,7 @@ import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
 import Customers from "@/pages/customers";
 import WorkOrders from "@/pages/work-orders";
-import Inventory from "@/pages/inventory";
+import Inventory from "@/pages/inventory-compact";
 import Reports from "@/pages/reports";
 import Technicians from "@/pages/technicians";
 import UserManagement from "@/pages/users";

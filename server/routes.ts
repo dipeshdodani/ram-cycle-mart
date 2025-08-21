@@ -652,6 +652,8 @@ export function registerRoutes(app: Express): Server {
         paymentMode: req.body.paymentMode || 'cash',
         billType: req.body.billType || 'gst',
         warrantyNote: req.body.warrantyNote || '',
+        advancePayment: req.body.advancePayment || '0',
+        dueAmount: req.body.dueAmount || '0',
         customerId: null // Will be set if customer exists
       };
 

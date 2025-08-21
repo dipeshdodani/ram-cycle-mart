@@ -170,6 +170,8 @@ export const advancedBills = pgTable("advanced_bills", {
   paymentMode: text("payment_mode").notNull().default('cash'),
   billType: text("bill_type").notNull().default('gst'), // 'gst' or 'non-gst'
   warrantyNote: text("warranty_note"),
+  advancePayment: decimal("advance_payment", { precision: 10, scale: 2 }).notNull().default('0.00'),
+  dueAmount: decimal("due_amount", { precision: 10, scale: 2 }).notNull().default('0.00'),
   createdAt: timestamp("created_at").notNull().default(sql`now()`),
   updatedAt: timestamp("updated_at").notNull().default(sql`now()`),
 });

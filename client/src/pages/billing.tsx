@@ -45,6 +45,8 @@ interface BillData {
   paymentMode: string;
   billType: 'gst' | 'non-gst';
   warrantyNote?: string;
+  advancePayment: number;
+  dueAmount: number;
 }
 
 export default function Billing() {
@@ -57,7 +59,9 @@ export default function Billing() {
     taxAmount: 0,
     total: 0,
     paymentMode: "cash",
-    billType: "gst"
+    billType: "gst",
+    advancePayment: 0,
+    dueAmount: 0
   });
   
   const [currentItem, setCurrentItem] = useState<Partial<BillItem>>({
@@ -113,9 +117,10 @@ export default function Billing() {
     const subtotal = bill.items.reduce((sum, item) => sum + item.total, 0);
     const taxAmount = bill.billType === 'gst' ? (subtotal * bill.taxRate) / 100 : 0;
     const total = subtotal + taxAmount;
+    const dueAmount = total - bill.advancePayment;
 
-    setBill(prev => ({ ...prev, subtotal, taxAmount, total }));
-  }, [bill.items, bill.taxRate, bill.billType]);
+    setBill(prev => ({ ...prev, subtotal, taxAmount, total, dueAmount }));
+  }, [bill.items, bill.taxRate, bill.billType, bill.advancePayment]);
 
   const selectCustomer = (customer: any) => {
     setBill(prev => ({
@@ -218,7 +223,9 @@ export default function Billing() {
         total: bill.total.toString(),
         paymentMode: bill.paymentMode,
         billType: bill.billType,
-        warrantyNote: generateWarrantyNote()
+        warrantyNote: generateWarrantyNote(),
+        advancePayment: bill.advancePayment.toString(),
+        dueAmount: bill.dueAmount.toString()
       }).then(res => res.json());
     },
     onSuccess: () => {
@@ -236,7 +243,9 @@ export default function Billing() {
         taxAmount: 0,
         total: 0,
         paymentMode: "cash",
-        billType: "gst"
+        billType: "gst",
+        advancePayment: 0,
+        dueAmount: 0
       });
       
       queryClient.invalidateQueries({ queryKey: ["/api/advanced-billing"] });
@@ -698,9 +707,37 @@ export default function Billing() {
                           <span>{formatCurrency(bill.taxAmount)}</span>
                         </div>
                       )}
-                      <div className="flex justify-between font-bold text-lg">
-                        <span>Total:</span>
+                      <div className="flex justify-between font-bold text-lg border-t pt-2">
+                        <span>Total Amount:</span>
                         <span>{formatCurrency(bill.total)}</span>
+                      </div>
+                      
+                      {/* Advance Payment Section */}
+                      <div className="bg-blue-50 dark:bg-blue-950 p-3 rounded space-y-2 border">
+                        <div className="flex justify-between items-center">
+                          <Label htmlFor="advance-payment">Advance Payment:</Label>
+                          <Input
+                            id="advance-payment"
+                            type="number"
+                            min="0"
+                            max={bill.total}
+                            value={bill.advancePayment || 0}
+                            onChange={(e) => setBill(prev => ({ ...prev, advancePayment: parseFloat(e.target.value) || 0 }))}
+                            className="w-28 h-8 text-right"
+                            placeholder="0"
+                          />
+                        </div>
+                        <div className="flex justify-between text-sm font-medium">
+                          <span>Due Amount:</span>
+                          <span className={bill.dueAmount > 0 ? "text-red-600" : "text-green-600"}>
+                            {formatCurrency(bill.dueAmount)}
+                          </span>
+                        </div>
+                        {bill.dueAmount > 0 && (
+                          <div className="text-xs text-orange-600 dark:text-orange-400">
+                            ⚠️ Partial payment - {formatCurrency(bill.dueAmount)} due
+                          </div>
+                        )}
                       </div>
                     </div>
 
