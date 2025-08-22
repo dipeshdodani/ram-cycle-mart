@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { CalendarIcon, Download, DollarSign, FileText, TrendingUp, Edit, CheckCircle, FileDown } from "lucide-react";
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
@@ -193,11 +193,19 @@ export default function SalesReports() {
 
   const generateBillPDF = async (bill: AdvancedBill) => {
     try {
+      console.log('Starting PDF generation for bill:', bill.billNumber);
+      
       // Get default shop details for the bill header
       const shopRes = await fetch('/api/shops/default');
+      if (!shopRes.ok) {
+        throw new Error('Failed to fetch shop details');
+      }
       const defaultShop = await shopRes.json();
+      console.log('Shop details fetched:', defaultShop);
       
+      console.log('Creating jsPDF instance...');
       const doc = new jsPDF();
+      console.log('jsPDF instance created successfully');
       
       // Shop Header
       if (defaultShop) {
@@ -261,9 +269,12 @@ export default function SalesReports() {
       // Items table
       let items = [];
       try {
+        console.log('Parsing bill items:', bill.items);
         items = JSON.parse(bill.items);
+        console.log('Parsed items:', items);
       } catch (e) {
         console.error('Error parsing items:', e);
+        items = []; // Fallback to empty array
       }
       
       const tableData = items.map((item: any, index: number) => [
@@ -274,17 +285,48 @@ export default function SalesReports() {
         formatCurrency((item.quantity || 1) * (item.price || item.unitPrice || 0))
       ]);
       
-      (doc as any).autoTable({
-        startY: 105,
-        head: [['#', 'Item Description', 'Qty', 'Rate', 'Amount']],
-        body: tableData,
-        theme: 'grid',
-        styles: { fontSize: 9 },
-        headStyles: { fillColor: [71, 85, 105], textColor: 255 },
-      });
+      console.log('Creating autoTable with data:', tableData);
+      let tableEndY = 105;
+      
+      try {
+        autoTable(doc, {
+          startY: 105,
+          head: [['#', 'Item Description', 'Qty', 'Rate', 'Amount']],
+          body: tableData,
+          theme: 'grid',
+          styles: { fontSize: 9 },
+          headStyles: { fillColor: [71, 85, 105], textColor: 255 },
+        });
+        tableEndY = (doc as any).lastAutoTable?.finalY || 150;
+        console.log('autoTable created successfully, finalY:', tableEndY);
+      } catch (tableError) {
+        console.error('Error creating autoTable, falling back to simple table:', tableError);
+        
+        // Fallback: Create simple table without autoTable
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('#', 20, 115);
+        doc.text('Item Description', 35, 115);
+        doc.text('Qty', 120, 115);
+        doc.text('Rate', 140, 115);
+        doc.text('Amount', 165, 115);
+        
+        doc.setFont('helvetica', 'normal');
+        tableData.forEach((row: any[], index: number) => {
+          const y = 125 + (index * 8);
+          doc.text(String(row[0]), 20, y);
+          doc.text(String(row[1]).substring(0, 25), 35, y);
+          doc.text(String(row[2]), 120, y);
+          doc.text(String(row[3]), 140, y);
+          doc.text(String(row[4]), 165, y);
+        });
+        
+        tableEndY = 125 + (tableData.length * 8) + 10;
+        console.log('Fallback table created, endY:', tableEndY);
+      }
       
       // Totals
-      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      const finalY = tableEndY + 10;
       doc.text(`Subtotal: ${formatCurrency(parseFloat(bill.subtotal))}`, 150, finalY);
       if (parseFloat(bill.taxAmount) > 0) {
         doc.text(`Tax (${bill.taxRate}%): ${formatCurrency(parseFloat(bill.taxAmount))}`, 150, finalY + 7);
@@ -306,7 +348,9 @@ export default function SalesReports() {
       
       // Save the PDF
       const filename = `Bill_${bill.billNumber}_${bill.customerName.replace(/\s+/g, '_')}.pdf`;
+      console.log('Saving PDF with filename:', filename);
       doc.save(filename);
+      console.log('PDF saved successfully');
       
       toast({
         title: "PDF Downloaded",
