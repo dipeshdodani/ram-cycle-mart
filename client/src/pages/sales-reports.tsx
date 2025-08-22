@@ -420,7 +420,7 @@ export default function SalesReports() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
-              <DollarSign className="h-4 w-4 text-green-600 mr-2" />
+              <DollarSign className="h-4 w-4 text-secondary mr-2" />
               <div>
                 <div className="text-xs text-gray-500">Total Sales</div>
                 <div className="text-lg font-bold">{formatCurrency(metrics.totalSales)}</div>
@@ -431,7 +431,7 @@ export default function SalesReports() {
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center">
-              <FileText className="h-4 w-4 text-blue-600 mr-2" />
+              <FileText className="h-4 w-4 text-primary mr-2" />
               <div>
                 <div className="text-xs text-gray-500">Total Bills</div>
                 <div className="text-lg font-bold">{metrics.totalBills}</div>

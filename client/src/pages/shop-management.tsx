@@ -435,7 +435,7 @@ export default function ShopManagement() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
         <Card className="p-3">
           <div className="flex items-center">
-            <Store className="h-4 w-4 text-blue-600 mr-2" />
+            <Store className="h-4 w-4 text-primary mr-2" />
             <div>
               <div className="text-xs text-gray-500">Total Shops</div>
               <div className="text-lg font-bold">{shops.length}</div>

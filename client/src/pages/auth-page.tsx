@@ -43,7 +43,7 @@ export default function AuthPage() {
         <div className="max-w-md w-full">
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
-              <div className="h-12 w-12 flex items-center justify-center bg-blue-600 rounded-full mr-3">
+              <div className="h-12 w-12 flex items-center justify-center bg-primary rounded-full mr-3">
                 <div className="h-8 w-8 border-2 border-white rounded-full relative">
                   <div className="absolute inset-1 border border-white rounded-full"></div>
                   <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-1 h-1 bg-white rounded-full"></div>
@@ -92,7 +92,7 @@ export default function AuthPage() {
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      className="w-full btn-primary-custom"
                       disabled={loginMutation.isPending}
                     >
                       {loginMutation.isPending ? "Signing In..." : "Sign In"}
@@ -192,7 +192,7 @@ export default function AuthPage() {
                     </div>
                     <Button 
                       type="submit" 
-                      className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                      className="w-full btn-secondary-custom"
                       disabled={registerMutation.isPending}
                     >
                       {registerMutation.isPending ? "Creating Account..." : "Create Account"}
@@ -206,7 +206,7 @@ export default function AuthPage() {
       </div>
 
       {/* Right Side - Hero Section */}
-      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:py-8 bg-primary">
+      <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:py-8 bg-gradient-primary">
         <div className="text-white">
           <h2 className="text-4xl font-bold mb-6">
             Complete Sewing Machine Shop Management Solution

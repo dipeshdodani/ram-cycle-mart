@@ -319,9 +319,9 @@ export default function Reports() {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 transition-colors">
+            <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-primary/50 dark:hover:border-primary/50 transition-colors">
               <CardContent className="p-6 text-center">
-                <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400 mx-auto mb-3" />
+                <FileText className="h-8 w-8 text-primary dark:text-primary mx-auto mb-3" />
                 <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Financial Report</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Export work orders and cost details</p>
                 <Button onClick={exportFinancialReport} className="w-full">
@@ -331,9 +331,9 @@ export default function Reports() {
               </CardContent>
             </Card>
 
-            <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-green-300 dark:hover:border-green-600 transition-colors">
+            <Card className="border-2 border-dashed border-gray-200 dark:border-gray-700 hover:border-secondary/50 dark:hover:border-secondary/50 transition-colors">
               <CardContent className="p-6 text-center">
-                <Package className="h-8 w-8 text-green-600 dark:text-green-400 mx-auto mb-3" />
+                <Package className="h-8 w-8 text-secondary dark:text-secondary mx-auto mb-3" />
                 <h3 className="font-medium text-gray-900 dark:text-gray-100 mb-2">Inventory Report</h3>
                 <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Export inventory items and stock levels</p>
                 <Button onClick={exportInventoryReport} className="w-full">

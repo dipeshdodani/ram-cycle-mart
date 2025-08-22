@@ -180,14 +180,14 @@ export default function Customers() {
               <Button 
                 onClick={handleExportToExcel}
                 variant="outline"
-                className="border-green-600 text-green-600 hover:bg-green-50"
+                className="border-secondary text-secondary hover:bg-secondary/10"
               >
                 <Download className="mr-2 h-4 w-4" />
                 Export Excel
               </Button>
               <Button 
                 onClick={() => setIsModalOpen(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white border-0"
+                className="btn-primary-custom"
               >
                 <Plus className="mr-2 h-4 w-4" />
                 Add Customer

@@ -340,7 +340,7 @@ export default function CustomerModal({ isOpen, onClose, customer }: CustomerMod
               <Button 
                 type="submit" 
                 disabled={isLoading}
-                className="bg-blue-600 hover:bg-blue-700 text-white border-0"
+                className="btn-primary-custom"
               >
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {customer ? "Update Customer" : "Create Customer"}
