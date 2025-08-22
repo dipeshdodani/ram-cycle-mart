@@ -269,6 +269,7 @@ export default function WorkOrders() {
                   <TableHead>Priority</TableHead>
                   <TableHead>Problem</TableHead>
                   <TableHead>Technician</TableHead>
+                  <TableHead>Created</TableHead>
                   <TableHead>Due Date</TableHead>
                   <TableHead>Cost</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
@@ -284,6 +285,7 @@ export default function WorkOrders() {
                       <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
@@ -325,6 +327,11 @@ export default function WorkOrders() {
                         ) : (
                           <span className="text-gray-400">Unassigned</span>
                         )}
+                      </TableCell>
+                      <TableCell>
+                        <div className="text-sm text-gray-600">
+                          {formatDate(order.createdAt)}
+                        </div>
                       </TableCell>
                       <TableCell>
                         {order.dueDate ? formatDate(order.dueDate) : "Not set"}
@@ -376,7 +383,7 @@ export default function WorkOrders() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center p-12">
+                    <TableCell colSpan={10} className="text-center p-12">
                       <div className="text-gray-500">
                         <Clock className="h-12 w-12 mx-auto mb-4" />
                         <h3 className="text-lg font-medium mb-2">No work orders found</h3>

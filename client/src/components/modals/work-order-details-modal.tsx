@@ -271,7 +271,7 @@ export default function WorkOrderDetailsModal({ isOpen, onClose, workOrder }: Wo
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <div>
                   <p className="text-sm font-medium text-gray-500">Estimated Cost</p>
                   <p className="text-sm text-gray-900 font-semibold">
@@ -287,6 +287,12 @@ export default function WorkOrderDetailsModal({ isOpen, onClose, workOrder }: Wo
                 <div>
                   <p className="text-sm font-medium text-gray-500">Labor Hours</p>
                   <p className="text-sm text-gray-900">{workOrder.laborHours || "Not tracked"}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Created Date</p>
+                  <p className="text-sm text-gray-900">
+                    {formatDate(workOrder.createdAt)}
+                  </p>
                 </div>
                 <div>
                   <p className="text-sm font-medium text-gray-500">Due Date</p>

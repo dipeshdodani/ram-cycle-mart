@@ -112,7 +112,7 @@ export default function RecentWorkOrders({ workOrders, isLoading }: RecentWorkOr
                     Status
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Due Date
+                    Created
                   </th>
                 </tr>
               </thead>
@@ -140,8 +140,8 @@ export default function RecentWorkOrders({ workOrders, isLoading }: RecentWorkOr
                         {formatStatus(order.status)}
                       </Badge>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                      {order.dueDate ? formatDate(order.dueDate) : "Not set"}
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                      {formatDate(order.createdAt)}
                     </td>
                   </tr>
                 ))}
