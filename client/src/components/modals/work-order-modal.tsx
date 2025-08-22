@@ -282,7 +282,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="low">Low</SelectItem>
-                        <SelectItem value="medium">Medium</SelectItem>
+                        <SelectItem value="normal">Normal</SelectItem>
                         <SelectItem value="high">High</SelectItem>
                         <SelectItem value="urgent">Urgent</SelectItem>
                       </SelectContent>
