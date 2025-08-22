@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -44,22 +44,44 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
   const form = useForm<ShopFormData>({
     resolver: zodResolver(shopSchema),
     defaultValues: {
-      name: shop?.name ?? "",
-      tagline: shop?.tagline ?? "",
-      description: shop?.description ?? "",
-      phone: shop?.phone ?? "",
-      email: shop?.email ?? "",
-      address: shop?.address ?? "",
-      city: shop?.city ?? "",
-      state: shop?.state ?? "",
-      pincode: shop?.pincode ?? "",
-      gstin: shop?.gstin ?? "",
-      panNumber: shop?.panNumber ?? "",
-      website: shop?.website ?? "",
-      logoUrl: shop?.logoUrl ?? "",
-      isDefault: shop?.isDefault ?? false,
+      name: "",
+      tagline: "",
+      description: "",
+      phone: "",
+      email: "",
+      address: "",
+      city: "",
+      state: "",
+      pincode: "",
+      gstin: "",
+      panNumber: "",
+      website: "",
+      logoUrl: "",
+      isDefault: false,
     },
   });
+
+  // Reset form when shop data changes or dialog opens
+  useEffect(() => {
+    if (isOpen) {
+      form.reset({
+        name: shop?.name ?? "",
+        tagline: shop?.tagline ?? "",
+        description: shop?.description ?? "",
+        phone: shop?.phone ?? "",
+        email: shop?.email ?? "",
+        address: shop?.address ?? "",
+        city: shop?.city ?? "",
+        state: shop?.state ?? "",
+        pincode: shop?.pincode ?? "",
+        gstin: shop?.gstin ?? "",
+        panNumber: shop?.panNumber ?? "",
+        website: shop?.website ?? "",
+        logoUrl: shop?.logoUrl ?? "",
+        isDefault: shop?.isDefault ?? false,
+      });
+    }
+  }, [shop, isOpen, form]);
 
   const mutation = useMutation({
     mutationFn: async (data: ShopFormData) => {
@@ -120,7 +142,7 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                   <FormItem>
                     <FormLabel>Tagline</FormLabel>
                     <FormControl>
-                      <TransliterationInput {...field} placeholder="Service & Repair" />
+                      <TransliterationInput {...field} value={field.value || ""} placeholder="Service & Repair" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -135,7 +157,7 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                 <FormItem>
                   <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <TransliterationTextarea {...field} placeholder="Complete sewing machine sales and service..." />
+                    <TransliterationTextarea {...field} value={field.value || ""} placeholder="Complete sewing machine sales and service..." />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -178,7 +200,7 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                 <FormItem>
                   <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <TransliterationTextarea {...field} placeholder="123 Main Street, Commercial Complex" />
+                    <TransliterationTextarea {...field} value={field.value || ""} placeholder="123 Main Street, Commercial Complex" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -193,7 +215,7 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                   <FormItem>
                     <FormLabel>City</FormLabel>
                     <FormControl>
-                      <TransliterationInput {...field} placeholder="Ahmedabad" />
+                      <TransliterationInput {...field} value={field.value || ""} placeholder="Ahmedabad" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -206,7 +228,7 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                   <FormItem>
                     <FormLabel>State</FormLabel>
                     <FormControl>
-                      <TransliterationInput {...field} placeholder="Gujarat" />
+                      <TransliterationInput {...field} value={field.value || ""} placeholder="Gujarat" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
