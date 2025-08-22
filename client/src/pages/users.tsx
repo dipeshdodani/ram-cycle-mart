@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Trash2, Edit, Plus, Users as UsersIcon, Shield, UserCheck } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -248,65 +249,88 @@ export default function UserManagement() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredUsers.map((user) => (
-          <Card key={user.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-4">
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">
+      {/* Users Table */}
+      <div className="border rounded-lg bg-card">
+        <Table>
+          <TableHeader>
+            <TableRow className="bg-muted/50">
+              <TableHead className="w-[80px]">Avatar</TableHead>
+              <TableHead>Name</TableHead>
+              <TableHead>Username</TableHead>
+              <TableHead>Email</TableHead>
+              <TableHead>Phone</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Created</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {filteredUsers.map((user) => (
+              <TableRow key={user.id} className="hover:bg-muted/50" data-testid={`row-user-${user.id}`}>
+                <TableCell>
+                  <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary font-medium text-sm">
+                    {user.firstName?.[0]}{user.lastName?.[0]}
+                  </div>
+                </TableCell>
+                <TableCell className="font-medium" data-testid={`text-name-${user.id}`}>
                   {user.firstName} {user.lastName}
-                </CardTitle>
-                <div className="flex items-center space-x-1">
-                  {getRoleIcon(user.role)}
-                </div>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Badge className={getRoleBadgeColor(user.role)}>
-                  {user.role}
-                </Badge>
-                {!user.isActive && (
-                  <Badge variant="secondary">Inactive</Badge>
-                )}
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              <div className="text-sm space-y-1">
-                <p><strong>Username:</strong> {user.username}</p>
-                {user.email && <p><strong>Email:</strong> {user.email}</p>}
-                {user.phone && <p><strong>Phone:</strong> {user.phone}</p>}
-                <p className="text-xs text-muted-foreground">
-                  Created: {formatDate(new Date(user.createdAt), "MMM d, yyyy")}
-                </p>
-              </div>
-              
-              <div className="flex space-x-2 pt-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => openEditModal(user)}
-                  className="flex-1"
-                >
-                  <Edit className="h-3 w-3 mr-1" />
-                  Edit
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    if (confirm("Are you sure you want to delete this user?")) {
-                      deleteMutation.mutate(user.id);
-                    }
-                  }}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                  disabled={user.role === "owner"}
-                  title={user.role === "owner" ? "Cannot delete owner account" : "Delete user"}
-                >
-                  <Trash2 className="h-3 w-3" />
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+                </TableCell>
+                <TableCell data-testid={`text-username-${user.id}`}>
+                  {user.username}
+                </TableCell>
+                <TableCell data-testid={`text-email-${user.id}`}>
+                  {user.email || "-"}
+                </TableCell>
+                <TableCell data-testid={`text-phone-${user.id}`}>
+                  {user.phone || "-"}
+                </TableCell>
+                <TableCell data-testid={`badge-role-${user.id}`}>
+                  <Badge className={getRoleBadgeColor(user.role)}>
+                    {getRoleIcon(user.role)}
+                    <span className="ml-1 capitalize">{user.role}</span>
+                  </Badge>
+                </TableCell>
+                <TableCell data-testid={`status-active-${user.id}`}>
+                  <Badge variant={user.isActive ? "default" : "secondary"}>
+                    {user.isActive ? "Active" : "Inactive"}
+                  </Badge>
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground" data-testid={`text-created-${user.id}`}>
+                  {formatDate(new Date(user.createdAt), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell className="text-right">
+                  <div className="flex items-center justify-end space-x-2">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openEditModal(user)}
+                      className="h-8 w-8 p-0"
+                      data-testid={`button-edit-${user.id}`}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => {
+                        if (confirm("Are you sure you want to delete this user?")) {
+                          deleteMutation.mutate(user.id);
+                        }
+                      }}
+                      className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                      disabled={user.role === "owner"}
+                      title={user.role === "owner" ? "Cannot delete owner account" : "Delete user"}
+                      data-testid={`button-delete-${user.id}`}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
       </div>
 
       {filteredUsers.length === 0 && !isLoading && (

@@ -202,12 +202,12 @@ export default function SalesReports() {
       // Shop Header
       if (defaultShop) {
         doc.setFontSize(20);
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text(defaultShop.name, 20, 25);
         
         if (defaultShop.tagline) {
           doc.setFontSize(12);
-          doc.setFont(undefined, 'normal');
+          doc.setFont('helvetica', 'normal');
           doc.text(defaultShop.tagline, 20, 33);
         }
         
@@ -233,22 +233,22 @@ export default function SalesReports() {
       
       // Bill details
       doc.setFontSize(16);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text('BILL', 150, 25);
       
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text(`Bill No: ${bill.billNumber}`, 150, 35);
       doc.text(`Date: ${format(new Date(bill.createdAt), 'dd/MM/yyyy')}`, 150, 42);
       doc.text(`Payment Mode: ${bill.paymentMode.toUpperCase()}`, 150, 49);
       
       // Customer details
       doc.setFontSize(12);
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text('Bill To:', 20, 65);
       
       doc.setFontSize(10);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text(bill.customerName, 20, 73);
       doc.text(`Phone: ${bill.customerPhone}`, 20, 80);
       if (bill.customerAddress) {
@@ -289,19 +289,19 @@ export default function SalesReports() {
       if (parseFloat(bill.taxAmount) > 0) {
         doc.text(`Tax (${bill.taxRate}%): ${formatCurrency(parseFloat(bill.taxAmount))}`, 150, finalY + 7);
       }
-      doc.setFont(undefined, 'bold');
+      doc.setFont('helvetica', 'bold');
       doc.text(`Total: ${formatCurrency(parseFloat(bill.total))}`, 150, finalY + 14);
       
       if (parseFloat(bill.advancePayment) > 0) {
-        doc.setFont(undefined, 'normal');
+        doc.setFont('helvetica', 'normal');
         doc.text(`Advance Paid: ${formatCurrency(parseFloat(bill.advancePayment))}`, 150, finalY + 21);
-        doc.setFont(undefined, 'bold');
+        doc.setFont('helvetica', 'bold');
         doc.text(`Due Amount: ${formatCurrency(parseFloat(bill.dueAmount))}`, 150, finalY + 28);
       }
       
       // Footer
       doc.setFontSize(8);
-      doc.setFont(undefined, 'normal');
+      doc.setFont('helvetica', 'normal');
       doc.text('Thank you for your business!', 20, finalY + 35);
       
       // Save the PDF

@@ -577,8 +577,16 @@ export function registerRoutes(app: Express): Server {
       
       await storage.deleteUser(req.params.id);
       res.status(200).json({ message: "User deleted successfully" });
-    } catch (error) {
+    } catch (error: any) {
       console.error("User deletion error:", error);
+      
+      // Handle foreign key constraint violation
+      if (error.code === '23503') {
+        return res.status(400).json({ 
+          message: "Cannot delete user who has assigned work orders. Please reassign or complete their work orders first." 
+        });
+      }
+      
       res.status(500).json({ message: "Failed to delete user" });
     }
   });
