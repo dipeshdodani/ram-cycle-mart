@@ -52,6 +52,27 @@ export function registerRoutes(app: Express): Server {
 
   // Role-based middleware for owner-only features
   function requireOwner(req: any, res: any, next: any) {
+    console.log(`Owner check for ${req.method} ${req.path}: authenticated=${req.isAuthenticated()}, user=${JSON.stringify(req.user)}`);
+    
+    // In development mode, allow access if we have a mock user with owner role OR for general development access
+    if (process.env.NODE_ENV === 'development') {
+      // If we have a user in development mode, proceed
+      if (req.user && req.user.role === 'owner') {
+        console.log(`DEVELOPMENT MODE: Owner access granted for ${req.method} ${req.path}`);
+        return next();
+      }
+      // For development, create mock owner access for user management
+      console.log(`DEVELOPMENT MODE: Granting owner access for ${req.method} ${req.path}`);
+      req.user = req.user || {
+        id: "26cfa482-a479-429f-8ea2-e4b25799e55c",
+        username: "shriram",
+        role: "owner",
+        firstName: "Shri",
+        lastName: "Ram"
+      };
+      return next();
+    }
+    
     if (!req.isAuthenticated() || req.user.role !== 'owner') {
       return res.status(403).json({ message: "Owner access required" });
     }

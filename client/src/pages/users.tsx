@@ -55,14 +55,24 @@ export default function UserManagement() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: usersData, isLoading } = useQuery<SystemUser[]>({
+  const { data: usersData, isLoading, error } = useQuery<SystemUser[]>({
     queryKey: ["/api/users"],
     queryFn: async () => {
-      const res = await fetch("/api/users", { credentials: "include" });
-      if (!res.ok) return [];
-      const data = await res.json();
-      return Array.isArray(data) ? data : [];
+      try {
+        const res = await apiRequest("GET", "/api/users");
+        if (!res.ok) {
+          const errorData = await res.json().catch(() => ({}));
+          console.error("Users API error:", errorData);
+          return [];
+        }
+        const data = await res.json();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Failed to fetch users:", error);
+        return [];
+      }
     },
+    retry: 3,
   });
 
   const users = Array.isArray(usersData) ? usersData : [];
