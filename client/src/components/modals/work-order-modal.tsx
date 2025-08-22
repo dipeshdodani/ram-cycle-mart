@@ -102,7 +102,14 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
       if (!res.ok) {
         const errorData = await res.json();
         console.error("API Error Response:", errorData);
-        throw new Error(errorData.message || 'Failed to create work order');
+        let errorMessage = errorData.message || 'Failed to create work order';
+        if (errorData.errors && Array.isArray(errorData.errors)) {
+          const validationErrors = errorData.errors.map((err: any) => 
+            `${err.path.join('.')}: ${err.message}`
+          ).join(', ');
+          errorMessage = `Validation errors: ${validationErrors}`;
+        }
+        throw new Error(errorMessage);
       }
       return res.json();
     },

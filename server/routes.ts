@@ -229,11 +229,22 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/work-orders", requireAuth, async (req, res) => {
     try {
+      console.log("Creating work order with data:", req.body);
       const validatedData = insertWorkOrderSchema.parse(req.body);
+      console.log("Validated data:", validatedData);
       const workOrder = await storage.createWorkOrder(validatedData);
       res.status(201).json(workOrder);
     } catch (error) {
-      res.status(400).json({ message: "Invalid work order data" });
+      console.error("Work order creation error:", error);
+      if (error instanceof z.ZodError) {
+        console.error("Validation errors:", error.errors);
+        res.status(400).json({ 
+          message: "Invalid work order data",
+          errors: error.errors
+        });
+      } else {
+        res.status(400).json({ message: "Invalid work order data" });
+      }
     }
   });
 
