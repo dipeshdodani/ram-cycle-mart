@@ -64,22 +64,24 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     },
   });
 
-  // Reset form when workOrder changes
+  // Reset form when workOrder changes or modal opens
   useEffect(() => {
     if (workOrder) {
+      console.log("Resetting form with work order data:", workOrder);
       form.reset({
-        customerId: workOrder.customerId,
+        customerId: workOrder.customerId || "",
         machineId: workOrder.machineId || "",
-        problemDescription: workOrder.problemDescription,
-        priority: workOrder.priority,
-        status: workOrder.status,
+        problemDescription: workOrder.problemDescription || "",
+        priority: workOrder.priority || "normal",
+        status: workOrder.status || "pending",
         estimatedCost: workOrder.estimatedCost ? workOrder.estimatedCost.toString() : "",
         actualCost: workOrder.actualCost ? workOrder.actualCost.toString() : "",
         laborHours: workOrder.laborHours ? workOrder.laborHours.toString() : "",
         dueDate: workOrder.dueDate ? new Date(workOrder.dueDate).toISOString().split('T')[0] : "",
         assignedTechnicianId: workOrder.assignedTechnicianId || "",
       });
-    } else {
+    } else if (isOpen) {
+      console.log("Resetting form for new work order");
       form.reset({
         customerId: "",
         machineId: "",
@@ -93,7 +95,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
         assignedTechnicianId: "",
       });
     }
-  }, [workOrder, form]);
+  }, [workOrder, isOpen, form]);
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
