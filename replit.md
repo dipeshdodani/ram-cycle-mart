@@ -18,6 +18,8 @@ It's designed specifically for sewing machine sales and service businesses to st
 ## Recent Changes
 
 **Latest Updates (August 2025):**
+- **Work Order Date Display**: Added creation date columns across all work order views (main table, details modal, dashboard)
+- **Browser Tab & Branding Update**: Updated page title from "Cycle Service" to "Sewing Machine Service" for accurate branding
 - **Work Order Creation Fixed**: Resolved production failures in work order creation by fixing schema validation, data transformation, and foreign key references
 - **Shop Management Form**: Fixed data loss issue when editing existing shops with proper form reset and useEffect handling
 - **Schema Improvements**: Enhanced work order schema with proper transformations for numeric fields and empty string handling

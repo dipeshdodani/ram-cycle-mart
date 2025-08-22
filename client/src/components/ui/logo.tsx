@@ -76,7 +76,7 @@ export function LogoWithText({ size = "md", showText = true }: LogoProps & { sho
               Ram Cycle Mart
             </span>
             <span className="text-xs text-gray-600 dark:text-gray-400 -mt-1">
-              Service & Repair
+              Sewing Machine Service
             </span>
           </div>
         )}
