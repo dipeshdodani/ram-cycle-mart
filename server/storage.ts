@@ -274,11 +274,15 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: workOrders.id,
         orderNumber: workOrders.orderNumber,
+        customerId: workOrders.customerId,
+        assignedTechnicianId: workOrders.assignedTechnicianId,
         problemDescription: workOrders.problemDescription,
+        serviceType: workOrders.serviceType,
         status: workOrders.status,
         priority: workOrders.priority,
         estimatedCost: workOrders.estimatedCost,
         actualCost: workOrders.actualCost,
+        laborHours: workOrders.laborHours,
         dueDate: workOrders.dueDate,
         createdAt: workOrders.createdAt,
         customer: {
@@ -286,11 +290,6 @@ export class DatabaseStorage implements IStorage {
           firstName: customers.firstName,
           lastName: customers.lastName,
           phone: customers.phone,
-        },
-        machine: {
-          id: sewingMachines.id,
-          brand: sewingMachines.brand,
-          model: sewingMachines.model,
         },
         technician: {
           id: users.id,
@@ -300,7 +299,6 @@ export class DatabaseStorage implements IStorage {
       })
       .from(workOrders)
       .leftJoin(customers, eq(workOrders.customerId, customers.id))
-      .leftJoin(sewingMachines, eq(workOrders.machineId, sewingMachines.id))
       .leftJoin(users, eq(workOrders.assignedTechnicianId, users.id));
 
     if (filters?.status) {
@@ -321,9 +319,12 @@ export class DatabaseStorage implements IStorage {
       .select({
         id: workOrders.id,
         orderNumber: workOrders.orderNumber,
+        customerId: workOrders.customerId,
+        assignedTechnicianId: workOrders.assignedTechnicianId,
         problemDescription: workOrders.problemDescription,
         diagnosis: workOrders.diagnosis,
         repairNotes: workOrders.repairNotes,
+        serviceType: workOrders.serviceType,
         status: workOrders.status,
         priority: workOrders.priority,
         estimatedCost: workOrders.estimatedCost,
@@ -332,6 +333,7 @@ export class DatabaseStorage implements IStorage {
         dueDate: workOrders.dueDate,
         completedAt: workOrders.completedAt,
         createdAt: workOrders.createdAt,
+        updatedAt: workOrders.updatedAt,
         customer: {
           id: customers.id,
           firstName: customers.firstName,
@@ -339,13 +341,7 @@ export class DatabaseStorage implements IStorage {
           phone: customers.phone,
           email: customers.email,
         },
-        machine: {
-          id: sewingMachines.id,
-          brand: sewingMachines.brand,
-          model: sewingMachines.model,
-          serialNumber: sewingMachines.serialNumber,
-        },
-        technician: {
+        assignedTechnician: {
           id: users.id,
           firstName: users.firstName,
           lastName: users.lastName,
@@ -353,7 +349,6 @@ export class DatabaseStorage implements IStorage {
       })
       .from(workOrders)
       .leftJoin(customers, eq(workOrders.customerId, customers.id))
-      .leftJoin(sewingMachines, eq(workOrders.machineId, sewingMachines.id))
       .leftJoin(users, eq(workOrders.assignedTechnicianId, users.id))
       .where(eq(workOrders.id, id));
 

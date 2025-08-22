@@ -47,6 +47,17 @@ export default function WorkOrders() {
     },
   });
 
+  // Query for individual work order details when editing
+  const { data: editWorkOrderData } = useQuery({
+    queryKey: ["/api/work-orders", selectedWorkOrder?.id],
+    queryFn: async () => {
+      if (!selectedWorkOrder?.id) return null;
+      const res = await fetch(`/api/work-orders/${selectedWorkOrder.id}`);
+      return res.json();
+    },
+    enabled: !!selectedWorkOrder?.id && isModalOpen,
+  });
+
   // Ensure data is always an array
   const workOrders = Array.isArray(workOrdersData) ? workOrdersData : [];
 
@@ -362,9 +373,18 @@ export default function WorkOrders() {
                           <Button 
                             size="sm" 
                             variant="ghost"
-                            onClick={() => {
-                              setSelectedWorkOrder(order);
-                              setIsModalOpen(true);
+                            onClick={async () => {
+                              // Fetch complete work order data for editing
+                              try {
+                                const res = await fetch(`/api/work-orders/${order.id}`);
+                                const fullWorkOrder = await res.json();
+                                setSelectedWorkOrder(fullWorkOrder);
+                                setIsModalOpen(true);
+                              } catch (error) {
+                                console.error("Error fetching work order:", error);
+                                setSelectedWorkOrder(order);
+                                setIsModalOpen(true);
+                              }
                             }}
                             title="Edit Work Order"
                           >
