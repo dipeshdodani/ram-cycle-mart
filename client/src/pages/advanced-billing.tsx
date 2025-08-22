@@ -33,13 +33,9 @@ interface BillData {
   customerName: string;
   customerPhone: string;
   customerEmail: string;
-  customerGstNumber: string;
   items: BillItem[];
   subtotal: number;
   discount: number;
-  gstEnabled: boolean;
-  gstRate: number;
-  gstAmount: number;
   total: number;
   notes: string;
   paymentMethod: string;
@@ -54,13 +50,9 @@ export default function AdvancedBilling() {
     customerName: "",
     customerPhone: "",
     customerEmail: "",
-    customerGstNumber: "",
     items: [],
     subtotal: 0,
     discount: 0,
-    gstEnabled: false,
-    gstRate: 18,
-    gstAmount: 0,
     total: 0,
     notes: "",
     paymentMethod: "cash"
@@ -107,7 +99,6 @@ export default function AdvancedBilling() {
           lastName: billData.customerName.split(' ').slice(1).join(' ') || '',
           phone: billData.customerPhone || '',
           email: billData.customerEmail || '',
-          gstNumber: billData.customerGstNumber || '',
           address: '',
           city: '',
           state: '',
