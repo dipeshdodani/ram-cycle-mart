@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Cog, Users, Wrench, FileText } from "lucide-react";
+import { Cog, Users, Wrench, FileText, Package, Star } from "lucide-react";
 
 export default function AuthPage() {
   const { user, loginMutation, registerMutation } = useAuth();
@@ -51,7 +51,7 @@ export default function AuthPage() {
               </div>
               <h1 className="text-3xl font-bold text-gray-900">Ram Cycle Mart</h1>
             </div>
-            <p className="text-gray-600">Cycle Service & Repair Shop Management System</p>
+            <p className="text-gray-600">Sewing Machine Service & Repair Shop Management System</p>
           </div>
 
           <Tabs defaultValue="login" className="w-full">
@@ -209,10 +209,10 @@ export default function AuthPage() {
       <div className="hidden lg:flex lg:flex-1 lg:flex-col lg:justify-center lg:px-12 lg:py-8 bg-primary">
         <div className="text-white">
           <h2 className="text-4xl font-bold mb-6">
-            Complete Cycle Shop Management Solution
+            Complete Sewing Machine Shop Management Solution
           </h2>
           <p className="text-xl mb-8 text-primary-100">
-            Streamline your cycle service and repair shop operations with our comprehensive management system.
+            Streamline your sewing machine sales and service operations with our all-in-one management system designed to deliver an exceptional customer experience.
           </p>
           
           <div className="space-y-6">
@@ -220,15 +220,15 @@ export default function AuthPage() {
               <Users className="h-8 w-8 text-primary-200" />
               <div>
                 <h3 className="font-semibold text-lg">Customer Management</h3>
-                <p className="text-primary-100">Track customer information and service history</p>
+                <p className="text-primary-100">Maintain detailed customer records, purchase history, and service interactions to provide personalized support and build long-lasting trust.</p>
               </div>
             </div>
             
             <div className="flex items-center space-x-4">
               <Wrench className="h-8 w-8 text-primary-200" />
               <div>
-                <h3 className="font-semibold text-lg">Cycle Repair Tracking</h3>
-                <p className="text-primary-100">Manage cycle repairs and maintenance efficiently</p>
+                <h3 className="font-semibold text-lg">Sewing Machine Service Tracking</h3>
+                <p className="text-primary-100">Track repairs, routine maintenance, and warranty details efficiently to ensure your customers enjoy a smooth and reliable sewing experience.</p>
               </div>
             </div>
             
@@ -236,7 +236,23 @@ export default function AuthPage() {
               <FileText className="h-8 w-8 text-primary-200" />
               <div>
                 <h3 className="font-semibold text-lg">Billing & Invoicing</h3>
-                <p className="text-primary-100">Generate professional invoices and track payments</p>
+                <p className="text-primary-100">Generate accurate invoices, manage warranties, and track payments seamlessly with professional documentation.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Package className="h-8 w-8 text-primary-200" />
+              <div>
+                <h3 className="font-semibold text-lg">Smart Inventory Management</h3>
+                <p className="text-primary-100">Easily manage stock of new sewing machines, spare parts, and accessories to avoid shortages and fulfill customer needs on time.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              <Star className="h-8 w-8 text-primary-200" />
+              <div>
+                <h3 className="font-semibold text-lg">Enhanced Customer Experience</h3>
+                <p className="text-primary-100">From purchase to after-sales service, we ensure every interaction is simple, transparent, and delightful for your customers.</p>
               </div>
             </div>
           </div>

@@ -356,7 +356,7 @@ export default function AdvancedBilling() {
       
       pdf.setFontSize(14);
       pdf.setFont("helvetica", "normal");
-      pdf.text("Professional Cycle Service & Repair", pageWidth / 2, 35, { align: "center" });
+      pdf.text("Professional Sewing Machine Service & Repair", pageWidth / 2, 35, { align: "center" });
       pdf.text("Phone: +91 98765 43210 | Email: info@ramcyclemart.com", pageWidth / 2, 45, { align: "center" });
       
       // Decorative line
@@ -517,7 +517,7 @@ export default function AdvancedBilling() {
       pdf.setFont("helvetica", "normal");
       pdf.setTextColor(0, 0, 0);
       pdf.text("We appreciate your business and trust in our services.", pageWidth / 2, footerY + 10, { align: "center" });
-      pdf.text("Visit us again for all your cycle service needs!", pageWidth / 2, footerY + 20, { align: "center" });
+      pdf.text("Visit us again for all your sewing machine service needs!", pageWidth / 2, footerY + 20, { align: "center" });
       
       // Bottom line with terms
       pdf.setFontSize(9);
