@@ -97,7 +97,13 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => {
+      console.log("Sending data to API:", data);
       const res = await apiRequest("POST", "/api/work-orders", data);
+      if (!res.ok) {
+        const errorData = await res.json();
+        console.error("API Error Response:", errorData);
+        throw new Error(errorData.message || 'Failed to create work order');
+      }
       return res.json();
     },
     onSuccess: () => {
@@ -111,9 +117,10 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
       form.reset();
     },
     onError: (error: Error) => {
+      console.error("Create work order error:", error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Failed to create work order",
+        description: error.message || "Please check all required fields and try again.",
         variant: "destructive",
       });
     },
@@ -143,16 +150,20 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
   });
 
   const onSubmit = (data: any) => {
+    console.log("Form submission data:", data);
+    
     // Transform the form data to ensure proper types
     const transformedData = {
       ...data,
       dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      estimatedCost: data.estimatedCost || null,
-      actualCost: data.actualCost || null,
-      laborHours: data.laborHours || null,
+      estimatedCost: data.estimatedCost ? parseFloat(data.estimatedCost) : null,
+      actualCost: data.actualCost ? parseFloat(data.actualCost) : null,
+      laborHours: data.laborHours ? parseFloat(data.laborHours) : null,
       assignedTechnicianId: data.assignedTechnicianId || null,
       machineId: data.machineId || null,
     };
+
+    console.log("Transformed data:", transformedData);
 
     if (workOrder) {
       updateMutation.mutate(transformedData);
