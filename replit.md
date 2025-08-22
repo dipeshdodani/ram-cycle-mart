@@ -2,17 +2,19 @@
 
 ## Overview
 
-Ram Cycle Mart is a comprehensive sewing machine service and repair shop management system built with a modern full-stack architecture. The application provides complete business management functionality including customer management, sewing machine repair tracking, inventory control, billing/invoicing with warranty tracking, advanced billing with PDF generation, and reporting capabilities. It's designed specifically for sewing machine repair shops to streamline their operations and improve customer service.
+Ram Cycle Mart is a comprehensive sewing machine service and repair shop management system built with a modern full-stack architecture. The application provides complete business management functionality including customer management, sewing machine repair tracking, inventory control, billing/invoicing with warranty tracking, Non GST billing with PDF generation, and reporting capabilities. It's designed specifically for sewing machine repair shops to streamline their operations and improve customer service.
 
 ## Recent Changes
 
 **Latest Updates (August 2025):**
+- **Naming Update**: Renamed "Advanced Billing" to "Non GST Billing" for better clarity
+- **Enhanced Error Handling**: Fixed JSON parsing errors in production with improved error handling for API responses
+- **Work Order Creation**: Fixed validation errors with detailed logging and improved data transformation
 - **PDF Generation Fixed**: Resolved TypeScript errors in jsPDF autoTable implementation with fallback support
 - **Users Management**: Converted to Excel-style table format with proper authentication and delete functionality
-- **Enhanced Error Handling**: Better foreign key constraint error messages and user-friendly feedback
 - **Sales Reports & Payment Management**: Complete billing system with payment tracking, edit functionality, and mark-as-paid options
 - **User-Friendly Error Messages**: Replaced technical error codes with clear, helpful messages for better user experience
-- **Bill Editing System**: Advanced payment management with partial payments, due amount calculations, and real-time updates
+- **Bill Editing System**: Non GST payment management with partial payments, due amount calculations, and real-time updates
 - **GitHub Ready**: Added comprehensive README.md, LICENSE, and proper .gitignore for version control
 - **Excel-Style Compact Views**: Efficient table layouts across all pages with comprehensive search and filtering
 
@@ -34,7 +36,7 @@ Preferred communication style: Simple, everyday language.
 - **Work Order System**: Service request tracking with status management and priority levels
 - **Inventory Control**: Parts and supplies management with stock tracking and low-stock alerts
 - **Technician Management**: Staff tracking with role-based access and workload monitoring
-- **Advanced Billing**: Professional invoicing with GST/Non-GST options, partial payments, and warranty tracking
+- **Non GST Billing**: Professional invoicing with custom items, partial payments, and warranty tracking
 - **Sales Reports**: Comprehensive reporting with payment status tracking and Excel export functionality
 
 ### Technical Features

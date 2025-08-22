@@ -26,7 +26,7 @@ export default function Navbar() {
       { path: "/billing", label: "Billing", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
       { path: "/reports", label: "Reports", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
       { path: "/sales-reports", label: "Sales Reports", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
-      { path: "/advanced-billing", label: "Advanced Billing", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
+      { path: "/advanced-billing", label: "Non GST Billing", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
       { path: "/shop-management", label: "Shop Management", roles: ["owner"] }, // Only owner access
       { path: "/users", label: "Users", roles: ["owner"] }, // Only owner access
     ];

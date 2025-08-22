@@ -103,7 +103,7 @@ export default function AdvancedBilling() {
           city: '',
           state: '',
           zipCode: '',
-          notes: `Created from Advanced Billing on ${new Date().toLocaleDateString()}`
+          notes: `Created from Non GST Billing on ${new Date().toLocaleDateString()}`
         };
         
         const customerRes = await apiRequest("POST", "/api/customers", customerData);
@@ -368,7 +368,7 @@ export default function AdvancedBilling() {
       pdf.setFontSize(20);
       pdf.setFont("helvetica", "bold");
       pdf.setTextColor(66, 135, 245);
-      pdf.text("ADVANCED BILL", 20, 70);
+      pdf.text("NON GST BILL", 20, 70);
       
       // Reset text color
       pdf.setTextColor(0, 0, 0);
@@ -525,12 +525,12 @@ export default function AdvancedBilling() {
       pdf.text("Terms: Payment due within 30 days. All services come with quality guarantee.", pageWidth / 2, footerY + 35, { align: "center" });
       
       // Download PDF
-      const fileName = `Advanced-Bill-${billData.billNumber || billData.invoiceNumber || Date.now()}.pdf`;
+      const fileName = `Non-GST-Bill-${billData.billNumber || billData.invoiceNumber || Date.now()}.pdf`;
       pdf.save(fileName);
       
       toast({
         title: "Professional PDF Generated",
-        description: "Advanced bill PDF with table format has been downloaded successfully.",
+        description: "Non GST bill PDF with table format has been downloaded successfully.",
       });
       
     } catch (error) {
@@ -552,7 +552,7 @@ export default function AdvancedBilling() {
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Advanced Billing</h1>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Non GST Billing</h1>
               <p className="text-gray-600 dark:text-gray-400">Create detailed bills with custom items and descriptions</p>
             </div>
           </div>
@@ -917,7 +917,7 @@ export default function AdvancedBilling() {
                     className="w-full bg-primary hover:bg-primary/90"
                   >
                     <FileText className="mr-2 h-4 w-4" />
-                    Generate Bill & Download PDF
+                    Generate Non GST Bill & Download PDF
                   </Button>
                   
                   {bill.items.length === 0 && (
