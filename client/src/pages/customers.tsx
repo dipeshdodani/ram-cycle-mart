@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Search, Plus, Phone, Mail, MapPin, Trash2, History, Edit, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
+import { useAuth } from "@/hooks/use-auth";
 import { formatCurrency } from "@/lib/currency";
 import { exportToExcel, formatDateForExcel } from "@/lib/excel-export";
 import Pagination from "@/components/ui/pagination";
@@ -25,6 +26,7 @@ export default function Customers() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const { user } = useAuth();
 
   const { data: customersData, isLoading } = useQuery<Customer[]>({
     queryKey: ["/api/customers", searchTerm],
@@ -54,6 +56,8 @@ export default function Customers() {
   // Ensure data is always arrays
   const customers = Array.isArray(customersData) ? customersData : [];
   const customerHistory = Array.isArray(customerHistoryData) ? customerHistoryData : [];
+
+
 
   // Filtered and paginated data
   const filteredCustomers = useMemo(() => {
@@ -296,21 +300,26 @@ export default function Customers() {
                           setEditingCustomer(customer);
                           setIsModalOpen(true);
                         }}
+                        data-testid={`button-edit-customer-${customer.id}`}
                       >
                         <Edit className="h-3 w-3" />
                       </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => {
-                          if (confirm('Are you sure you want to delete this customer?')) {
-                            deleteMutation.mutate(customer.id);
-                          }
-                        }}
-                        className="text-red-600 hover:text-red-700"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
+                      {user?.role === 'owner' && (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => {
+                            if (confirm(`Are you sure you want to delete customer "${customer.firstName} ${customer.lastName}"? This action cannot be undone.`)) {
+                              deleteMutation.mutate(customer.id);
+                            }
+                          }}
+                          disabled={deleteMutation.isPending}
+                          className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                          data-testid={`button-delete-customer-${customer.id}`}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

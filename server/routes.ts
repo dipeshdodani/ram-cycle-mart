@@ -165,7 +165,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/customers/:id", requireAuth, async (req, res) => {
+  app.delete("/api/customers/:id", requireOwner, async (req, res) => {
     try {
       await storage.deleteCustomer(req.params.id);
       res.status(204).send();
