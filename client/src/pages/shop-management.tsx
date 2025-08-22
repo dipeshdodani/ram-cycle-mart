@@ -2,22 +2,21 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Plus, Edit, Trash2, Star, StarOff, Store, Phone, Mail, MapPin, Hash } from "lucide-react";
+import { Plus, Edit, Trash2, Star, StarOff, Store, Phone, Mail, MapPin, Hash, Search } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { TransliterationInput } from "@/components/ui/transliteration-input";
 import { TransliterationTextarea } from "@/components/ui/transliteration-textarea";
-import { useTranslation } from "react-i18next";
 
 const shopSchema = z.object({
   name: z.string().min(1, "Shop name is required"),
@@ -41,7 +40,6 @@ type ShopFormData = z.infer<typeof shopSchema>;
 function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onClose: () => void }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
 
   const form = useForm<ShopFormData>({
     resolver: zodResolver(shopSchema),
@@ -74,8 +72,8 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/shops"] });
       toast({
-        title: shop ? "Shop Updated" : "Shop Created",
-        description: shop ? "Shop details updated successfully." : "New shop created successfully.",
+        title: "Success",
+        description: shop ? "Shop updated successfully" : "Shop created successfully",
       });
       onClose();
       form.reset();
@@ -83,7 +81,7 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to save shop details",
+        description: error.message || "Failed to save shop",
         variant: "destructive",
       });
     },
@@ -97,45 +95,32 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle data-testid={`title-${shop ? 'edit' : 'create'}-shop`}>
-            {shop ? t('editShop') : t('createShop')}
-          </DialogTitle>
+          <DialogTitle>{shop ? "Edit Shop" : "Add New Shop"}</DialogTitle>
         </DialogHeader>
-
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <FormField
                 control={form.control}
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-name">{t('shopName')}</FormLabel>
+                    <FormLabel>Shop Name *</FormLabel>
                     <FormControl>
-                      <TransliterationInput
-                        {...field}
-                        placeholder={t('enterShopName')}
-                        data-testid="input-shop-name"
-                      />
+                      <TransliterationInput {...field} placeholder="Ram Cycle Mart" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="tagline"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-tagline">{t('tagline')}</FormLabel>
+                    <FormLabel>Tagline</FormLabel>
                     <FormControl>
-                      <TransliterationInput
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder={t('enterTagline')}
-                        data-testid="input-shop-tagline"
-                      />
+                      <TransliterationInput {...field} placeholder="Service & Repair" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -148,14 +133,9 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
               name="description"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel data-testid="label-shop-description">{t('description')}</FormLabel>
+                  <FormLabel>Description</FormLabel>
                   <FormControl>
-                    <TransliterationTextarea
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={t('enterShopDescription')}
-                      data-testid="textarea-shop-description"
-                    />
+                    <TransliterationTextarea {...field} placeholder="Complete sewing machine sales and service..." />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -168,32 +148,22 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                 name="phone"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-phone">{t('phone')}</FormLabel>
+                    <FormLabel>Phone *</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('enterPhoneNumber')}
-                        data-testid="input-shop-phone"
-                      />
+                      <Input {...field} placeholder="+91 98765 43210" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-email">{t('email')}</FormLabel>
+                    <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder={t('enterEmailAddress')}
-                        data-testid="input-shop-email"
-                      />
+                      <Input {...field} type="email" placeholder="info@ramcyclemart.com" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -206,14 +176,9 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel data-testid="label-shop-address">{t('address')}</FormLabel>
+                  <FormLabel>Address</FormLabel>
                   <FormControl>
-                    <TransliterationTextarea
-                      {...field}
-                      value={field.value ?? ""}
-                      placeholder={t('enterShopAddress')}
-                      data-testid="textarea-shop-address"
-                    />
+                    <TransliterationTextarea {...field} placeholder="123 Main Street, Commercial Complex" />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -226,51 +191,35 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                 name="city"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-city">{t('city')}</FormLabel>
+                    <FormLabel>City</FormLabel>
                     <FormControl>
-                      <TransliterationInput
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder={t('enterCity')}
-                        data-testid="input-shop-city"
-                      />
+                      <TransliterationInput {...field} placeholder="Ahmedabad" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="state"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-state">{t('state')}</FormLabel>
+                    <FormLabel>State</FormLabel>
                     <FormControl>
-                      <TransliterationInput
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder={t('enterState')}
-                        data-testid="input-shop-state"
-                      />
+                      <TransliterationInput {...field} placeholder="Gujarat" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="pincode"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-pincode">{t('pincode')}</FormLabel>
+                    <FormLabel>Pincode</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('enterPincode')}
-                        data-testid="input-shop-pincode"
-                      />
+                      <Input {...field} placeholder="380001" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -284,69 +233,22 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                 name="gstin"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-gstin">{t('gstNumber')}</FormLabel>
+                    <FormLabel>GSTIN</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('enterGSTIN')}
-                        data-testid="input-shop-gstin"
-                      />
+                      <Input {...field} placeholder="24ABCDE1234F1Z5" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
                 name="panNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel data-testid="label-shop-pan">{t('panNumber')}</FormLabel>
+                    <FormLabel>PAN Number</FormLabel>
                     <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('enterPANNumber')}
-                        data-testid="input-shop-pan"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="website"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel data-testid="label-shop-website">{t('website')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('enterWebsiteURL')}
-                        data-testid="input-shop-website"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="logoUrl"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel data-testid="label-shop-logo">{t('logoURL')}</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder={t('enterLogoURL')}
-                        data-testid="input-shop-logo"
-                      />
+                      <Input {...field} placeholder="ABCDE1234F" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -363,15 +265,12 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      data-testid="checkbox-shop-default"
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel data-testid="label-shop-default">
-                      {t('setAsDefaultShop')}
-                    </FormLabel>
+                    <FormLabel>Set as Default Shop</FormLabel>
                     <p className="text-sm text-muted-foreground">
-                      {t('defaultShopDescription')}
+                      This shop will be used for billing and invoices
                     </p>
                   </div>
                 </FormItem>
@@ -379,20 +278,11 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
             />
 
             <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-                data-testid="button-cancel-shop"
-              >
-                {t('cancel')}
+              <Button type="button" variant="outline" onClick={onClose}>
+                Cancel
               </Button>
-              <Button
-                type="submit"
-                disabled={mutation.isPending}
-                data-testid="button-save-shop"
-              >
-                {mutation.isPending ? t('saving') : (shop ? t('updateShop') : t('createShop'))}
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "Saving..." : shop ? "Update Shop" : "Create Shop"}
               </Button>
             </div>
           </form>
@@ -403,64 +293,85 @@ function ShopModal({ shop, isOpen, onClose }: { shop?: any; isOpen: boolean; onC
 }
 
 export default function ShopManagement() {
-  const [selectedShop, setSelectedShop] = useState<any>(null);
+  const [searchTerm, setSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingShop, setEditingShop] = useState<any>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
 
-  const { data: shops = [], isLoading } = useQuery<any[]>({
+  const { data: shopsData, isLoading } = useQuery<any[]>({
     queryKey: ["/api/shops"],
+    queryFn: async () => {
+      const res = await apiRequest("GET", "/api/shops");
+      const data = await res.json();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
+  const shops = Array.isArray(shopsData) ? shopsData : [];
+
   const deleteShopMutation = useMutation({
-    mutationFn: (shopId: string) => apiRequest("DELETE", `/api/shops/${shopId}`),
+    mutationFn: async (shopId: string) => {
+      const res = await apiRequest("DELETE", `/api/shops/${shopId}`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+      }
+      return res.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shops"] });
       toast({
-        title: t('shopDeleted'),
-        description: t('shopDeletedDescription'),
+        title: "Success",
+        description: "Shop deleted successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/shops"] });
     },
     onError: (error: any) => {
       toast({
-        title: t('error'),
-        description: error.message || t('failedToDeleteShop'),
+        title: "Error",
+        description: error.message || "Failed to delete shop",
         variant: "destructive",
       });
     },
   });
 
   const setDefaultShopMutation = useMutation({
-    mutationFn: (shopId: string) => apiRequest("PATCH", `/api/shops/${shopId}/set-default`),
+    mutationFn: async (shopId: string) => {
+      const res = await apiRequest("PATCH", `/api/shops/${shopId}/set-default`);
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.message || `HTTP error! status: ${res.status}`);
+      }
+      return res.json();
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/shops"] });
       toast({
-        title: t('defaultShopSet'),
-        description: t('defaultShopSetDescription'),
+        title: "Success",
+        description: "Default shop updated successfully",
       });
+      queryClient.invalidateQueries({ queryKey: ["/api/shops"] });
     },
     onError: (error: any) => {
       toast({
-        title: t('error'),
-        description: error.message || t('failedToSetDefaultShop'),
+        title: "Error",
+        description: error.message || "Failed to set default shop",
         variant: "destructive",
       });
     },
   });
 
-  const handleEdit = (shop: any) => {
-    setSelectedShop(shop);
+  const handleEditShop = (shop: any) => {
+    setEditingShop(shop);
     setIsModalOpen(true);
   };
 
-  const handleCreate = () => {
-    setSelectedShop(null);
+  const handleAddNew = () => {
+    setEditingShop(null);
     setIsModalOpen(true);
   };
 
-  const handleDelete = (shopId: string) => {
-    if (confirm(t('confirmDeleteShop'))) {
+  const handleDeleteShop = (shopId: string) => {
+    if (window.confirm("Are you sure you want to delete this shop?")) {
       deleteShopMutation.mutate(shopId);
     }
   };
@@ -471,164 +382,219 @@ export default function ShopManagement() {
 
   const closeModal = () => {
     setIsModalOpen(false);
-    setSelectedShop(null);
+    setEditingShop(null);
   };
 
-  if (isLoading) {
+  // Filter shops based on search term
+  const filteredShops = shops.filter(shop => {
+    if (!searchTerm) return true;
+    
+    const searchLower = searchTerm.toLowerCase();
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin w-8 h-8 border-4 border-primary border-t-transparent rounded-full" />
-      </div>
+      shop.name?.toLowerCase().includes(searchLower) ||
+      shop.phone?.toLowerCase().includes(searchLower) ||
+      shop.email?.toLowerCase().includes(searchLower) ||
+      shop.city?.toLowerCase().includes(searchLower) ||
+      shop.gstin?.toLowerCase().includes(searchLower)
     );
-  }
+  });
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold" data-testid="heading-shop-management">
-            {t('shopManagement')}
-          </h1>
-          <p className="text-muted-foreground mt-2" data-testid="description-shop-management">
-            {t('manageShopDetailsForBilling')}
-          </p>
-        </div>
-        <Button onClick={handleCreate} data-testid="button-add-shop">
+    <div className="container mx-auto p-4 mt-16">
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-bold">Shop Management</h1>
+        <Button onClick={handleAddNew} size="sm" data-testid="button-add-shop">
           <Plus className="h-4 w-4 mr-2" />
-          {t('addShop')}
+          Add Shop
         </Button>
       </div>
 
-      {shops.length === 0 ? (
+      {/* Metrics Card */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <Card className="p-3">
+          <div className="flex items-center">
+            <Store className="h-4 w-4 text-blue-600 mr-2" />
+            <div>
+              <div className="text-xs text-gray-500">Total Shops</div>
+              <div className="text-lg font-bold">{shops.length}</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3">
+          <div className="flex items-center">
+            <Star className="h-4 w-4 text-yellow-600 mr-2" />
+            <div>
+              <div className="text-xs text-gray-500">Default Shop</div>
+              <div className="text-lg font-bold">{shops.filter(s => s.isDefault).length}</div>
+            </div>
+          </div>
+        </Card>
+        <Card className="p-3">
+          <div className="flex items-center">
+            <Hash className="h-4 w-4 text-green-600 mr-2" />
+            <div>
+              <div className="text-xs text-gray-500">With GST</div>
+              <div className="text-lg font-bold">{shops.filter(s => s.gstin).length}</div>
+            </div>
+          </div>
+        </Card>
+      </div>
+
+      {/* Search */}
+      <div className="mb-4">
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            placeholder="Search shops by name, phone, email, city, or GST number..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="pl-10 h-9"
+            data-testid="input-search-shops"
+          />
+        </div>
+      </div>
+
+      {/* Shops Table */}
+      {isLoading ? (
         <Card>
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <Store className="h-16 w-16 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold mb-2" data-testid="text-no-shops">
-              {t('noShopsFound')}
-            </h3>
-            <p className="text-muted-foreground text-center mb-4" data-testid="text-no-shops-description">
-              {t('noShopsDescription')}
-            </p>
-            <Button onClick={handleCreate} data-testid="button-create-first-shop">
-              <Plus className="h-4 w-4 mr-2" />
-              {t('createFirstShop')}
-            </Button>
+          <CardContent className="p-6">
+            <div className="animate-pulse space-y-2">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="h-8 bg-gray-200 rounded w-full"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ) : filteredShops.length > 0 ? (
+        <Card>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50 dark:bg-gray-800">
+                    <TableHead className="font-semibold">Shop Name</TableHead>
+                    <TableHead className="font-semibold">Contact</TableHead>
+                    <TableHead className="font-semibold">Location</TableHead>
+                    <TableHead className="font-semibold">GST</TableHead>
+                    <TableHead className="font-semibold">Status</TableHead>
+                    <TableHead className="font-semibold">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredShops.map((shop) => (
+                    <TableRow key={shop.id} className="hover:bg-gray-50 dark:hover:bg-gray-800">
+                      <TableCell>
+                        <div>
+                          <div className="font-medium flex items-center">
+                            {shop.name}
+                            {shop.isDefault && (
+                              <Badge variant="default" className="ml-2 text-xs">
+                                <Star className="h-3 w-3 mr-1" />
+                                Default
+                              </Badge>
+                            )}
+                          </div>
+                          {shop.tagline && (
+                            <div className="text-sm text-gray-500">{shop.tagline}</div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div>
+                          <div className="flex items-center text-sm">
+                            <Phone className="h-3 w-3 mr-1" />
+                            {shop.phone}
+                          </div>
+                          {shop.email && (
+                            <div className="flex items-center text-sm text-gray-500">
+                              <Mail className="h-3 w-3 mr-1" />
+                              {shop.email}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {shop.city || shop.state ? (
+                          <div className="flex items-center text-sm">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {[shop.city, shop.state].filter(Boolean).join(", ")}
+                          </div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {shop.gstin ? (
+                          <div className="text-sm font-mono">{shop.gstin}</div>
+                        ) : (
+                          <span className="text-gray-400">-</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant={shop.isDefault ? "default" : "secondary"}>
+                          {shop.isDefault ? "Default" : "Active"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center space-x-2">
+                          {!shop.isDefault && (
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => handleSetDefault(shop.id)}
+                              className="text-yellow-600 border-yellow-600 hover:bg-yellow-50"
+                              data-testid={`button-set-default-${shop.id}`}
+                            >
+                              <Star className="h-3 w-3 mr-1" />
+                              Set Default
+                            </Button>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleEditShop(shop)}
+                            data-testid={`button-edit-${shop.id}`}
+                          >
+                            <Edit className="h-3 w-3 mr-1" />
+                            Edit
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => handleDeleteShop(shop.id)}
+                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                            data-testid={`button-delete-${shop.id}`}
+                          >
+                            <Trash2 className="h-3 w-3 mr-1" />
+                            Delete
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {shops.map((shop: any) => (
-            <Card key={shop.id} className="relative" data-testid={`card-shop-${shop.id}`}>
-              {shop.isDefault && (
-                <div className="absolute top-3 right-3">
-                  <Badge variant="default" className="bg-yellow-500 hover:bg-yellow-600" data-testid={`badge-default-${shop.id}`}>
-                    <Star className="h-3 w-3 mr-1" />
-                    {t('default')}
-                  </Badge>
-                </div>
-              )}
-              
-              <CardHeader className="pb-3">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1 mr-12">
-                    <CardTitle className="text-xl mb-1" data-testid={`text-shop-name-${shop.id}`}>
-                      {shop.name}
-                    </CardTitle>
-                    {shop.tagline && (
-                      <CardDescription className="text-sm" data-testid={`text-shop-tagline-${shop.id}`}>
-                        {shop.tagline}
-                      </CardDescription>
-                    )}
-                  </div>
-                </div>
-              </CardHeader>
-
-              <CardContent className="space-y-3">
-                {shop.description && (
-                  <p className="text-sm text-muted-foreground line-clamp-2" data-testid={`text-shop-description-${shop.id}`}>
-                    {shop.description}
-                  </p>
-                )}
-
-                <div className="space-y-2">
-                  {shop.phone && (
-                    <div className="flex items-center text-sm" data-testid={`text-shop-phone-${shop.id}`}>
-                      <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {shop.phone}
-                    </div>
-                  )}
-                  
-                  {shop.email && (
-                    <div className="flex items-center text-sm" data-testid={`text-shop-email-${shop.id}`}>
-                      <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                      {shop.email}
-                    </div>
-                  )}
-                  
-                  {shop.address && (
-                    <div className="flex items-start text-sm" data-testid={`text-shop-address-${shop.id}`}>
-                      <MapPin className="h-4 w-4 mr-2 mt-0.5 text-muted-foreground" />
-                      <div className="flex-1">
-                        {shop.address}
-                        {(shop.city || shop.state || shop.pincode) && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {[shop.city, shop.state, shop.pincode].filter(Boolean).join(", ")}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                  
-                  {shop.gstin && (
-                    <div className="flex items-center text-sm" data-testid={`text-shop-gstin-${shop.id}`}>
-                      <Hash className="h-4 w-4 mr-2 text-muted-foreground" />
-                      GST: {shop.gstin}
-                    </div>
-                  )}
-                </div>
-
-                <div className="flex justify-between items-center pt-4 border-t">
-                  <div className="flex space-x-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEdit(shop)}
-                      data-testid={`button-edit-shop-${shop.id}`}
-                    >
-                      <Edit className="h-3 w-3" />
-                    </Button>
-                    
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDelete(shop.id)}
-                      data-testid={`button-delete-shop-${shop.id}`}
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </div>
-                  
-                  {!shop.isDefault && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleSetDefault(shop.id)}
-                      disabled={setDefaultShopMutation.isPending}
-                      data-testid={`button-set-default-${shop.id}`}
-                    >
-                      <StarOff className="h-3 w-3 mr-1" />
-                      {t('setDefault')}
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Card>
+          <CardContent className="p-12 text-center">
+            <Store className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">No shops found</h3>
+            <p className="text-gray-500 mb-4">
+              {searchTerm ? "No shops match your search criteria." : "Get started by adding your first shop."}
+            </p>
+            <Button onClick={handleAddNew}>
+              <Plus className="h-4 w-4 mr-2" />
+              Add First Shop
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       <ShopModal
-        shop={selectedShop}
+        shop={editingShop}
         isOpen={isModalOpen}
         onClose={closeModal}
       />
