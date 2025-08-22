@@ -41,7 +41,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
   });
 
   const { data: machines } = useQuery({
-    queryKey: ["/api/inventory"],
+    queryKey: ["/api/sewing-machines"],
   });
 
   const { data: technicians } = useQuery({
@@ -241,19 +241,19 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
                   const selectedMachine = Array.isArray(machines) ? machines.find((m: any) => m.id === field.value) : null;
                   return (
                     <FormItem>
-                      <FormLabel>Inventory Item (Optional)</FormLabel>
+                      <FormLabel>Machine (Optional)</FormLabel>
                       <Select onValueChange={field.onChange} value={field.value}>
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue 
-                              placeholder={selectedMachine ? `${selectedMachine.name} - ${selectedMachine.category}` : "Select inventory item"} 
+                              placeholder={selectedMachine ? `${selectedMachine.brand} ${selectedMachine.model}` : "Select customer machine"} 
                             />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          {Array.isArray(machines) && machines?.map((item: any) => (
-                            <SelectItem key={item.id} value={item.id}>
-                              {item.name} - {item.category} (Stock: {item.quantity})
+                          {Array.isArray(machines) && machines?.map((machine: any) => (
+                            <SelectItem key={machine.id} value={machine.id}>
+                              {machine.brand} {machine.model} {machine.serialNumber ? `(SN: ${machine.serialNumber})` : ''}
                             </SelectItem>
                           ))}
                         </SelectContent>

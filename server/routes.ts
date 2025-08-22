@@ -240,7 +240,7 @@ export function registerRoutes(app: Express): Server {
           field: err.path.join('.'),
           message: err.message,
           code: err.code,
-          received: err.received
+          received: 'received' in err ? err.received : undefined
         }));
         
         return res.status(400).json({ 

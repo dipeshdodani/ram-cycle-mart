@@ -7,10 +7,11 @@ Ram Cycle Mart is a comprehensive sewing machine service and repair shop managem
 ## Recent Changes
 
 **Latest Updates (August 2025):**
+- **Work Order Creation Fixed**: Resolved production failures in work order creation by fixing schema validation, data transformation, and foreign key references
+- **Shop Management Form**: Fixed data loss issue when editing existing shops with proper form reset and useEffect handling
+- **Schema Improvements**: Enhanced work order schema with proper transformations for numeric fields and empty string handling
 - **Naming Update**: Renamed "Advanced Billing" to "Non GST Billing" for better clarity
 - **Enhanced Error Handling**: Fixed JSON parsing errors in production with improved error handling for API responses
-- **Work Order Creation**: Fixed validation errors with detailed logging and improved data transformation
-- **PDF Generation Fixed**: Resolved TypeScript errors in jsPDF autoTable implementation with fallback support
 - **Users Management**: Converted to Excel-style table format with proper authentication and delete functionality
 - **Sales Reports & Payment Management**: Complete billing system with payment tracking, edit functionality, and mark-as-paid options
 - **User-Friendly Error Messages**: Replaced technical error codes with clear, helpful messages for better user experience
