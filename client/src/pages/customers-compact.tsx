@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Search, Plus, Users, Phone, MapPin, Edit, User } from "lucide-react";
+import { Search, Plus, Users, Phone, MapPin, Edit, User, Download } from "lucide-react";
+import * as XLSX from 'xlsx';
 import CustomerModal from "@/components/modals/customer-modal";
 import { useToast } from "@/hooks/use-toast";
 import type { Customer, insertCustomerSchema, selectCustomerSchema } from "@shared/schema";
@@ -82,6 +83,48 @@ export default function Customers() {
     }
   };
 
+  const exportToExcel = () => {
+    if (!customers.length) {
+      toast({
+        title: "No Data",
+        description: "No customers to export",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const exportData = customers.map(customer => ({
+      'Customer Name': `${customer.firstName} ${customer.lastName}`,
+      'Phone': customer.phone,
+      'Email': customer.email || '',
+      'Address': customer.address || '',
+      'City': customer.city || '',
+      'State': customer.state || '',
+      'ZIP Code': customer.zipCode || '',
+      'GST Number': customer.gstNumber || '',
+      'Notes': customer.notes || '',
+      'Created Date': customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : '',
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(exportData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Customers');
+
+    // Auto-fit columns
+    const columnWidths = Object.keys(exportData[0] || {}).map(key => ({
+      wch: Math.max(key.length, ...exportData.map(row => String(row[key] || '').length))
+    }));
+    worksheet['!cols'] = columnWidths;
+
+    const fileName = `customers-export-${new Date().toISOString().split('T')[0]}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
+
+    toast({
+      title: "Export Successful",
+      description: `Customer data exported to ${fileName}`,
+    });
+  };
+
   // Filter customers based on search term
   const filteredCustomers = customers.filter(customer => {
     if (!searchTerm) return true;
@@ -101,10 +144,16 @@ export default function Customers() {
     <div className="container mx-auto p-4 mt-16">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold">Customer Management</h1>
-        <Button onClick={handleAddNew} size="sm">
-          <Plus className="h-4 w-4 mr-2" />
-          Add Customer
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={exportToExcel} variant="outline" size="sm" data-testid="button-export-customers">
+            <Download className="h-4 w-4 mr-2" />
+            Export Excel
+          </Button>
+          <Button onClick={handleAddNew} size="sm" data-testid="button-add-customer">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Customer
+          </Button>
+        </div>
       </div>
 
       {/* Metrics Card */}

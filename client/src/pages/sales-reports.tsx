@@ -7,7 +7,9 @@ import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { CalendarIcon, Download, DollarSign, FileText, TrendingUp, Edit, CheckCircle } from "lucide-react";
+import { CalendarIcon, Download, DollarSign, FileText, TrendingUp, Edit, CheckCircle, FileDown } from "lucide-react";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { useToast } from "@/hooks/use-toast";
 import { formatCurrency } from "@/lib/currency";
 import { format } from "date-fns";
@@ -189,6 +191,138 @@ export default function SalesReports() {
     }
   };
 
+  const generateBillPDF = async (bill: AdvancedBill) => {
+    try {
+      // Get default shop details for the bill header
+      const shopRes = await fetch('/api/shops/default');
+      const defaultShop = await shopRes.json();
+      
+      const doc = new jsPDF();
+      
+      // Shop Header
+      if (defaultShop) {
+        doc.setFontSize(20);
+        doc.setFont(undefined, 'bold');
+        doc.text(defaultShop.name, 20, 25);
+        
+        if (defaultShop.tagline) {
+          doc.setFontSize(12);
+          doc.setFont(undefined, 'normal');
+          doc.text(defaultShop.tagline, 20, 33);
+        }
+        
+        // Contact details
+        doc.setFontSize(10);
+        let yPos = 40;
+        if (defaultShop.address) {
+          doc.text(`Address: ${defaultShop.address}`, 20, yPos);
+          yPos += 5;
+        }
+        if (defaultShop.phone) {
+          doc.text(`Phone: ${defaultShop.phone}`, 20, yPos);
+          yPos += 5;
+        }
+        if (defaultShop.email) {
+          doc.text(`Email: ${defaultShop.email}`, 20, yPos);
+          yPos += 5;
+        }
+        if (defaultShop.gstin) {
+          doc.text(`GSTIN: ${defaultShop.gstin}`, 20, yPos);
+        }
+      }
+      
+      // Bill details
+      doc.setFontSize(16);
+      doc.setFont(undefined, 'bold');
+      doc.text('BILL', 150, 25);
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(`Bill No: ${bill.billNumber}`, 150, 35);
+      doc.text(`Date: ${format(new Date(bill.createdAt), 'dd/MM/yyyy')}`, 150, 42);
+      doc.text(`Payment Mode: ${bill.paymentMode.toUpperCase()}`, 150, 49);
+      
+      // Customer details
+      doc.setFontSize(12);
+      doc.setFont(undefined, 'bold');
+      doc.text('Bill To:', 20, 65);
+      
+      doc.setFontSize(10);
+      doc.setFont(undefined, 'normal');
+      doc.text(bill.customerName, 20, 73);
+      doc.text(`Phone: ${bill.customerPhone}`, 20, 80);
+      if (bill.customerAddress) {
+        doc.text(`Address: ${bill.customerAddress}`, 20, 87);
+      }
+      if (bill.customerGstNumber) {
+        doc.text(`GST No: ${bill.customerGstNumber}`, 20, 94);
+      }
+      
+      // Items table
+      let items = [];
+      try {
+        items = JSON.parse(bill.items);
+      } catch (e) {
+        console.error('Error parsing items:', e);
+      }
+      
+      const tableData = items.map((item: any, index: number) => [
+        index + 1,
+        item.name || item.description || '',
+        item.quantity || 1,
+        formatCurrency(item.price || item.unitPrice || 0),
+        formatCurrency((item.quantity || 1) * (item.price || item.unitPrice || 0))
+      ]);
+      
+      (doc as any).autoTable({
+        startY: 105,
+        head: [['#', 'Item Description', 'Qty', 'Rate', 'Amount']],
+        body: tableData,
+        theme: 'grid',
+        styles: { fontSize: 9 },
+        headStyles: { fillColor: [71, 85, 105], textColor: 255 },
+      });
+      
+      // Totals
+      const finalY = (doc as any).lastAutoTable.finalY + 10;
+      doc.text(`Subtotal: ${formatCurrency(parseFloat(bill.subtotal))}`, 150, finalY);
+      if (parseFloat(bill.taxAmount) > 0) {
+        doc.text(`Tax (${bill.taxRate}%): ${formatCurrency(parseFloat(bill.taxAmount))}`, 150, finalY + 7);
+      }
+      doc.setFont(undefined, 'bold');
+      doc.text(`Total: ${formatCurrency(parseFloat(bill.total))}`, 150, finalY + 14);
+      
+      if (parseFloat(bill.advancePayment) > 0) {
+        doc.setFont(undefined, 'normal');
+        doc.text(`Advance Paid: ${formatCurrency(parseFloat(bill.advancePayment))}`, 150, finalY + 21);
+        doc.setFont(undefined, 'bold');
+        doc.text(`Due Amount: ${formatCurrency(parseFloat(bill.dueAmount))}`, 150, finalY + 28);
+      }
+      
+      // Footer
+      doc.setFontSize(8);
+      doc.setFont(undefined, 'normal');
+      doc.text('Thank you for your business!', 20, finalY + 35);
+      
+      // Save the PDF
+      const filename = `Bill_${bill.billNumber}_${bill.customerName.replace(/\s+/g, '_')}.pdf`;
+      doc.save(filename);
+      
+      toast({
+        title: "PDF Downloaded",
+        description: `Bill PDF saved as ${filename}`,
+      });
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "PDF Generation Failed",
+        description: "Unable to generate PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div className="container mx-auto p-4 mt-16">
       <div className="flex items-center justify-between mb-6">
@@ -313,6 +447,7 @@ export default function SalesReports() {
                     <TableHead className="font-semibold">Payment</TableHead>
                     <TableHead className="font-semibold">Status</TableHead>
                     <TableHead className="font-semibold">Actions</TableHead>
+                    <TableHead className="font-semibold">Download</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -374,6 +509,17 @@ export default function SalesReports() {
                             Edit
                           </Button>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => generateBillPDF(bill)}
+                          data-testid={`button-pdf-${bill.id}`}
+                        >
+                          <FileDown className="h-3 w-3 mr-1" />
+                          PDF
+                        </Button>
                       </TableCell>
                     </TableRow>
                   ))}

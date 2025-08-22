@@ -12,6 +12,8 @@ import {
   Plus, Minus, Download, FileText, Calendar, 
   DollarSign, ShoppingCart, Trash2, Edit2 
 } from "lucide-react";
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import { formatCurrency, parseCurrency, INDIA_GST_RATE } from "@/lib/currency";
@@ -142,8 +144,10 @@ export default function AdvancedBilling() {
       setSavedItems(uniqueItems);
       localStorage.setItem('ramCycleMart_savedItems', JSON.stringify(uniqueItems));
 
-      // Generate PDF
-      generatePDF(data);
+      // Generate PDF - fix potential issue by calling with proper bill data
+      if (data) {
+        generatePDF({ ...data, ...bill });
+      }
       
       // Reset form
       setBill({
@@ -482,7 +486,8 @@ export default function AdvancedBilling() {
       pdf.text("Terms: Payment due within 30 days. All services come with quality guarantee.", pageWidth / 2, footerY + 35, { align: "center" });
       
       // Download PDF
-      pdf.save(`Advanced-Bill-${billData.invoiceNumber || Date.now()}.pdf`);
+      const fileName = `Advanced-Bill-${billData.billNumber || billData.invoiceNumber || Date.now()}.pdf`;
+      pdf.save(fileName);
       
       toast({
         title: "Professional PDF Generated",
