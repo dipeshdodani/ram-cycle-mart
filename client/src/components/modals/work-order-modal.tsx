@@ -159,15 +159,16 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
   const onSubmit = (data: any) => {
     console.log("Form submission data:", data);
     
-    // Transform the form data to ensure proper types
+    // Transform the form data - let the schema handle the transformations
     const transformedData = {
       ...data,
-      dueDate: data.dueDate ? new Date(data.dueDate) : null,
-      estimatedCost: data.estimatedCost ? parseFloat(data.estimatedCost) : null,
-      actualCost: data.actualCost ? parseFloat(data.actualCost) : null,
-      laborHours: data.laborHours ? parseFloat(data.laborHours) : null,
-      assignedTechnicianId: data.assignedTechnicianId || null,
-      machineId: data.machineId || null,
+      // Only transform empty strings to null/undefined for optional fields
+      dueDate: data.dueDate && data.dueDate.trim() !== "" ? data.dueDate : null,
+      estimatedCost: data.estimatedCost && data.estimatedCost.trim() !== "" ? data.estimatedCost : null,
+      actualCost: data.actualCost && data.actualCost.trim() !== "" ? data.actualCost : null,
+      laborHours: data.laborHours && data.laborHours.trim() !== "" ? data.laborHours : null,
+      assignedTechnicianId: data.assignedTechnicianId && data.assignedTechnicianId.trim() !== "" ? data.assignedTechnicianId : null,
+      machineId: data.machineId && data.machineId.trim() !== "" ? data.machineId : null,
     };
 
     console.log("Transformed data:", transformedData);

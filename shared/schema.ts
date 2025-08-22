@@ -305,7 +305,23 @@ export const insertWorkOrderSchema = createInsertSchema(workOrders).omit({
   createdAt: true,
   updatedAt: true,
 }).extend({
-  dueDate: z.union([z.string(), z.date()]).optional().nullable(),
+  dueDate: z.union([z.string(), z.date()]).optional().nullable().transform(val => {
+    if (!val || val === '') return null;
+    if (val instanceof Date) return val;
+    return new Date(val);
+  }),
+  estimatedCost: z.union([z.string(), z.number()]).optional().nullable().transform(val => {
+    if (!val || val === '' || val === null || val === undefined) return null;
+    return typeof val === 'string' ? parseFloat(val) : val;
+  }),
+  actualCost: z.union([z.string(), z.number()]).optional().nullable().transform(val => {
+    if (!val || val === '' || val === null || val === undefined) return null;
+    return typeof val === 'string' ? parseFloat(val) : val;
+  }),
+  laborHours: z.union([z.string(), z.number()]).optional().nullable().transform(val => {
+    if (!val || val === '' || val === null || val === undefined) return null;
+    return typeof val === 'string' ? parseFloat(val) : val;
+  }),
 });
 
 export const insertInventoryItemSchema = createInsertSchema(inventoryItems).omit({

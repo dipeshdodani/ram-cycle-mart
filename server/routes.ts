@@ -229,21 +229,48 @@ export function registerRoutes(app: Express): Server {
 
   app.post("/api/work-orders", requireAuth, async (req, res) => {
     try {
-      console.log("Creating work order with data:", req.body);
-      const validatedData = insertWorkOrderSchema.parse(req.body);
-      console.log("Validated data:", validatedData);
+      console.log("Creating work order with raw data:", JSON.stringify(req.body, null, 2));
+      
+      // Enhanced validation with detailed error reporting
+      const parseResult = insertWorkOrderSchema.safeParse(req.body);
+      
+      if (!parseResult.success) {
+        console.error("Validation failed:", JSON.stringify(parseResult.error.errors, null, 2));
+        const detailedErrors = parseResult.error.errors.map(err => ({
+          field: err.path.join('.'),
+          message: err.message,
+          code: err.code,
+          received: err.received
+        }));
+        
+        return res.status(400).json({ 
+          message: "Work order validation failed",
+          details: detailedErrors,
+          errors: parseResult.error.errors
+        });
+      }
+
+      const validatedData = parseResult.data;
+      console.log("Successfully validated data:", JSON.stringify(validatedData, null, 2));
+      
       const workOrder = await storage.createWorkOrder(validatedData);
+      console.log("Work order created successfully:", workOrder.id);
       res.status(201).json(workOrder);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Work order creation error:", error);
+      console.error("Error stack:", error.stack);
+      
       if (error instanceof z.ZodError) {
-        console.error("Validation errors:", error.errors);
+        console.error("Zod validation errors:", error.errors);
         res.status(400).json({ 
           message: "Invalid work order data",
           errors: error.errors
         });
       } else {
-        res.status(400).json({ message: "Invalid work order data" });
+        res.status(500).json({ 
+          message: "Internal server error creating work order",
+          error: error.message 
+        });
       }
     }
   });
