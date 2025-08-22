@@ -7,16 +7,13 @@ interface WorkOrder {
   id: string;
   orderNumber: string;
   status: string;
-  dueDate: string;
+  createdAt: string;
   customer: {
     firstName: string;
     lastName: string;
     phone: string;
   };
-  machine?: {
-    brand: string;
-    model: string;
-  } | null;
+  serviceType?: string;
 }
 
 interface RecentWorkOrdersProps {
@@ -106,7 +103,7 @@ export default function RecentWorkOrders({ workOrders, isLoading }: RecentWorkOr
                     Customer
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    Machine
+                    Service Type
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Status
@@ -131,8 +128,8 @@ export default function RecentWorkOrders({ workOrders, isLoading }: RecentWorkOr
                       <div className="text-sm text-gray-500">{order.customer.phone}</div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm text-gray-900">
-                        {order.machine ? `${order.machine.brand} ${order.machine.model}` : "Not specified"}
+                      <div className="text-sm text-gray-900 capitalize">
+                        {order.serviceType ? order.serviceType.replace(/_/g, ' ') : "Not specified"}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">

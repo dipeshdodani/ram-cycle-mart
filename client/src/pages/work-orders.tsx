@@ -60,7 +60,7 @@ export default function WorkOrders() {
         order.orderNumber?.toLowerCase().includes(searchLower) ||
         `${order.customer?.firstName || ''} ${order.customer?.lastName || ''}`.toLowerCase().includes(searchLower) ||
         order.customer?.phone?.toLowerCase().includes(searchLower) ||
-        order.machine?.name?.toLowerCase().includes(searchLower) ||
+        order.serviceType?.toLowerCase().includes(searchLower) ||
         order.problemDescription?.toLowerCase().includes(searchLower) ||
         `${order.technician?.firstName || ''} ${order.technician?.lastName || ''}`.toLowerCase().includes(searchLower)
       );
@@ -174,7 +174,7 @@ export default function WorkOrders() {
       { key: 'orderNumber', header: 'Order Number' },
       { key: 'customer.firstName', header: 'Customer Name', formatter: (customer: any) => customer ? `${customer.firstName} ${customer.lastName}` : '' },
       { key: 'customer.phone', header: 'Customer Phone' },
-      { key: 'machine.name', header: 'Machine/Equipment' },
+      { key: 'serviceType', header: 'Service Type', formatter: (serviceType: string) => serviceType ? serviceType.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : '' },
       { key: 'problemDescription', header: 'Problem Description' },
       { key: 'status', header: 'Status', formatter: formatStatusForExcel },
       { key: 'priority', header: 'Priority', formatter: formatStatusForExcel },
@@ -265,6 +265,7 @@ export default function WorkOrders() {
                 <TableRow>
                   <TableHead>Order #</TableHead>
                   <TableHead>Customer</TableHead>
+                  <TableHead>Service Type</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Priority</TableHead>
                   <TableHead>Problem</TableHead>
@@ -281,6 +282,7 @@ export default function WorkOrders() {
                     <TableRow key={i}>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div></TableCell>
+                      <TableCell><div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div></TableCell>
                       <TableCell><div className="h-4 bg-gray-200 rounded w-48 animate-pulse"></div></TableCell>
@@ -302,6 +304,11 @@ export default function WorkOrders() {
                           <div className="font-medium">{order.customer?.firstName} {order.customer?.lastName}</div>
                           <div className="text-sm text-gray-500">{order.customer?.phone}</div>
                         </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge variant="secondary" className="capitalize">
+                          {order.serviceType ? order.serviceType.replace(/_/g, ' ') : 'Service'}
+                        </Badge>
                       </TableCell>
                       <TableCell>
                         <Badge className={`${getStatusColor(order.status)} flex items-center gap-1`}>
@@ -383,7 +390,7 @@ export default function WorkOrders() {
                   ))
                 ) : (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center p-12">
+                    <TableCell colSpan={11} className="text-center p-12">
                       <div className="text-gray-500">
                         <Clock className="h-12 w-12 mx-auto mb-4" />
                         <h3 className="text-lg font-medium mb-2">No work orders found</h3>

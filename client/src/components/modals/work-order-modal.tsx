@@ -40,9 +40,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     queryKey: ["/api/customers"],
   });
 
-  const { data: machines } = useQuery({
-    queryKey: ["/api/sewing-machines"],
-  });
+
 
   const { data: technicians } = useQuery({
     queryKey: ["/api/technicians"],
@@ -52,7 +50,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
     resolver: zodResolver(insertWorkOrderSchema),
     defaultValues: {
       customerId: "",
-      machineId: "",
+      serviceType: "service",
       problemDescription: "",
       priority: "normal",
       status: "pending",
@@ -70,7 +68,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
       console.log("Resetting form with work order data:", workOrder);
       form.reset({
         customerId: workOrder.customerId || "",
-        machineId: workOrder.machineId || "",
+        serviceType: workOrder.serviceType || "service",
         problemDescription: workOrder.problemDescription || "",
         priority: workOrder.priority || "normal",
         status: workOrder.status || "pending",
@@ -84,7 +82,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
       console.log("Resetting form for new work order");
       form.reset({
         customerId: "",
-        machineId: "",
+        serviceType: "service",
         problemDescription: "",
         priority: "normal",
         status: "pending",
@@ -170,7 +168,7 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
       actualCost: data.actualCost && data.actualCost.trim() !== "" ? data.actualCost : null,
       laborHours: data.laborHours && data.laborHours.trim() !== "" ? data.laborHours : null,
       assignedTechnicianId: data.assignedTechnicianId && data.assignedTechnicianId.trim() !== "" ? data.assignedTechnicianId : null,
-      machineId: data.machineId && data.machineId.trim() !== "" ? data.machineId : null,
+      serviceType: data.serviceType || "service",
     };
 
     console.log("Transformed data:", transformedData);
@@ -238,32 +236,29 @@ export default function WorkOrderModal({ isOpen, onClose, workOrder }: WorkOrder
 
               <FormField
                 control={form.control}
-                name="machineId"
-                render={({ field }) => {
-                  const selectedMachine = Array.isArray(machines) ? machines.find((m: any) => m.id === field.value) : null;
-                  return (
-                    <FormItem>
-                      <FormLabel>Machine (Optional)</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue 
-                              placeholder={selectedMachine ? `${selectedMachine.brand} ${selectedMachine.model}` : "Select customer machine"} 
-                            />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.isArray(machines) && machines?.map((machine: any) => (
-                            <SelectItem key={machine.id} value={machine.id}>
-                              {machine.brand} {machine.model} {machine.serialNumber ? `(SN: ${machine.serialNumber})` : ''}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  );
-                }}
+                name="serviceType"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Service Type</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select service type" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="service">Service</SelectItem>
+                        <SelectItem value="repair">Repair</SelectItem>
+                        <SelectItem value="part_change">Part Change</SelectItem>
+                        <SelectItem value="part_ordered">Part Ordered</SelectItem>
+                        <SelectItem value="maintenance">Maintenance</SelectItem>
+                        <SelectItem value="consultation">Consultation</SelectItem>
+                        <SelectItem value="warranty_service">Warranty Service</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
             </div>
 

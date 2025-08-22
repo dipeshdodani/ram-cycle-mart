@@ -13,6 +13,9 @@ export const workOrderStatusEnum = pgEnum("work_order_status", ["pending", "in_p
 // Work order priority enum
 export const workOrderPriorityEnum = pgEnum("work_order_priority", ["low", "normal", "high", "urgent"]);
 
+// Service type enum
+export const serviceTypeEnum = pgEnum("service_type", ["service", "repair", "part_change", "part_ordered", "maintenance", "consultation", "warranty_service"]);
+
 // Payment status enum
 export const paymentStatusEnum = pgEnum("payment_status", ["pending", "partial", "paid", "overdue", "cancelled"]);
 
@@ -70,7 +73,7 @@ export const workOrders = pgTable("work_orders", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   orderNumber: text("order_number").notNull().unique(),
   customerId: varchar("customer_id").notNull().references(() => customers.id),
-  machineId: varchar("machine_id").references(() => sewingMachines.id),
+  serviceType: serviceTypeEnum("service_type").notNull().default("service"),
   assignedTechnicianId: varchar("assigned_technician_id").references(() => users.id),
   problemDescription: text("problem_description").notNull(),
   diagnosis: text("diagnosis"),
@@ -233,10 +236,6 @@ export const workOrdersRelations = relations(workOrders, ({ one, many }) => ({
   customer: one(customers, {
     fields: [workOrders.customerId],
     references: [customers.id],
-  }),
-  machine: one(sewingMachines, {
-    fields: [workOrders.machineId],
-    references: [sewingMachines.id],
   }),
   assignedTechnician: one(users, {
     fields: [workOrders.assignedTechnicianId],

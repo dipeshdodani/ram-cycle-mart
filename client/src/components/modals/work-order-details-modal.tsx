@@ -193,35 +193,29 @@ export default function WorkOrderDetailsModal({ isOpen, onClose, workOrder }: Wo
             </CardContent>
           </Card>
 
-          {/* Machine Information */}
-          {workOrder.machine && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Wrench className="h-4 w-4" />
-                  Sewing Machine
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Brand & Model</p>
-                    <p className="text-sm text-gray-900">{workOrder.machine.brand} {workOrder.machine.model}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Serial Number</p>
-                    <p className="text-sm text-gray-900">{workOrder.machine.serialNumber || "Not specified"}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-500">Purchase Date</p>
-                    <p className="text-sm text-gray-900">
-                      {workOrder.machine.purchaseDate ? formatDate(workOrder.machine.purchaseDate) : "Not specified"}
-                    </p>
-                  </div>
+          {/* Service Information */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Wrench className="h-4 w-4" />
+                Service Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Service Type</p>
+                  <p className="text-sm text-gray-900 capitalize">
+                    {workOrder.serviceType ? workOrder.serviceType.replace(/_/g, ' ') : "Not specified"}
+                  </p>
                 </div>
-              </CardContent>
-            </Card>
-          )}
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Priority Level</p>
+                  <p className="text-sm text-gray-900 capitalize">{workOrder.priority} Priority</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
 
           {/* Work Details */}
           <Card>
