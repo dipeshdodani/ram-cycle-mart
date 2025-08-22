@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/hooks/use-auth";
 import { ThemeProvider } from "@/hooks/use-theme";
 import { ProtectedRoute } from "./lib/protected-route";
+import { RoleProtectedRoute } from "./lib/role-protected-route";
 import NotFound from "@/pages/not-found";
 import AuthPage from "@/pages/auth-page";
 import Dashboard from "@/pages/dashboard";
@@ -28,12 +29,41 @@ function Router() {
       <ProtectedRoute path="/work-orders" component={WorkOrders} />
       <ProtectedRoute path="/technicians" component={Technicians} />
       <ProtectedRoute path="/inventory" component={Inventory} />
-      <ProtectedRoute path="/billing" component={Billing} />
-      <ProtectedRoute path="/reports" component={Reports} />
-      <ProtectedRoute path="/sales-reports" component={SalesReports} />
-      <ProtectedRoute path="/users" component={UserManagement} />
-      <ProtectedRoute path="/advanced-billing" component={AdvancedBilling} />
-      <ProtectedRoute path="/shop-management" component={ShopManagement} />
+      
+      {/* Management-only pages (Owner, Manager, Receptionist) */}
+      <RoleProtectedRoute 
+        path="/billing" 
+        component={Billing} 
+        allowedRoles={["owner", "manager", "receptionist"]} 
+      />
+      <RoleProtectedRoute 
+        path="/reports" 
+        component={Reports} 
+        allowedRoles={["owner", "manager", "receptionist"]} 
+      />
+      <RoleProtectedRoute 
+        path="/sales-reports" 
+        component={SalesReports} 
+        allowedRoles={["owner", "manager", "receptionist"]} 
+      />
+      <RoleProtectedRoute 
+        path="/advanced-billing" 
+        component={AdvancedBilling} 
+        allowedRoles={["owner", "manager", "receptionist"]} 
+      />
+      
+      {/* Owner-only pages */}
+      <RoleProtectedRoute 
+        path="/users" 
+        component={UserManagement} 
+        allowedRoles={["owner"]} 
+      />
+      <RoleProtectedRoute 
+        path="/shop-management" 
+        component={ShopManagement} 
+        allowedRoles={["owner"]} 
+      />
+      
       <Route path="/auth" component={AuthPage} />
       <Route component={NotFound} />
     </Switch>

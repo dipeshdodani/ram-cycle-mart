@@ -17,25 +17,24 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
 
   const getNavItems = () => {
-    const baseItems = [
-      { path: "/", label: "Dashboard" },
-      { path: "/customers", label: "Customers" },
-      { path: "/work-orders", label: "Work Orders" },
-      { path: "/technicians", label: "Technicians" },
-      { path: "/inventory", label: "Inventory" },
-      { path: "/billing", label: "Billing" },
-      { path: "/reports", label: "Reports" },
-      { path: "/sales-reports", label: "Sales Reports" },
-      { path: "/advanced-billing", label: "Advanced Billing" },
-      { path: "/shop-management", label: "Shop Management" },
+    const allItems = [
+      { path: "/", label: "Dashboard", roles: ["owner", "manager", "receptionist", "technician"] },
+      { path: "/customers", label: "Customers", roles: ["owner", "manager", "receptionist", "technician"] },
+      { path: "/work-orders", label: "Work Orders", roles: ["owner", "manager", "receptionist", "technician"] },
+      { path: "/technicians", label: "Technicians", roles: ["owner", "manager", "receptionist", "technician"] },
+      { path: "/inventory", label: "Inventory", roles: ["owner", "manager", "receptionist", "technician"] },
+      { path: "/billing", label: "Billing", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
+      { path: "/reports", label: "Reports", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
+      { path: "/sales-reports", label: "Sales Reports", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
+      { path: "/advanced-billing", label: "Advanced Billing", roles: ["owner", "manager", "receptionist"] }, // Technician excluded
+      { path: "/shop-management", label: "Shop Management", roles: ["owner"] }, // Only owner access
+      { path: "/users", label: "Users", roles: ["owner"] }, // Only owner access
     ];
     
-    // Add Users page for owners only
-    if (user?.role === "owner") {
-      baseItems.push({ path: "/users", label: "Users" });
-    }
-    
-    return baseItems;
+    // Filter items based on user role
+    return allItems.filter(item => 
+      user?.role && item.roles.includes(user.role)
+    );
   };
 
   const navItems = getNavItems();

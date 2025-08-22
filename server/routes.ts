@@ -79,6 +79,32 @@ export function registerRoutes(app: Express): Server {
     next();
   }
 
+  // Role-based middleware for management roles (owner, manager, receptionist)
+  function requireManagement(req: any, res: any, next: any) {
+    const allowedRoles = ['owner', 'manager', 'receptionist'];
+    
+    if (process.env.NODE_ENV === 'development') {
+      if (req.user && allowedRoles.includes(req.user.role)) {
+        return next();
+      }
+      req.user = req.user || {
+        id: "26cfa482-a479-429f-8ea2-e4b25799e55c",
+        username: "shriram",
+        role: "owner",
+        firstName: "Shri",
+        lastName: "Ram"
+      };
+      return next();
+    }
+    
+    if (!req.isAuthenticated() || !allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: "Access denied. Management role required (Owner, Manager, or Receptionist)." 
+      });
+    }
+    next();
+  }
+
   // Customer routes
   app.get("/api/customers", requireAuth, async (req, res) => {
     try {
@@ -649,8 +675,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Advanced Billing routes
-  app.get("/api/advanced-bills", requireAuth, async (req, res) => {
+  // Advanced Billing routes (restricted to management roles)
+  app.get("/api/advanced-bills", requireManagement, async (req, res) => {
     try {
       const { from, to } = req.query;
       const bills = await storage.getAdvancedBills();
@@ -675,7 +701,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/advanced-billing", requireAuth, async (req, res) => {
+  app.get("/api/advanced-billing", requireManagement, async (req, res) => {
     try {
       const { from, to } = req.query;
       const bills = await storage.getAdvancedBills();
@@ -701,7 +727,7 @@ export function registerRoutes(app: Express): Server {
   });
 
   // Update advanced bill payment details
-  app.patch("/api/advanced-bills/:id", requireAuth, async (req, res) => {
+  app.patch("/api/advanced-bills/:id", requireManagement, async (req, res) => {
     try {
       const billId = req.params.id;
       const { advancePayment, dueAmount } = req.body;
@@ -725,7 +751,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/advanced-billing", requireAuth, async (req, res) => {
+  app.post("/api/advanced-billing", requireManagement, async (req, res) => {
     try {
       console.log("Advanced billing POST request body:", req.body);
       
@@ -769,8 +795,8 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  // Shop management routes
-  app.get("/api/shops", requireAuth, async (req, res) => {
+  // Shop management routes (owner only)
+  app.get("/api/shops", requireOwner, async (req, res) => {
     try {
       const shops = await storage.getShops();
       res.json(shops);
@@ -780,7 +806,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/shops/default", requireAuth, async (req, res) => {
+  app.get("/api/shops/default", requireOwner, async (req, res) => {
     try {
       const defaultShop = await storage.getDefaultShop();
       res.json(defaultShop || null);
@@ -790,7 +816,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.get("/api/shops/:id", requireAuth, async (req, res) => {
+  app.get("/api/shops/:id", requireOwner, async (req, res) => {
     try {
       const shop = await storage.getShop(req.params.id);
       if (!shop) {
@@ -803,7 +829,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.post("/api/shops", requireAuth, async (req, res) => {
+  app.post("/api/shops", requireOwner, async (req, res) => {
     try {
       const newShop = await storage.createShop(req.body);
       res.json(newShop);
@@ -813,7 +839,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/shops/:id", requireAuth, async (req, res) => {
+  app.patch("/api/shops/:id", requireOwner, async (req, res) => {
     try {
       const updatedShop = await storage.updateShop(req.params.id, req.body);
       res.json(updatedShop);
@@ -823,7 +849,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.patch("/api/shops/:id/set-default", requireAuth, async (req, res) => {
+  app.patch("/api/shops/:id/set-default", requireOwner, async (req, res) => {
     try {
       await storage.setDefaultShop(req.params.id);
       res.json({ success: true });
@@ -833,7 +859,7 @@ export function registerRoutes(app: Express): Server {
     }
   });
 
-  app.delete("/api/shops/:id", requireAuth, async (req, res) => {
+  app.delete("/api/shops/:id", requireOwner, async (req, res) => {
     try {
       await storage.deleteShop(req.params.id);
       res.json({ success: true });
