@@ -1,4 +1,5 @@
 import React from "react";
+import { Link } from "wouter";
 
 interface LogoProps {
   size?: "sm" | "md" | "lg";
@@ -66,18 +67,20 @@ export function Logo({ size = "md", className = "" }: LogoProps) {
 
 export function LogoWithText({ size = "md", showText = true }: LogoProps & { showText?: boolean }) {
   return (
-    <div className="flex items-center space-x-3">
-      <Logo size={size} />
-      {showText && (
-        <div className="flex flex-col">
-          <span className="text-xl font-bold text-primary dark:text-primary-300">
-            Ram Cycle Mart
-          </span>
-          <span className="text-xs text-gray-600 dark:text-gray-400 -mt-1">
-            Service & Repair
-          </span>
-        </div>
-      )}
-    </div>
+    <Link href="/">
+      <div className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity" data-testid="logo-home-link">
+        <Logo size={size} />
+        {showText && (
+          <div className="flex flex-col">
+            <span className="text-xl font-bold text-primary dark:text-primary-300">
+              Ram Cycle Mart
+            </span>
+            <span className="text-xs text-gray-600 dark:text-gray-400 -mt-1">
+              Service & Repair
+            </span>
+          </div>
+        )}
+      </div>
+    </Link>
   );
 }
