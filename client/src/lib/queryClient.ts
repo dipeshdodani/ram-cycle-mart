@@ -2,8 +2,27 @@ import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
-    const text = (await res.text()) || res.statusText;
-    throw new Error(`${res.status}: ${text}`);
+    let errorMessage = res.statusText;
+    try {
+      const text = await res.text();
+      // Try to parse as JSON first
+      try {
+        const errorData = JSON.parse(text);
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        // If not JSON, use the text if it's not HTML
+        if (!text.includes('<') && !text.includes('DOCTYPE')) {
+          errorMessage = text;
+        } else {
+          // It's likely an HTML error page, use a user-friendly message
+          errorMessage = `Server error (${res.status}). Please check your connection and try again.`;
+        }
+      }
+    } catch {
+      // If we can't read the response, use status text
+      errorMessage = res.statusText || `Server error (${res.status})`;
+    }
+    throw new Error(errorMessage);
   }
 }
 
@@ -38,7 +57,17 @@ export const getQueryFn: <T>(options: {
     }
 
     await throwIfResNotOk(res);
-    return await res.json();
+    
+    // Safe JSON parsing
+    const text = await res.text();
+    if (!text) return null;
+    
+    try {
+      return JSON.parse(text);
+    } catch (error) {
+      console.error("Failed to parse JSON response:", error, "Response text:", text);
+      throw new Error("Invalid server response. Please try again.");
+    }
   };
 
 export const queryClient = new QueryClient({

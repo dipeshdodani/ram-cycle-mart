@@ -107,6 +107,16 @@ export default function AdvancedBilling() {
         };
         
         const customerRes = await apiRequest("POST", "/api/customers", customerData);
+        if (!customerRes.ok) {
+          const errorText = await customerRes.text();
+          console.error("Customer creation failed:", customerRes.status, errorText);
+          try {
+            const errorJson = JSON.parse(errorText);
+            throw new Error(errorJson.message || `Failed to create customer (${customerRes.status})`);
+          } catch {
+            throw new Error(`Server error (${customerRes.status}): Please check your connection and try again`);
+          }
+        }
         const newCustomer = await customerRes.json();
         customerId = newCustomer.id;
       }
@@ -127,6 +137,17 @@ export default function AdvancedBilling() {
       };
       
       const res = await apiRequest("POST", "/api/invoices", invoiceData);
+      if (!res.ok) {
+        const errorText = await res.text();
+        console.error("Invoice creation failed:", res.status, errorText);
+        // Try to parse as JSON first, if it fails use the text as error message
+        try {
+          const errorJson = JSON.parse(errorText);
+          throw new Error(errorJson.message || `Failed to create invoice (${res.status})`);
+        } catch {
+          throw new Error(`Server error (${res.status}): Please check your connection and try again`);
+        }
+      }
       return res.json();
     },
     onSuccess: (data) => {
@@ -144,9 +165,19 @@ export default function AdvancedBilling() {
       setSavedItems(uniqueItems);
       localStorage.setItem('ramCycleMart_savedItems', JSON.stringify(uniqueItems));
 
-      // Generate PDF - fix potential issue by calling with proper bill data
+      // Generate PDF with error handling
       if (data) {
-        generatePDF({ ...data, ...bill });
+        try {
+          generatePDF({ ...data, ...bill });
+        } catch (pdfError) {
+          console.error("PDF generation error:", pdfError);
+          // Don't fail the entire process if PDF generation fails
+          toast({
+            title: "Bill Created Successfully",
+            description: "Bill was created but PDF generation failed. You can try downloading the PDF later.",
+            variant: "default",
+          });
+        }
       }
       
       // Reset form
@@ -164,9 +195,17 @@ export default function AdvancedBilling() {
       });
     },
     onError: (error: Error) => {
+      console.error("Bill generation error:", error);
+      let errorMessage = error.message;
+      
+      // Handle specific JSON parsing errors
+      if (error.message.includes('DOCTYPE') || error.message.includes('Unexpected token')) {
+        errorMessage = "Server connection error. Please check your internet connection and try again.";
+      }
+      
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Failed to Generate Bill",
+        description: errorMessage,
         variant: "destructive",
       });
     },
